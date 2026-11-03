@@ -170,6 +170,10 @@
     "48": {
       "en-US": "Quick race now opens on 6 worlds you swipe through: kitchen, beach, forest, snow, city and bedroom. Each mode of each track (normal, night, rain, reverse) earns its own stars, and stars unlock the worlds. Narrow shortcuts no longer slow you down, and rivals now dare to take them too.",
       "fr-FR": "La course libre s'ouvre sur 6 mondes à faire défiler : cuisine, plage, forêt, neige, ville et chambre. Chaque mode de chaque circuit (normal, nuit, pluie, sens inverse) rapporte ses étoiles, et les étoiles débloquent les mondes. Les raccourcis étroits ne ralentissent plus, et les rivaux osent les prendre aussi."
+    },
+    "50": {
+      "en-US": "New shield logo on the title screen and a new app icon, with the subtitle Toy Car Racing. The turbo pad on narrow shortcuts now sits before the junction, so it really boosts you instead of spilling onto the main road.",
+      "fr-FR": "Nouveau logo écusson sur l'écran titre et nouvelle icône d'appli, avec le sous-titre Course de petites voitures. Sur les raccourcis étroits, la dalle turbo est placée avant la jonction : elle te propulse vraiment au lieu de déborder sur la route."
     }
   }
 }
