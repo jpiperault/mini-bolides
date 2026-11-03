@@ -214,7 +214,34 @@
     const n = dayNum(key), h = (n * 2654435761) >>> 0;
     return Object.assign({ track: trackIds[h % trackIds.length] }, CHALLENGES[(h >>> 8) % CHALLENGES.length]);
   };
-  MB.challengeMet = (c, r) => (c.kind === 'pos' ? r.pos <= c.n : c.kind === 'coins' ? r.coins >= c.n : c.kind === 'boosts' ? r.boosts >= c.n : r.walls <= c.n);
+  // Missions du jour : trois par jour (facile, moyenne, difficile), cumulées sur toutes les courses de la journée.
+  // {n} est remplacé par l'objectif, {s} par « s » au pluriel. Les trois finies ouvrent le coffre.
+  MB.MISSION_COINS = [60, 100, 150];
+  MB.MISSIONS = [
+    { kind: 'races', icon: '🏁', n: [2, 3, 5], text: { fr: 'Termine {n} courses', en: 'Finish {n} races' } },
+    { kind: 'boosts', icon: '🔥', n: [5, 9, 14], text: { fr: 'Déclenche {n} turbos de drift', en: 'Trigger {n} drift boosts' } },
+    { kind: 'l2', icon: '💜', n: [1, 2, 4], text: { fr: 'Fais {n} super turbo{s}', en: 'Pull off {n} super boost{s}' } },
+    { kind: 'coins', icon: '🪙', n: [25, 45, 70], text: { fr: 'Ramasse {n} pièces en course', en: 'Pick up {n} coins on track' } },
+    { kind: 'podium', icon: '🥉', n: [1, 2, 3], text: { fr: 'Monte {n} fois sur le podium', en: 'Finish on the podium {n} time{s}' } },
+    { kind: 'win', icon: '🏆', n: [1, 1, 2], text: { fr: 'Gagne {n} course{s}', en: 'Win {n} race{s}' } },
+    { kind: 'sc', icon: '»', n: [1, 2, 3], text: { fr: 'Prends {n} raccourci{s}', en: 'Take {n} shortcut{s}' } },
+    { kind: 'items', icon: '🎁', n: [3, 6, 10], text: { fr: 'Utilise {n} objets', en: 'Use {n} items' } },
+    { kind: 'clean', icon: '✨', n: [1, 1, 2], text: { fr: 'Finis {n} course{s} en touchant 2 murs au plus', en: 'Finish {n} race{s} hitting 2 walls at most' } },
+  ];
+  MB.missionText = (m, lang) => m.def.text[lang].replace('{n}', m.n).replace('{s}', m.n > 1 ? 's' : '');
+  MB.dailyMissions = (key, shortcuts) => {                     // sans circuit à raccourci ouvert, pas de mission raccourci
+    let h = (dayNum(key) * 2246822519) >>> 0;
+    const pool = MB.MISSIONS.filter((m) => shortcuts || m.kind !== 'sc'), out = [];
+    for (let tier = 0; tier < 3; tier++) {
+      h = (Math.imul(h ^ (h >>> 15), 2654435761) + tier) >>> 0;
+      const def = pool.splice(h % pool.length, 1)[0];
+      out.push({ def, n: def.n[tier], coins: MB.MISSION_COINS[tier] });
+    }
+    return out;
+  };
+  MB.chestCoins = (key) => 250 + ((dayNum(key) * 7919) % 5) * 50;   // 250 à 450, la surprise du coffre
+
+  MB.challengeMet =(c, r) => (c.kind === 'pos' ? r.pos <= c.n : c.kind === 'coins' ? r.coins >= c.n : c.kind === 'boosts' ? r.boosts >= c.n : r.walls <= c.n);
 
   MB.POINTS = [10, 7, 5, 3, 2, 1];
   MB.RACE_COINS = [100, 70, 50, 30, 20, 10];

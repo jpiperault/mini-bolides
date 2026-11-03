@@ -1,7 +1,10 @@
 package com.minibolides.game;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.webkit.JavascriptInterface;
@@ -98,6 +101,27 @@ public class AndroidBridge {
             return true;
         } catch (IOException e) { lastError = e.getClass().getSimpleName() + " " + e.getMessage(); return false; }
         finally { if (c != null) c.disconnect(); }
+    }
+
+    /** Rappel quotidien : at en millisecondes (heure locale déjà calculée par le jeu), texte déjà traduit. */
+    @JavascriptInterface
+    public void remind(double at, String title, String text) { Reminder.schedule(context, (long) at, title, text); }
+
+    @JavascriptInterface
+    public void remindOff() { Reminder.cancel(context); }
+
+    @JavascriptInterface
+    public boolean notifAllowed() { return Reminder.allowed(context); }
+
+    /** Demande la permission (Android 13+) ; la réponse arrive dans window.mbOnNotif(true|false). */
+    @JavascriptInterface
+    public void askNotif() {
+        if (Build.VERSION.SDK_INT >= 33 && context instanceof Activity && !Reminder.allowed(context)) {
+            ((Activity) context).runOnUiThread(() -> ((Activity) context).requestPermissions(new String[] { Manifest.permission.POST_NOTIFICATIONS }, MainActivity.ASK_NOTIF));
+        } else {
+            boolean ok = Reminder.allowed(context);
+            web.post(() -> web.evaluateJavascript("window.mbOnNotif&&mbOnNotif(" + ok + ")", null));
+        }
     }
 
     @JavascriptInterface

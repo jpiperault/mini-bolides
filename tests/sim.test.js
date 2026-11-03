@@ -188,4 +188,16 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   for (let k = 0; k < 40; k++) { w._tick({ steer: 0.3 }); over = Math.max(over, Math.abs(MB.projectTrack(t, p.x, p.z, p.idx).lat) - lim); }
   check(over < 0.05, `coincé contre le mur par un rival : enfoncé de ${Math.max(0, over).toFixed(2)} m au plus`);
 }
+{
+  // Missions du jour : trois types différents, une par palier, stables pour la journée, sans raccourci s'il n'y en a pas.
+  let ok = true, noSc = true, kinds = new Set();
+  for (let d = 1; d <= 60; d++) {
+    const key = `2026-12-${String((d % 28) + 1).padStart(2, '0')}`, a = MB.dailyMissions(key, true), b = MB.dailyMissions(key, true);
+    if (new Set(a.map((m) => m.def.kind)).size !== 3 || a.map((m) => m.def.kind + m.n).join() !== b.map((m) => m.def.kind + m.n).join() || a.some((m, i) => m.coins !== MB.MISSION_COINS[i])) ok = false;
+    if (MB.dailyMissions(key, false).some((m) => m.def.kind === 'sc')) noSc = false;
+    a.forEach((m) => kinds.add(m.def.kind));
+  }
+  check(ok && noSc && kinds.size >= 7, `missions du jour : 3 types distincts et stables, ${kinds.size} types tirés, pas de raccourci sans circuit à raccourci`);
+  check(/^Fais 1 super turbo$/.test(MB.missionText({ def: MB.MISSIONS.find((m) => m.kind === 'l2'), n: 1 }, 'fr')), 'mission au singulier sans « s »');
+}
 process.exit(failed ? 1 : 0);

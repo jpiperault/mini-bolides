@@ -33,6 +33,7 @@ h2 { font-size: 22px; font-weight: 800; }
 .btn.primary { background: var(--tomato); color: #fff; box-shadow: 0 5px 0 var(--tomato-d); font-size: 20px; min-height: 66px; }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .split .btn { font-size: 14px; padding: 10px 6px; }
+#homeLow.split { grid-template-columns: 1fr 1fr 1fr; }   /* boutique, trophées, réglages sur une ligne : la place des missions */
 .iconbtn { position: fixed; left: 14px; top: var(--top); width: 48px; height: 48px; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 var(--line); font-size: 20px; font-weight: 700; }
 #coinbar { position: fixed; right: 14px; top: var(--top); height: 48px; padding: 0 16px; border-radius: 16px; display: flex; align-items: center; gap: 6px; background: var(--cream);
   box-shadow: 0 3px 0 var(--line); font-family: var(--display); font-weight: 800; font-size: 15px; z-index: 4; font-variant-numeric: tabular-nums; }
@@ -149,6 +150,14 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
 .offer { padding: 12px 14px; margin-top: 10px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); } .offer b { display: block; font-size: 17px; } .offer p { margin: 2px 0 8px; color: var(--muted); font-size: 14px; }
 .offer .btn { margin-top: 0; min-height: 50px; font-size: 15px; }
 .demo { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; background: rgba(255, 210, 63, .35); }
+.mbtn { background: #fff; box-shadow: inset 0 0 0 2px var(--line), 0 4px 0 var(--line); } .mbtn.ready { background: var(--butter); box-shadow: 0 4px 0 var(--butter-d); animation: mpulse 1.4s ease-in-out infinite; }
+@keyframes mpulse { 50% { transform: scale(1.025); } }
+.miss { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px 12px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); font-weight: 600; }
+.miss b { width: 28px; font-size: 22px; text-align: center; } .miss span { flex: 1; min-width: 0; } .miss em { font-style: normal; font-weight: 700; color: var(--tomato); white-space: nowrap; }
+.miss i { display: block; height: 8px; margin: 6px 0 2px; border-radius: 4px; background: linear-gradient(90deg, var(--mint, #25b98a) var(--p), rgba(43, 34, 48, .1) var(--p)); }
+.miss small { color: var(--muted); font-weight: 600; font-size: 12px; } .miss.on { background: rgba(37, 185, 138, .14); }
+#missChestBtn { margin-top: 14px; } #missChestBtn:disabled { opacity: .5; }
+.nask { margin: 4px 0 0; text-align: center; font-size: 44px; }
 .modal { position: fixed; inset: 0; z-index: 6; display: flex; flex-direction: column; justify-content: flex-end; background: rgba(43, 34, 48, .55); }
 .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0 4px; } .days div { padding: 6px 0; border-radius: 10px; text-align: center; font-size: 11px; font-weight: 700; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); } .days .done { background: rgba(37, 185, 138, .25); } .days .now { background: var(--butter); }
 #adScreen { position: fixed; inset: 0; z-index: 7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; color: #fff; background: #2b2230; }
@@ -179,6 +188,7 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
   <div class="sheet">
     <button class="btn primary" data-go="cups" data-t="play"></button>
     <button class="btn dbtn" data-go="challenge"><b>🎯</b><span id="chalBtn"></span></button>
+    <button class="btn dbtn mbtn" id="missHome" data-go="missions"><b>📋</b><span id="missBtn"></span></button>
     <div class="split"><button class="btn" data-go="tracks" data-t="free"></button><button class="btn" data-go="garage" data-t="garage"></button></div>
     <div class="split" id="homeLow"><button class="btn" id="shopBtn" data-go="shop" data-t="shop"></button><button class="btn" data-go="trophies" data-t="trophies"></button><button class="btn" data-go="settings" data-t="settings"></button></div>
   </div>
@@ -281,6 +291,20 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
   <div class="sheet"><h2 data-t="dailyT"></h2><div class="days" id="dailyDays"></div><p class="reward" id="dailyMsg"></p>
     <button class="btn primary" data-go="dailyTake" data-t="dailyTake"></button>
     <button class="btn" id="dailyAd" data-go="dailyDouble" data-t="dailyAd" hidden></button>
+  </div>
+</div>
+
+<div class="modal" id="missions" hidden>
+  <div class="sheet"><h2 data-t="miss"></h2><div id="missList"></div>
+    <button class="btn primary" id="missChestBtn" data-go="chest"></button><p class="reward" id="missChestMsg"></p>
+    <button class="btn" data-go="missClose" data-t="close"></button>
+  </div>
+</div>
+
+<div class="modal" id="notifAsk" hidden>
+  <div class="sheet"><h2 data-t="notifQ"></h2><p class="nask">🔔</p><p class="reward" data-t="notifTxt"></p>
+    <button class="btn primary" data-go="notifYes" data-t="notifYes"></button>
+    <button class="btn" data-go="notifNo" data-t="notifNo"></button>
   </div>
 </div>
 

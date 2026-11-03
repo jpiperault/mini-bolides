@@ -7,6 +7,12 @@
     play: ['Championnat', 'Championship'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
     stars: ['étoiles', 'stars'], locked: ['étoiles requises', 'stars needed'], unlocked: ['Nouvelle coupe débloquée !', 'New cup unlocked!'], goal: ['3e étoile : gagne avec 20 pièces', '3rd star: win with 20 coins'],
     chal: ['Défi du jour', 'Daily challenge'], chalDone: ['réussi, reviens demain !', 'done, back tomorrow!'], chalWin: ['Défi réussi', 'Challenge done'], chalFail: ['Défi manqué', 'Challenge failed'],
+    close: ['Fermer', 'Close'], miss: ['Missions du jour', 'Daily missions'], missChest: ['Ouvrir le coffre', 'Open the chest'], missLock: ['Finis les 3 missions pour ouvrir le coffre', 'Finish all 3 missions to open the chest'],
+    missOpened: ['Coffre ouvert ! Nouvelles missions demain', 'Chest opened! New missions tomorrow'], missReady: ['Coffre des missions prêt !', 'Mission chest ready!'], missChestT: ['coffre à la clé', 'chest to win'],
+    missGo: ['Coffre prêt, viens l\'ouvrir !', 'Chest ready, come and open it!'], missTomorrow: ['à demain pour de nouvelles', 'new ones tomorrow'],
+    notifQ: ['Un petit rappel ?', 'A little reminder?'], notifTxt: ['Une seule notification par jour, quand ton cadeau et tes nouvelles missions sont prêts. Jamais de spam.', 'Just one notification a day, when your gift and new missions are ready. Never spam.'],
+    notifYes: ['Oui, rappelle-moi', 'Yes, remind me'], notifNo: ['Non merci', 'No thanks'], notif: ['Rappel quotidien', 'Daily reminder'], notifHelp: ['Une notification par jour, cadeau et missions', 'One notification a day: gift and missions'],
+    notifBlocked: ['Bloquées par le téléphone : autorise les notifications de Mini Bolides dans les réglages Android', 'Blocked by the phone: allow Mini Bolides notifications in Android settings'],
     dailyT: ['Cadeau du jour', 'Daily gift'], dailyTake: ['Récupérer', 'Collect'], dailyAd: ['Récupérer × 2 (pub)', 'Collect × 2 (ad)'], day: ['Jour', 'Day'],
     shortcut: ['RACCOURCI !', 'SHORTCUT!'], cancel: ['Annuler', 'Cancel'], owned: ['Acheté', 'Owned'], restore: ['Restaurer mes achats', 'Restore purchases'],
     demoNote: ['Version de test : pubs et achats sont simulés, aucun paiement.', 'Test build: ads and purchases are simulated, no payment.'], demoBuy: ['Achat de test : aucun paiement réel.', 'Test purchase: no real payment.'], demoYes: ['Confirmer le test', 'Confirm test'], demoReset: ['Annuler mes achats de test', 'Reset test purchases'],
@@ -34,7 +40,7 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0 }, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {} });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0 }, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
   if (!save.v4) {                                             // anciennes médailles : 1er = 2 étoiles, podium = 1 étoile
@@ -223,11 +229,81 @@
     chal = null;
     const c = challenge(), won = save.chal === today();
     $('chalBtn').innerHTML = `${t('chal')}<small>${won ? t('chalDone') : `${L(c.text)} · +${MB.CHALLENGE_COINS} 🪙`}</small>`;
+    renderMissBtn();
+    planReminder();
     $('shopBtn').hidden = !MB.FEATURES.premium;
     $('homeLow').className = MB.FEATURES.premium ? 'split' : '';
     show('home');
     if (save.daily.last !== today()) renderDaily();
+    else if (save.notif === null && save.races >= 2 && bridge && bridge.remind) $('notifAsk').hidden = false;   // proposé une fois, après deux courses
   }
+
+  // ---------- Missions du jour ----------
+  function missions() {
+    if (!save.miss || save.miss.day !== today()) {
+      const sc = openTracks().some((id) => (MB.TRACKS.find((d) => d.id === id).shortcuts || []).length);
+      save.miss = { day: today(), list: MB.dailyMissions(today(), sc).map((m) => ({ kind: m.def.kind, n: m.n, coins: m.coins, p: 0 })), chest: false };
+      persist();
+    }
+    return save.miss;
+  }
+  const missDef = (m) => MB.MISSIONS.find((d) => d.kind === m.kind);
+  const missText = (m) => MB.missionText({ def: missDef(m), n: m.n }, lang);
+  const missDone = () => missions().list.filter((m) => m.p >= m.n).length;
+  // Après une course terminée : chaque mission avance, et sa récompense tombe dès qu'elle est remplie.
+  function missionsAfter(r) {
+    const ms = missions(), notes = [];
+    for (const m of ms.list) {
+      if (m.p >= m.n) continue;
+      m.p = Math.min(m.n, m.p + (r[m.kind] || 0));
+      if (m.p >= m.n) { save.coins += m.coins; notes.push(`✅ ${missText(m)} +${m.coins} 🪙`); }
+    }
+    if (notes.length && !ms.chest && missDone() === 3) notes.push(`🎁 ${t('missReady')}`);
+    return notes;
+  }
+  function renderMissBtn() {
+    const ms = missions(), n = missDone(), ready = n === 3 && !ms.chest;
+    $('missBtn').innerHTML = `${t('miss')} · ${n}/3<small>${ms.chest ? t('missTomorrow') : ready ? t('missGo') : `${missText(ms.list.find((m) => m.p < m.n))} · ${t('missChestT')}`}</small>`;
+    $('missHome').classList.toggle('ready', ready);
+  }
+  function renderMissions() {
+    const ms = missions(), ready = missDone() === 3 && !ms.chest;
+    $('missList').innerHTML = ms.list.map((m) => `<div class="miss ${m.p >= m.n ? 'on' : ''}"><b>${m.p >= m.n ? '✅' : missDef(m).icon}</b><span>${missText(m)}<i style="--p:${Math.round((m.p / m.n) * 100)}%"></i><small>${m.p} / ${m.n}</small></span><em>+${m.coins} 🪙</em></div>`).join('');
+    $('missChestBtn').disabled = !ready;
+    $('missChestBtn').textContent = ms.chest ? t('missOpened') : `🎁 ${t('missChest')}`;
+    $('missChestMsg').textContent = ms.chest ? '' : ready ? '' : t('missLock');
+    $('missions').hidden = false;
+  }
+  function openChest() {
+    const ms = missions();
+    if (ms.chest || missDone() < 3) return;
+    const gain = MB.chestCoins(today());
+    ms.chest = true; save.coins += gain; persist();
+    $('coinval').textContent = save.coins;
+    renderMissions(); renderMissBtn();
+    $('missChestMsg').textContent = `+${gain} ${t('coins')} !`;
+    Sound.play('buy', [880, 0.3, 'triangle', 0.16, 1320], 0); buzz(60);
+  }
+
+  // ---------- Rappel quotidien (Android) ----------
+  // Une seule notification programmée, toujours remplacée : demain, à l'heure où l'on joue d'habitude (entre 10 h et 20 h).
+  function planReminder() {
+    if (!bridge || !bridge.remind) return;
+    if (!save.notif) { bridge.remindOff(); return; }
+    const now = new Date(), at = new Date(now);
+    at.setDate(now.getDate() + 1); at.setHours(Math.min(20, Math.max(10, now.getHours())), 0, 0, 0);
+    const key = MB.dayKey(at), day = MB.nextStreak(save.daily.last, key, save.daily.streak), gift = MB.DAILY_REWARDS[day - 1];
+    const fr = lang === 'fr', text = day > 1
+      ? (fr ? `🎁 Jour ${day} de ta série : ${gift} pièces t'attendent. Et 3 nouvelles missions !` : `🎁 Day ${day} of your streak: ${gift} coins are waiting. Plus 3 new missions!`)
+      : (fr ? `🎁 Ton cadeau du jour et 3 nouvelles missions t'attendent au garage.` : `🎁 Your daily gift and 3 new missions are waiting in the garage.`);
+    bridge.remind(at.getTime(), 'Mini Bolides', text);
+  }
+  function setNotif(on) {
+    save.notif = on; persist();
+    if (on && bridge && bridge.askNotif) bridge.askNotif();
+    planReminder();
+  }
+  window.mbOnNotif = (ok) => { if (!$('settings').hidden) renderSettings(); if (!ok) toast(t('notifBlocked')); };
 
   function renderDaily() {
     const next = MB.nextStreak(save.daily.last, today(), save.daily.streak);
@@ -242,6 +318,8 @@
     save.coins += MB.DAILY_REWARDS[next - 1] * mult;
     persist();
     $('daily').hidden = true; $('coinval').textContent = save.coins;
+    planReminder();
+    if (save.notif === null && save.races >= 2 && bridge && bridge.remind) $('notifAsk').hidden = false;
   }
 
   // ---------- Course ----------
@@ -307,7 +385,7 @@
     $('posPill').hidden = solo;
     pendingCoins = 0;
     rec = []; recT = -99; replay = null;
-    stat = { boosts: 0, walls: 0, l2: 0, sc: 0, marbles: 0, lastLapPos: 0 }; slowT = 0; timeK = 1; finFx = false; lastPos = race.cars.length; tickT = 0;
+    stat = { boosts: 0, walls: 0, l2: 0, sc: 0, marbles: 0, items: 0, lastLapPos: 0 }; slowT = 0; timeK = 1; finFx = false; lastPos = race.cars.length; tickT = 0;
     phase = 'race'; paused = false;
     show('hud');
     $('hint').textContent = chal ? `${t('chal')} : ${L(chal.text)}` : t('how');
@@ -415,6 +493,7 @@
         case 'gotItem': { coach('item'); const b = $('itemBtn'); b.className = 'full'; b.textContent = MB.ITEMS[e.item].icon; flash(`${MB.ITEMS[e.item].icon} ${L(MB.ITEMS[e.item].name)}`); view.pickup(); Sound.play('item', [1100, 0.16, 'triangle', 0.1, 1480], 0); buzz(16); break; }
         case 'item': view.itemFx(e.car, e.item);
           if (e.car === race.player.id) {
+            stat.items++;
             const b = $('itemBtn'); b.className = 'empty'; b.textContent = '';
             flash(`${MB.ITEMS[e.item].icon} ${L(MB.ITEMS[e.item].name)} !`, 'boost');
             if (e.item === 'elastique') { Sound.play('elastique', [120, 0.7, 'sawtooth', 0.18, 980], 0); buzz(45); view.shake(0.6); }
@@ -558,6 +637,7 @@
     const key = trackKey();
     if (race.bestLap && (!save.best[key] || race.bestLap < save.best[key])) save.best[key] = race.bestLap;
     const tnotes = trophiesAfter({ done: true, solo: true, coins: race.coinCount, l2: stat.l2, ghostBeat: ghost.record && ghost.hadGhost }, pendingCoins);
+    tnotes.push(...missionsAfter({ races: 1, boosts: stat.boosts, l2: stat.l2, coins: race.coinCount, sc: stat.sc, items: stat.items, clean: stat.walls <= 2 ? 1 : 0 }));
     persist();
     $('resTitle').textContent = `⏱ ${fmt(p.time)}`;
     $('resTrack').textContent = trackLabel();
@@ -598,6 +678,7 @@
     if (openCups().length > opened) notes.push(t('unlocked'));
     if (openWorlds().length > worldsBefore) notes.push(`${t('worldOpen')} ${openWorlds().slice(worldsBefore).map((w) => w.icon + ' ' + L(w.name)).join(', ')} !`);
     notes.push(...trophiesAfter({ done: true, solo: false, pos, walls: stat.walls, l2: stat.l2, coins: race.coinCount, lastLapPos: stat.lastLapPos, diff: save.diff }, pendingCoins));
+    notes.push(...missionsAfter({ races: 1, boosts: stat.boosts, l2: stat.l2, coins: race.coinCount, podium: pos <= 3 ? 1 : 0, win: pos === 1 ? 1 : 0, sc: stat.sc, items: stat.items, clean: stat.walls <= 2 ? 1 : 0 }));
     persist();
 
     $('resTitle').textContent = `${pos}${placeSuf(pos)}`;
@@ -778,6 +859,7 @@
       <button class="row" data-toggle="sound"><span>${t('sound')}</span><i>${save.sound ? 'ON' : 'OFF'}</i></button>
       <button class="row" data-toggle="music"><span>${t('music')}</span><i>${save.music ? 'ON' : 'OFF'}</i></button>
       <button class="row" data-toggle="vib"><span>${t('vib')}</span><i>${save.vib ? 'ON' : 'OFF'}</i></button>
+      ${bridge && bridge.remind ? `<button class="row" data-go="notifToggle"><span>${t('notif')}<br><small>${save.notif && !bridge.notifAllowed() ? t('notifBlocked') : t('notifHelp')}</small></span><i>${save.notif ? 'ON' : 'OFF'}</i></button>` : ''}
       ${MB.FEATURES.demo ? `<button class="btn tiny" data-go="demoReset">${t('demoReset')}</button>` : ''}
       <p class="small">${t('credits')} v0.4</p>`;
     show('settings');
@@ -796,6 +878,12 @@
     if (d.go === 'home') return leave(menu);
     if (d.go === 'cups') return renderCups();
     if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; return startRace(cup.def.tracks[0]); }
+    if (d.go === 'missions') return renderMissions();
+    if (d.go === 'missClose') { $('missions').hidden = true; return; }
+    if (d.go === 'chest') return openChest();
+    if (d.go === 'notifYes') { $('notifAsk').hidden = true; return setNotif(true); }
+    if (d.go === 'notifNo') { $('notifAsk').hidden = true; return setNotif(false); }
+    if (d.go === 'notifToggle') { setNotif(!save.notif); return renderSettings(); }
     if (d.go === 'challenge') {
       if (save.chal === today()) return;
       chal = challenge(); cup = null;
@@ -959,6 +1047,8 @@
     if (adDone) return true;
     if (!$('confirm').hidden) { $('confirm').hidden = true; confirmDone = null; return true; }
     if (!$('daily').hidden) { $('daily').hidden = true; return true; }
+    if (!$('missions').hidden) { $('missions').hidden = true; return true; }
+    if (!$('notifAsk').hidden) { $('notifAsk').hidden = true; setNotif(false); return true; }
     if (phase === 'result') { menu(); return true; }
     if (!$('home').hidden) return false;
     menu(); return true;
@@ -986,7 +1076,7 @@
     const m = location.hash.match(/race=(\w+)/);
     if (location.hash.indexOf('chrono') >= 0) trackMode = 'chrono';     // tests : contre-la-montre
     const vm = location.hash.match(/v=(\w+)/);                       // tests : variante (nuit, pluie, inverse)
-    if (m) { $('daily').hidden = true; buildRace(m[1], vm && vm[1]); }
+    if (m) { $('daily').hidden = true; $('notifAsk').hidden = true; buildRace(m[1], vm && vm[1]); }
     const ff = location.hash.match(/ff=(\d+)/);                // tests : avance la course sans rendu
     if (ff && race) { for (let i = 0; i < +ff[1] * 60; i++) race.step(1 / 60, MB.botInput(race)); }
     const sc = location.hash.match(/screen=(\w+)/);

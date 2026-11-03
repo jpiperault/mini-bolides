@@ -18,6 +18,7 @@ import java.util.Arrays;
 
 /** Héberge le jeu (assets/www/index.html) dans une WebView plein écran, hors ligne. */
 public class MainActivity extends Activity {
+    static final int ASK_NOTIF = 7;
     private WebView web;
 
     @Override
@@ -115,6 +116,12 @@ public class MainActivity extends Activity {
         web.evaluateJavascript("window.mcBack ? window.mcBack() : false", v -> {
             if (!"true".equals(v)) finish();
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(code, perms, res);
+        if (code == ASK_NOTIF) web.evaluateJavascript("window.mbOnNotif&&mbOnNotif(" + Reminder.allowed(this) + ")", null);
     }
 
     @Override
