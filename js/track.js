@@ -124,7 +124,10 @@
     sc.mouth = 0; while (sc.mouth < count && inner[sc.mouth]) sc.mouth++;
     sc.tail = 0; while (sc.tail < count && inner[count - 1 - sc.tail]) sc.tail++;
     sc.door = Math.min(sc.win, 6);                            // porte d'entrée étroite (~12 m) : on la vise, on n'y tombe pas
-    sc.pad = Math.max(1, count - 9);                          // dalle turbo des derniers mètres : la sortie relance la voiture
+    // Dalle turbo juste avant la jonction, sur la partie propre au raccourci : plus loin, la branche
+    // recouvre déjà le circuit et la voiture y repasse sur la route normale (la dalle n'y servirait à rien).
+    sc.padEnd = Math.max(10, count - 2 - sc.tail);
+    sc.pad = sc.padEnd - 9;
     return sc;
   }
 

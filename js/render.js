@@ -950,7 +950,7 @@
           g.lineWidth = 26; g.beginPath(); g.moveTo(10, 104); g.lineTo(W / 2, 30); g.lineTo(W - 10, 104); g.stroke();
         });
         padTex.wrapS = padTex.wrapT = T.RepeatWrapping;
-        const pad = { open: true, count: p.count - p.pad, length: (p.count - p.pad) * p.ds, px: p.px.slice(p.pad), pz: p.pz.slice(p.pad), tx: p.tx.slice(p.pad), tz: p.tz.slice(p.pad) };
+        const pe = p.padEnd + 1, pad = { open: true, count: pe - p.pad, length: (pe - p.pad) * p.ds, px: p.px.slice(p.pad, pe), pz: p.pz.slice(p.pad, pe), tx: p.tx.slice(p.pad, pe), tz: p.tz.slice(p.pad, pe) };
         const padMesh = ribbon(pad, -hw + 1, hw - 1, 0.19, 0.19, 7, new T.MeshBasicMaterial({ map: padTex, transparent: true, opacity: 0.92 }));
         this.pads.push(padTex);
         s.add(padMesh);

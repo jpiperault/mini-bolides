@@ -340,7 +340,7 @@
         c.sci = pr.i; c.lat = pr.lat; c.onWall = false;
         c.idx = Math.round(p.a + ((p.b - p.a) * pr.i) / (p.count - 1));
         const backward = Math.cos(c.h) * p.tx[pr.i] + Math.sin(c.h) * p.tz[pr.i] < 0;
-        if (pr.i >= p.pad && c.padT !== p.a + this.lap(c) * 1000) {   // la dalle turbo de sortie, une fois par passage
+        if (pr.i >= p.pad && pr.i <= p.padEnd + 3 && c.padT !== p.a + this.lap(c) * 1000) {   // la dalle turbo de sortie, une fois par passage
           c.padT = p.a + this.lap(c) * 1000;
           if (c.boost < 0.7) { c.boost = 0.7; c.boostPow = 1.15; }
           if (c.isPlayer) this.events.push({ t: 'pad' });

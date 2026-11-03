@@ -36,15 +36,23 @@ for (const def of MB.TRACKS) {
     let hits = 0;
     for (const [A, B] of mainWalls) for (const [C, D] of branch) if (cut(A, B, C, D)) hits++;
     check(hits === 0, `${def.id}: le raccourci ne traverse aucun mur du circuit (${hits} croisements)`);
-    let taken = 0, res = 0, gain = 0, natural = false;                          // sur plusieurs courses : une seule dépend trop du trafic
+    // La dalle turbo reste sur la partie propre au raccourci : elle ne déborde pas sur la route normale.
+    let over = 0;
+    for (let q = p.pad; q <= p.padEnd; q++) for (const off of [-(p.width / 2 - 1), p.width / 2 - 1]) {
+      const x = p.px[q] - p.tz[q] * off, z = p.pz[q] + p.tx[q] * off;
+      for (let i = 0; i < t.count; i++) if (Math.hypot(x - t.px[i], z - t.pz[i]) < t.width / 2) { over++; break; }
+    }
+    check(over === 0, `${def.id}: dalle turbo hors du circuit normal (${over} point(s) dessus)`);
+    let taken = 0, pads = 0, res = 0, gain = 0, natural = false;                          // sur plusieurs courses : une seule dépend trop du trafic
     for (const seed of [7, 131, 262, 393, 524]) {
       const fast = new MB.Race({ trackId: def.id, carId: 'bolide', diff: 'facile', seed }), slow = new MB.Race({ trackId: def.id, carId: 'bolide', diff: 'facile', seed });
       let n = 0;
-      while (fast.state !== 'done' && n++ < 60 * 400) { fast.step(1 / 60, MB.botInput(fast, { shortcut: true })); for (const e of fast.events) { if (e.t === 'shortcut') taken++; if (e.t === 'rescue' && e.car === fast.player.id) res++; } fast.events.length = 0; }
+      while (fast.state !== 'done' && n++ < 60 * 400) { fast.step(1 / 60, MB.botInput(fast, { shortcut: true })); for (const e of fast.events) { if (e.t === 'shortcut') taken++; if (e.t === 'pad') pads++; if (e.t === 'rescue' && e.car === fast.player.id) res++; } fast.events.length = 0; }
       n = 0;
       while (slow.state !== 'done' && n++ < 60 * 400) { slow.step(1 / 60, MB.botInput(slow)); if (slow.events.some((e) => e.t === 'shortcut')) natural = true; slow.events.length = 0; }
       gain += slow.player.time - fast.player.time;
     }
+    check(pads === taken, `${def.id}: dalle turbo déclenchée à chaque passage (${pads}/${taken})`);
     check(taken >= 8 && res === 0 && gain > 0 && gain / 5 < 8, `${def.id}: raccourci pris ${taken}/15, ${res} remise(s), gain moyen ${(gain / 5).toFixed(1)} s`);
     // Il faut longer le bord pour entrer : la trajectoire normale ne s'y engage jamais par hasard.
     check(!natural, `${def.id}: la trajectoire normale reste sur le circuit`);
