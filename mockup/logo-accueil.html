@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo sur l'accueil</title>
+<link rel="stylesheet" href="../fonts.css">
+<style>
+:root { --cream: #fff6e6; --ink: #2b2230; --muted: #7b6c72; --tomato: #e5352b; --tomato-d: #a82018; --butter: #ffd23f; --butter-d: #d9a514; --line: rgba(43,34,48,.14); }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3ead9; color: var(--ink); font-family: Saira, sans-serif; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 26px 16px 40px; }
+h1 { font-family: Unbounded, sans-serif; font-size: 28px; margin: 0 0 6px; }
+.lead { color: var(--muted); font-weight: 600; margin: 0 0 18px; max-width: 820px; }
+.phones { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+.cap h2 { font-family: Unbounded, sans-serif; font-size: 16px; margin: 10px 0 2px; }
+.cap p { margin: 0; color: var(--muted); font-weight: 600; font-size: 13px; }
+.phone { position: relative; width: 100%; aspect-ratio: 412 / 917; border: 7px solid var(--ink); border-radius: 30px; overflow: hidden; container-type: inline-size; background: #333; }
+.phone > img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.badge { position: absolute; display: block; filter: drop-shadow(0 1.5cqw 2.5cqw rgba(43,34,48,.35)); }
+/* A : bandeau en haut */
+.band { position: absolute; left: 3.5cqw; top: 3.5cqw; display: flex; align-items: center; gap: 2.4cqw; background: var(--ink); color: var(--cream); border-radius: 99px; padding: 1.6cqw 5cqw 1.6cqw 1.6cqw; box-shadow: 0 1.5cqw 3cqw rgba(43,34,48,.3); }
+.band svg { width: 13cqw; height: 13cqw; }
+.band b { display: block; font-family: Unbounded; font-weight: 800; font-size: 5cqw; letter-spacing: .06em; line-height: 1.05; }
+.band small { display: block; font-weight: 600; font-size: 2.6cqw; letter-spacing: .14em; color: var(--butter); }
+/* D : feuille refaite */
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--cream); border-radius: 6cqw 6cqw 0 0; padding: 4cqw 4.4cqw 4cqw; box-shadow: 0 -2cqw 7cqw rgba(43,34,48,.22); }
+.head { display: flex; align-items: center; gap: 3cqw; margin-bottom: 1cqw; }
+.head svg { width: 20cqw; height: 20cqw; flex: none; filter: drop-shadow(0 1cqw 1.5cqw rgba(43,34,48,.25)); }
+.head b { display: block; font-family: Unbounded; font-weight: 800; font-size: 6.4cqw; line-height: 1; }
+.head small { display: block; margin-top: 1.2cqw; font-weight: 700; font-size: 3cqw; letter-spacing: .12em; color: var(--tomato); }
+.btn { display: flex; align-items: center; justify-content: center; gap: 2cqw; min-height: 13cqw; margin-top: 2.6cqw; border-radius: 4.4cqw; font-family: Unbounded; font-weight: 800; font-size: 3.9cqw; background: #fff; box-shadow: inset 0 0 0 .5cqw var(--line), 0 1cqw 0 var(--line); }
+.btn.primary { background: var(--tomato); color: #fff; font-size: 4.9cqw; min-height: 15cqw; box-shadow: 0 1.2cqw 0 var(--tomato-d); }
+.btn.daily { background: var(--butter); justify-content: flex-start; padding: 0 4cqw; box-shadow: 0 1cqw 0 var(--butter-d); }
+.btn.daily small { display: block; font-family: Saira; font-weight: 600; font-size: 2.9cqw; }
+.split { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.4cqw; }
+.split .btn { font-size: 3.2cqw; }
+.coins { position: absolute; right: 3.5cqw; top: 3.5cqw; background: var(--cream); border-radius: 4cqw; padding: 2.4cqw 4cqw; font-family: Unbounded; font-weight: 800; font-size: 4cqw; }
+.rec { outline: 4px solid var(--tomato); outline-offset: 4px; }
+@media (max-width: 900px) { .phones { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .phones { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Le logo sans cacher la voiture : 4 placements</h1>
+  <p class="lead">Mêmes écrans d'accueil que dans le jeu, avec l'écusson déplacé. La voiture tourne au milieu de l'écran : le logo va donc soit tout en haut, soit sur le bord de la feuille de boutons, soit dans la feuille.</p>
+  <div class="phones">
+    <div class="cap"><div class="phone"><img src="accueil-full.png" alt=""><div class="band"><svg viewBox="0 0 300 300" data-badge></svg><span><b>MINI BOLIDES</b><small>COURSE DE PETITES VOITURES</small></span></div></div>
+      <h2>A · Bandeau en haut</h2><p>Petit écusson et nom dans une pastille foncée, à gauche des pièces. Discret, toujours lisible sur le décor.</p></div>
+    <div class="cap"><div class="phone"><img src="accueil-full.png" alt=""><svg class="badge" viewBox="0 0 300 300" data-badge style="width:32cqw;left:34cqw;top:calc(54.6% - 28cqw)"></svg></div>
+      <h2>B · Posé sur la feuille</h2><p>L'écusson à cheval sur le bord de la feuille de boutons, sous la voiture. Il reste grand et bien visible, comme un tampon.</p></div>
+    <div class="cap"><div class="phone"><img src="accueil-full.png" alt=""><svg class="badge" viewBox="0 0 300 300" data-badge style="width:27cqw;left:3.5cqw;top:3cqw;transform:rotate(-8deg)"></svg></div>
+      <h2>C · Autocollant dans le coin</h2><p>L'écusson en haut à gauche, un peu penché, comme un autocollant sur une boîte de jouet. Toute la voiture est libre.</p></div>
+    <div class="cap"><div class="phone"><img src="accueil-nosheet.png" alt=""><span class="coins">🪙 899</span>
+      <div class="sheet"><div class="head"><svg viewBox="0 0 300 300" data-badge></svg><span><b>Mini Bolides</b><small>COURSE DE PETITES VOITURES</small></span></div>
+        <div class="btn primary">Championnat</div><div class="btn daily">🎯 <span>Défi du jour<small>Touche les murs 2 fois au plus · +250 🪙</small></span></div>
+        <div class="split"><div class="btn">Course libre</div><div class="btn">Garage</div><div class="btn">Boutique</div></div>
+        <div class="split" style="grid-template-columns:1fr 1fr"><div class="btn">Trophées</div><div class="btn">Réglages</div></div></div></div>
+      <h2>D · En tête de la feuille</h2><p>Écusson et nom en haut de la feuille, au-dessus des boutons (rangés par 3 pour garder la même hauteur). La 3D n'a plus rien dessus.</p></div>
+  </div>
+</div>
+<script>
+const INK = '#2b2230', TOM = '#e5352b', BUT = '#ffd23f', CRE = '#fff6e6';
+let n = 0;
+function badge() {
+  const id = 'b' + n++;
+  let chk = ''; for (let i = 0; i < 12; i++) for (let j = 0; j < 2; j++) chk += `<rect x="${60 + i * 15}" y="${186 + j * 12}" width="15.2" height="12.2" fill="${(i + j) % 2 ? INK : CRE}"/>`;
+  return `<defs><path id="${id}t" d="M45 150 A105 105 0 0 1 255 150"/><path id="${id}b" d="M36 150 A114 114 0 0 0 264 150"/><clipPath id="${id}k"><circle cx="150" cy="150" r="84"/></clipPath></defs>
+    <circle cx="150" cy="150" r="140" fill="${INK}"/><circle cx="150" cy="150" r="131" fill="none" stroke="${CRE}" stroke-width="2.5"/><circle cx="150" cy="150" r="86" fill="none" stroke="${CRE}" stroke-width="2.5"/>
+    <text font-family="Unbounded" font-weight="800" font-size="27" letter-spacing="5" fill="${CRE}"><textPath href="#${id}t" startOffset="50%" text-anchor="middle">MINI BOLIDES</textPath></text>
+    <text font-family="Saira" font-weight="600" font-size="14.5" letter-spacing="2.6" fill="${BUT}"><textPath href="#${id}b" startOffset="50%" text-anchor="middle" dominant-baseline="hanging">COURSE DE PETITES VOITURES</textPath></text>
+    <circle cx="32" cy="150" r="4" fill="${TOM}"/><circle cx="268" cy="150" r="4" fill="${TOM}"/>
+    <g clip-path="url(#${id}k)"><rect x="60" y="60" width="180" height="180" fill="${TOM}"/>${chk}<rect x="60" y="210" width="180" height="40" fill="#b8241c"/></g>
+    <g transform="translate(80 118) scale(1.18)"><path d="M6 43 C6 35 12 32 22 31 L40 29 C47 21 55 17 67 17 L77 17 C86 17 92 23 96 29 L109 32 C115 34 117 38 117 43 L117 45 L6 45 Z" fill="${CRE}"/>
+      <path d="M47 29 C52 23 57 21 64 21 L66 21 L66 29 Z M70 21 L77 21 C82 21 86 24 89 29 L70 29 Z" fill="${INK}"/>
+      <circle cx="31" cy="45" r="10.5" fill="${INK}"/><circle cx="31" cy="45" r="4.2" fill="${BUT}"/><circle cx="94" cy="45" r="10.5" fill="${INK}"/><circle cx="94" cy="45" r="4.2" fill="${BUT}"/></g>`;
+}
+document.querySelectorAll('[data-badge]').forEach((s) => { s.innerHTML = badge(); });
+</script>
+</body>
+</html>
