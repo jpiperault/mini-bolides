@@ -481,15 +481,27 @@
         const a = cs[i], b = cs[j], dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz, min = CAR_R * 2;
         if (d2 >= min * min || d2 === 0 || Math.abs(a.y - b.y) > 2) continue;
         const d = Math.sqrt(d2), o = (0.3 * (min - d)) / d, ma = a.spec.mass, mb = b.spec.mass, sum = ma + mb;
-        a.x -= dx * o * (mb / sum); a.z -= dz * o * (mb / sum);
-        b.x += dx * o * (ma / sum); b.z += dz * o * (ma / sum);
+        let ax = -dx * o * (mb / sum), az = -dz * o * (mb / sum), bx = dx * o * (ma / sum), bz = dz * o * (ma / sum);
+        // Une voiture collée au mur ne peut pas reculer dans le mur : c'est l'autre qui s'écarte de toute la poussée.
+        // Sinon le voisin l'enfonce et le mur la renvoie à chaque pas, comme une force qui l'aspire vers le bord.
+        let w = this._wallPush(a, ax, az); if (w) { ax -= w[0]; az -= w[1]; bx -= w[0]; bz -= w[1]; }
+        w = this._wallPush(b, bx, bz); if (w) { bx -= w[0]; bz -= w[1]; ax -= w[0]; az -= w[1]; }
+        a.x += ax; a.z += az; b.x += bx; b.z += bz;
         const rear = a.prog < b.prog ? a : b;                  // celui qui percute perd un peu de vitesse
         rear.v *= 0.9975;
-        // Petit décalage latéral : deux voitures se frottent et se dépassent au lieu de rester en file.
-        const front = rear === a ? b : a, side = rear.lat >= front.lat ? 1 : -1, t = this.track, k = rear.idx;
-        rear.x += -t.tz[k] * side * 8 * DT; rear.z += t.tx[k] * side * 8 * DT;
+        // Petit décalage latéral : deux voitures se frottent et se dépassent au lieu de rester en file (pas vers un mur tout proche).
+        const front = rear === a ? b : a, side = rear.lat >= front.lat ? 1 : -1, path = rear.sc || this.track, k = rear.sc ? rear.sci : rear.idx;
+        if (side * rear.lat < path.width / 2 - CAR_R * 0.6 - 1.2) { rear.x += -path.tz[k] * side * 8 * DT; rear.z += path.tx[k] * side * 8 * DT; }
         if (a.isPlayer || b.isPlayer) { if (!this.bumpT || this.clock - this.bumpT > 0.4) { this.bumpT = this.clock; this.events.push({ t: 'bump' }); } }
       }
+    }
+
+    // Part d'un déplacement (mx, mz) qui enfoncerait la voiture dans le mur le plus proche, ou null.
+    _wallPush(c, mx, mz) {
+      const path = c.sc || this.track, i = c.sc ? c.sci : c.idx, lim = path.width / 2 - CAR_R * 0.6;
+      if (Math.abs(c.lat) < lim - 0.6) return null;
+      const s = Math.sign(c.lat), nx = -path.tz[i] * s, nz = path.tx[i] * s, out = mx * nx + mz * nz;
+      return out > 0 ? [nx * out, nz * out] : null;
     }
 
     _rollItem(c) {
