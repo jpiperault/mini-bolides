@@ -175,4 +175,17 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   const back = w.coins.filter((k) => !k.taken).length;
   check(back === 15, `pièces revenues au 2e tour : ${back}`);
 }
+{
+  // Coincé entre un rival qui serre et le mur : le joueur reste au bord, sans être enfoncé puis renvoyé à chaque pas.
+  const w = new MB.Race({ trackId: 'bol', carCount: 2, seed: 3 }), t = w.track, p = w.player, r = w.cars[1];
+  while (w.state !== 'run') w._tick({ steer: 0 });
+  const i0 = (p.idx + 30) % t.count, lim = t.width / 2 - 2.3 * 0.6;
+  const put = (c, lat) => { c.x = t.px[i0] - t.tz[i0] * lat; c.z = t.pz[i0] + t.tx[i0] * lat; c.h = Math.atan2(t.tz[i0], t.tx[i0]); c.idx = c.lastIdx = i0; c.lat = lat; c.v = 30; };
+  put(p, lim); put(r, lim - 3.5);
+  const ai = w._ai.bind(w);
+  w._ai = (c) => Object.assign(ai(c), { steer: Math.max(-1, Math.min(1, Math.atan2(Math.sin(Math.atan2(p.z - c.z, p.x - c.x) - c.h), Math.cos(Math.atan2(p.z - c.z, p.x - c.x) - c.h)) * 3)) });
+  let over = 0;
+  for (let k = 0; k < 40; k++) { w._tick({ steer: 0.3 }); over = Math.max(over, Math.abs(MB.projectTrack(t, p.x, p.z, p.idx).lat) - lim); }
+  check(over < 0.05, `coincé contre le mur par un rival : enfoncé de ${Math.max(0, over).toFixed(2)} m au plus`);
+}
 process.exit(failed ? 1 : 0);
