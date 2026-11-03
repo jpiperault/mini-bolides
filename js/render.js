@@ -965,6 +965,12 @@
           post.position.set(track.px[m] - track.tz[m] * p.side * (w + 1.2), 2.5, track.pz[m] + track.tx[m] * p.side * (w + 1.2));
           post.castShadow = true; s.add(post);
         }
+        // Plots en slalom dans le raccourci : gros bidons rayés rouge et blanc, coiffés de jaune.
+        const plotMat = new T.MeshLambertMaterial({ map: stripeTexture('#e5352b', '#fff6e6') }), capMat = new T.MeshLambertMaterial({ color: 0xffd23f });
+        for (const o of p.obst) {
+          const body = new T.Mesh(new T.CylinderGeometry(o.r * 0.92, o.r, 2.4, 20), plotMat), cap = new T.Mesh(new T.SphereGeometry(o.r * 0.92, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), capMat);
+          body.position.set(o.x, 1.2, o.z); cap.position.set(o.x, 2.4, o.z); body.castShadow = cap.castShadow = true; s.add(body, cap);
+        }
         sign.scale.set(12, 6, 1);
         sign.position.set(track.px[i] - track.tz[i] * p.side * (w + 7), 8, track.pz[i] + track.tx[i] * p.side * (w + 7));
         s.add(sign);

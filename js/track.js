@@ -105,7 +105,7 @@
       const j = Math.min(i + 1, count - 1), h = Math.max(i - 1, 0), dx = px[j] - px[h], dz = pz[j] - pz[h], l = Math.hypot(dx, dz) || 1;
       tx[i] = dx / l; tz[i] = dz / l;
     }
-    const sc = { open: true, a, b, side, count, ds: t.ds, length: len, width: SC_WIDTH, px, pz, tx, tz, win: 0 };
+    const sc = { open: true, a, b, side, count, ds: t.ds, length: len, width: SC_WIDTH, px, pz, tx, tz, win: 0, edge: d[3] || 4.4 };   // edge : écart au centre pour entrer ; d[4] : longueur de porte imposée
     // Le mur s'ouvre là où le raccourci touche le bord ; on peut y entrer tout au long de la première ouverture.
     const edge = t.width / 2 + 1.5, gap = t.wallGap[side], reach = SC_WIDTH / 2 + 2;
     for (let i = a - 6; i <= b + 6; i++) {
@@ -123,11 +123,18 @@
     const inner = sc.wallHole[-side];
     sc.mouth = 0; while (sc.mouth < count && inner[sc.mouth]) sc.mouth++;
     sc.tail = 0; while (sc.tail < count && inner[count - 1 - sc.tail]) sc.tail++;
-    sc.door = Math.min(sc.win, 6);                            // porte d'entrée étroite (~12 m) : on la vise, on n'y tombe pas
+    sc.door = Math.min(sc.win, d[4] || 14);                           // porte d'entrée (~28 m) : il faut la viser, mais on y arrive
     // Dalle turbo juste avant la jonction, sur la partie propre au raccourci : plus loin, la branche
     // recouvre déjà le circuit et la voiture y repasse sur la route normale (la dalle n'y servirait à rien).
     sc.padEnd = Math.max(10, count - 2 - sc.tail);
     sc.pad = sc.padEnd - 9;
+    // Le péril : des plots en slalom au milieu de la branche. Les toucher fait tourner la voiture.
+    sc.obst = [];
+    const o0 = sc.mouth + 10, o1 = sc.pad - 2;                   // deux plots bien espacés : le temps de changer de côté
+    for (let k = 0; k < 2; k++) {
+      const q = Math.round(o0 + (o1 - o0) * (k ? 0.85 : 0.15)), lat = (k % 2 ? -1 : 1) * side * 1.9;   // il bouche le milieu : on passe d'un côté puis de l'autre
+      sc.obst.push({ q, lat, r: 1.25, x: px[q] - tz[q] * lat, z: pz[q] + tx[q] * lat });
+    }
     return sc;
   }
 
@@ -160,7 +167,7 @@
     return Object.assign({}, def, {
       pts: [def.pts[0], ...def.pts.slice(1).reverse()],
       jumps: (def.jumps || []).map(flip),
-      shortcuts: (def.shortcuts || []).map(([a, b, side]) => [flip(b), flip(a) || 1, -side]),
+      shortcuts: (def.shortcuts || []).map(([a, b, side, edge, door]) => [flip(b), flip(a) || 1, -side, edge, door]),
     });
   };
 

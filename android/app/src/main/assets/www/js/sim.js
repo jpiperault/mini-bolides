@@ -9,7 +9,6 @@
 
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const STEER_BASE = 0.5, STEER_LOOK = 9, WALL_OFF = 0.2, ASSIST_BACK = 0.8, NEUTRAL_BACK = 0.22, DRIFT_ARM = 0.3, DRIFT_L1 = 0.35, DRIFT_L2 = 0.8, DUEL_GAP = 30;
-  const SC_EDGE = 5.4;                                     // entrée du raccourci : coller au bord, entre les deux poteaux
   const CAR_R = 2.3, COIN_R = 3.4, RAMP_H = 1.6, RAMP_N = 5;
   // Contacts avec les objets au sol : la voiture est une gélule (axe ±CAR_AXIS, rayon CAR_SIDE) qui suit
   // sa carrosserie (~4,9 m sur 2,3 m), et non plus un point au centre : le nez ou le flanc comptent aussi.
@@ -142,14 +141,14 @@
       if (this.playerFinished) this._finishAll();
     }
 
-    // Rival sur le raccourci : il suit son axe et ralentit dans les courbes de la branche.
+    // Rival sur le raccourci : il suit son axe, contourne les plots et ralentit dans les courbes de la branche.
     _aiBranch(c) {
-      const p = c.sc, look = Math.round((8 + c.v * 0.35) / p.ds), i = Math.min(c.sci + look, p.count - 1);
+      const p = c.sc, look = Math.round((8 + c.v * 0.35) / p.ds), i = Math.min(c.sci + look, p.count - 1), aim = MB.branchAim(p, c.sci, i, c.aiSlip || 0);
       let bend = 0;
       for (let k = 0; k < 14; k++) { const j = Math.min(c.sci + k, p.count - 2); bend = Math.max(bend, Math.abs(angleDiff(Math.atan2(p.tz[j + 1], p.tx[j + 1]), Math.atan2(p.tz[j], p.tx[j]))) / p.ds); }
       const cornerV = Math.max((c.spec.turn * 1.25) / Math.max(bend, 1e-3), c.spec.vmax * 0.74);
       if (c.item) { c.itemDelay -= DT; if (c.itemDelay <= 0) this._useItem(c); }
-      return { steer: clamp(angleDiff(Math.atan2(p.pz[i] - c.z, p.px[i] - c.x), c.h) * 3.2, -1, 1), limit: Math.min(cornerV, c.spec.vmax * this.diff.skill * c.style.pace), ai: true };
+      return { steer: clamp(angleDiff(Math.atan2(aim[1] - c.z, aim[0] - c.x), c.h) * 3.2, -1, 1), limit: Math.min(cornerV, c.spec.vmax * this.diff.skill * c.style.pace), ai: true };
     }
 
     _ai(c) {
@@ -209,7 +208,7 @@
       c.branch = null;
       if (isP && !c.sc && inSteer) for (const q of t.shortcuts) {
         const into = (c.idx - q.a + t.count) % t.count;
-        if (Math.sign(inSteer) === q.side && c.lat * q.side > SC_EDGE - 1.5 && (into < q.door + 4 || into > t.count - 20)) c.branch = q;
+        if (Math.sign(inSteer) === q.side && c.lat * q.side > q.edge - 1.5 && (into < q.door + 4 || into > t.count - 20)) c.branch = q;
       }
       if (isP) {
         // Le doigt répond tout de suite ; au-delà, le braquage n'augmente que si la route le demande :
@@ -348,6 +347,18 @@
         c.sci = pr.i; c.lat = pr.lat; c.onWall = false;
         c.idx = Math.round(p.a + ((p.b - p.a) * pr.i) / (p.count - 1));
         const backward = Math.cos(c.h) * p.tx[pr.i] + Math.sin(c.h) * p.tz[pr.i] < 0;
+        for (const o of p.obst) {                                       // plots du raccourci : on rebondit dessus et on part en toupie
+          const d = bodyDist(c, o.x, o.z), min = o.r + CAR_SIDE;
+          if (c.y > 0.8 || d >= min) continue;
+          const nx = c.x - o.x, nz = c.z - o.z, nl = Math.hypot(nx, nz) || 1;
+          c.x += (nx / nl) * (min - d); c.z += (nz / nl) * (min - d);
+          if (c.bumpT > this.clock) continue;
+          c.bumpT = this.clock + 1;
+          if (c.shield > 0) { c.shield = 0; this.events.push({ t: 'pop', car: c.id, x: c.x, z: c.z }); continue; }
+          c.spin = 0.6; c.drifting = false; c.charge = 0; c.v *= 0.7; c.aiSlip = 0;
+          this.events.push({ t: 'plot', car: c.id, x: o.x, z: o.z });
+          if (c.isPlayer) this.events.push({ t: 'spin', why: 'plot' });
+        }
         if (pr.i >= p.pad && pr.i <= p.padEnd + 3 && c.padT !== p.a + this.lap(c) * 1000) {   // la dalle turbo de sortie, une fois par passage
           c.padT = p.a + this.lap(c) * 1000;
           if (c.boost < 0.7) { c.boost = 0.7; c.boostPow = 1.15; }
@@ -363,13 +374,14 @@
         c.idx = pr.i; c.lat = pr.lat; c.onWall = false;
         if (c.isPlayer || c.scWant) for (const q of t.shortcuts) {
           const into = (pr.i - q.a + t.count) % t.count;
-          if ((into >= q.door && into < t.count - 6) || pr.lat * q.side < SC_EDGE || (!c.isPlayer && c.scWant !== q)) continue;   // le mur s'ouvre un peu avant a
+          if ((into >= q.door && into < t.count - 6) || pr.lat * q.side < q.edge || (!c.isPlayer && c.scWant !== q)) continue;   // le mur s'ouvre un peu avant a
           // Il faut longer le bord pour entrer : la trajectoire normale, même large, reste sur le circuit.
           // La voiture glisse alors en douceur sur la branche (scEase) au lieu d'être poussée comme contre un mur.
           const sp = MB.projectPath(q, c.x, c.z, into > t.count / 2 ? 0 : Math.min(into, q.count - 1)), on = Math.abs(sp.lat) <= q.width / 2 - CAR_R * 0.6;
           if (sp.i < q.count / 2) {
             const fresh = !c.scSeen || this.clock - c.scSeen > 3;
             c.sc = q; c.sci = sp.i; c.lat = sp.lat; c.scSeen = this.clock; c.scEase = on ? 0 : 0.6; c.scWant = null;
+            if (!c.isPlayer) c.aiSlip = this.random() < this.diff.plot ? 1 + this.random() * 2 : 0;   // parfois un rival rate son slalom
             if (fresh) this.events.push(c.isPlayer ? { t: 'shortcut' } : { t: 'rivalShortcut', car: c.id });
             return;
           }
@@ -590,10 +602,17 @@
 
   // Pilote automatique pour les tests : se comporte comme un doigt qui tient gauche/droite.
   // opts.shortcut : vise les raccourcis.
+  // Point visé dans un raccourci : l'axe, décalé du côté libre du prochain plot (slip = erreur du pilote, en points).
+  MB.branchAim = function (p, sci, i, slip) {
+    let lat = 0;
+    for (const o of p.obst) if (o.q + 2 >= sci && o.q - sci < 22) { lat = -Math.sign(o.lat) * 2.6; if (slip) lat = -Math.sign(o.lat) * 0.4; break; }
+    return [p.px[i] - p.tz[i] * lat, p.pz[i] + p.tx[i] * lat];
+  };
+
   MB.botInput = function (race, opts) {
     const c = race.player, t = race.track, look = Math.round((10 + c.v * 0.42) / t.ds);
     if (c.sc) {
-      const p = c.sc, i = Math.min(c.sci + look, p.count - 1), d = angleDiff(Math.atan2(p.pz[i] - c.z, p.px[i] - c.x), c.h);
+      const p = c.sc, a = MB.branchAim(p, c.sci, Math.min(c.sci + Math.round(look * 0.6), p.count - 1), 0), d = angleDiff(Math.atan2(a[1] - c.z, a[0] - c.x), c.h);
       return { steer: Math.abs(d) < 0.09 ? 0 : Math.sign(d), item: !!c.item };
     }
     const i = (c.idx + look) % t.count;

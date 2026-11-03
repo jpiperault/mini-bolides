@@ -422,6 +422,7 @@
             else Sound.play('use', [520, 0.25, 'triangle', 0.16, 1040]);
           } break;
         case 'splat': view.splat(e.x, e.z); break;
+        case 'plot': if (e.car === race.player.id) { flash(lang === 'fr' ? 'Aïe, le plot !' : 'Ouch, the post!'); Sound.play('bump', [110, 0.12, 'square', 0.12], 0.1); buzz(40); view.shake(0.5); } break;
         case 'marbleHit': view.splat(e.x, e.z, 0x3f8fe0); if (e.by === race.player.id && e.car !== race.player.id) { stat.marbles++; flash(lang === 'fr' ? 'Touché !' : 'Hit!', 'boost'); Sound.play('bump', [150, 0.08, 'square', 0.08], 0.12); buzz(20); } break;
         case 'marbleBounce': if (!marbleT || race.clock - marbleT > 0.15) { marbleT = race.clock; Sound.play('tap', [900, 0.04, 'triangle', 0.06]); } break;
         case 'pop': view.pop(e.x, e.z); if (e.car === race.player.id) { flash(lang === 'fr' ? 'Bulle éclatée, sauvé !' : 'Bubble burst, saved!', 'boost'); Sound.play('pop', [900, 0.18, 'sine', 0.16, 240]); buzz(30); } break;
@@ -437,7 +438,7 @@
     drift: ['↪️ Virage ! Braque fort et garde : tu drifts', '↪️ Corner! Steer hard and hold to drift'],
     release: ['🔥 Relâche maintenant : TURBO !', '🔥 Release now: TURBO!'],
     item: ['🎁 Touche le bouton en bas pour utiliser ton bonus', '🎁 Tap the button below to use your bonus'],
-    shortcut: ['»» Colle-toi au bord vers les chevrons : raccourci !', '»» Hug the edge at the yellow arrows: shortcut!'],
+    shortcut: ['»» Longe le bord aux chevrons : raccourci ! Gare aux plots.', '»» Hug the edge at the yellow arrows: shortcut! Mind the posts.'],
   };
   let coachT = null;
   function coach(key) {

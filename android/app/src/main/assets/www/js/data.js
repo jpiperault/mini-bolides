@@ -143,7 +143,7 @@
       jumps: [0.66], shortcuts: [[0.7, 0.96, 1]],
       pts: [[85, 36], [72, 56], [71, 62], [65, 79], [53, 88], [45, 93], [43, 68], [29, 65], [17, 61], [26, 48], [35, 38], [40, 31], [44, 22], [58, 15], [65, 13], [76, 29]] },
     { id: 'glacier', name: { fr: 'Le Glacier Vanille', en: 'Vanilla Glacier' }, mood: 'neige', seed: 83, grip: 0.94,
-      jumps: [0.49, 0.8], shortcuts: [[0.307, 0.6, 1]],
+      jumps: [0.49, 0.8], shortcuts: [[0.307, 0.6, 1, 4.4, 6]],
       pts: [[30, 58], [24, 43], [19, 31], [35, 23], [39, 17], [54, 29], [69, 15], [81, 24], [83, 41], [82, 51], [70, 68], [69, 76], [61, 93], [49, 91], [31, 87], [38, 63]] },
     { id: 'ville', name: { fr: 'Le Tapis de Ville', en: 'Playmat City' }, mood: 'ville', seed: 97,
       jumps: [0.52, 0.63],
@@ -208,9 +208,9 @@
 
   // skill = fraction de la vitesse max des rivaux ; le rattrapage reste doux pour que gagner ait du sens.
   MB.DIFFS = {
-    facile: { label: { fr: 'Facile', en: 'Easy' }, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2 },
-    normal: { label: { fr: 'Normal', en: 'Normal' }, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35 },
-    expert: { label: { fr: 'Expert', en: 'Expert' }, skill: 1.08, catchUp: 0.12, slowDown: 0.02, duel: 0.32, gain: 1.6, sc: 0.5 },
+    facile: { label: { fr: 'Facile', en: 'Easy' }, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },
+    normal: { label: { fr: 'Normal', en: 'Normal' }, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35, plot: 0.2 },
+    expert: { label: { fr: 'Expert', en: 'Expert' }, skill: 1.08, catchUp: 0.12, slowDown: 0.02, duel: 0.32, gain: 1.6, sc: 0.5, plot: 0.08 },
   };
 
   MB.ITEMS = {

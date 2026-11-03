@@ -57,13 +57,15 @@ for (const def of MB.TRACKS) {
     // Il faut longer le bord pour entrer : la trajectoire normale ne s'y engage jamais par hasard.
     check(!natural, `${def.id}: la trajectoire normale reste sur le circuit`);
     // Des rivaux l'empruntent aussi (en Normal, sur quelques courses).
-    let rivals = 0;
+    let rivals = 0, plots = 0;
     for (const seed of [11, 22, 33, 44]) {
       const r = new MB.Race({ trackId: def.id, carId: 'bolide', diff: 'normal', seed });
       let n = 0;
-      while (r.state !== 'done' && n++ < 60 * 400) { r.step(1 / 60, MB.botInput(r)); rivals += r.events.filter((e) => e.t === 'rivalShortcut').length; r.events.length = 0; }
+      while (r.state !== 'done' && n++ < 60 * 400) { r.step(1 / 60, MB.botInput(r)); rivals += r.events.filter((e) => e.t === 'rivalShortcut').length; plots += r.events.filter((e) => e.t === 'plot').length; r.events.length = 0; }
     }
     check(rivals >= 2, `${def.id}: raccourci pris ${rivals} fois par les rivaux sur 4 courses`);
+    // Le péril : deux plots en slalom ; les rivaux s'y font parfois piéger, sans y rester coincés.
+    check(p.obst.length === 2 && plots >= 1 && plots <= rivals, `${def.id}: plots touchés ${plots} fois par les rivaux pour ${rivals} passages`);
   }
   if (t.jumps.length) {
     const r = new MB.Race({ trackId: def.id, carId: 'bolide', diff: 'facile', seed: 7 });
