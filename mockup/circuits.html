@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choix du circuit — maquettes</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+<script src="circuits-data.js"></script>
+<style>
+:root { --cream: #fff6e6; --ink: #2b2230; --muted: #7b6c72; --tomato: #e5352b; --butter: #ffd23f; --butter-d: #d9a514; --mint: #25b98a; --line: rgba(43, 34, 48, .14);
+  --display: 'Unbounded', 'Arial Black', sans-serif; --body: 'Saira', 'Segoe UI', sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #ffe6c4; color: var(--ink); font-family: var(--body); }
+header { max-width: 1180px; margin: 0 auto; padding: 28px 16px 8px; }
+header h1 { font-family: var(--display); font-size: clamp(22px, 5vw, 32px); margin: 0 0 6px; }
+header p { margin: 0; color: var(--muted); font-weight: 600; max-width: 720px; }
+.props { max-width: 1180px; margin: 0 auto; padding: 8px 16px 40px; }
+.prop { margin-top: 30px; }
+.prop h2 { font-family: var(--display); font-size: 20px; margin: 0 0 4px; }
+.prop .why { margin: 0 0 14px; color: var(--muted); font-weight: 600; max-width: 760px; }
+.phones { display: flex; gap: 22px; flex-wrap: wrap; }
+.phone { width: 340px; max-width: 100%; height: 690px; border-radius: 34px; background: var(--cream); border: 8px solid #2b2230; overflow: hidden; position: relative; box-shadow: 0 14px 30px rgba(43,34,48,.25); }
+.cap { font-size: 13px; color: var(--muted); font-weight: 700; margin: 8px 4px 0; max-width: 340px; }
+.scroll { position: absolute; inset: 0; overflow-y: auto; padding: 16px 14px 90px; scrollbar-width: none; }
+.top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.back, .coins { background: #fff; border-radius: 14px; padding: 8px 12px; font-family: var(--display); font-weight: 800; font-size: 14px; box-shadow: 0 3px 0 var(--line); }
+h3 { font-family: var(--display); font-size: 20px; margin: 4px 0 10px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.tabs b { flex: 1; text-align: center; padding: 9px 4px; border-radius: 14px; background: #fff; border: 2px solid var(--line); font-size: 13px; }
+.tabs b.on { background: var(--butter); border-color: var(--butter-d); }
+.stars { color: var(--tomato); letter-spacing: 1px; font-size: 13px; white-space: nowrap; }
+.stars i { color: #d9cfc3; font-style: normal; }
+svg.map { display: block; }
+
+/* A — Galerie */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.card { border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 3px 0 var(--line); cursor: pointer; }
+.card .art { aspect-ratio: 1.15; position: relative; }
+.card .art svg { position: absolute; inset: 8% 10%; width: 80%; height: 84%; }
+.card .info { padding: 7px 9px 8px; }
+.card .nm { font-weight: 700; font-size: 13px; line-height: 1.15; min-height: 30px; }
+.card .row { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+.dots { display: flex; gap: 3px; }
+.dots span { width: 18px; height: 18px; border-radius: 6px; display: grid; place-items: center; font-size: 11px; background: #f3ebe0; }
+.dots span.done { background: var(--butter); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--cream); border-radius: 26px 26px 0 0; padding: 14px 16px 18px; box-shadow: 0 -10px 30px rgba(43,34,48,.3); }
+.sheet .grab { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
+.dim { position: absolute; inset: 0; background: rgba(43,34,48,.45); }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 12px 0; }
+.mode { border-radius: 16px; padding: 10px; background: #fff; border: 2px solid var(--line); cursor: pointer; position: relative; }
+.mode.on { border-color: var(--butter-d); background: #fff4c7; }
+.mode .ic { font-size: 22px; }
+.mode .t { font-weight: 700; font-size: 14px; }
+.mode .r { font-size: 12px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+.mode.lock { opacity: .55; }
+.mode.lock::after { content: '🔒'; position: absolute; top: 8px; right: 9px; font-size: 14px; }
+.go { display: block; width: 100%; padding: 14px; border: 0; border-radius: 18px; background: var(--tomato); color: #fff; font-family: var(--display); font-weight: 800; font-size: 18px; box-shadow: 0 4px 0 #a82018; cursor: pointer; }
+.hint { font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 8px; text-align: center; }
+
+/* B — Carrousel */
+.big { border-radius: 24px; overflow: hidden; position: relative; aspect-ratio: .92; box-shadow: 0 4px 0 var(--line); transition: background .3s; }
+.big svg { position: absolute; inset: 10% 8% 18%; width: 84%; height: 72%; }
+.big .lbl { position: absolute; left: 14px; right: 14px; bottom: 12px; color: #fff; font-family: var(--display); font-weight: 800; font-size: 17px; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
+.big .nav { position: absolute; top: 46%; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.9); display: grid; place-items: center; font-weight: 800; cursor: pointer; }
+.big .fx { position: absolute; inset: 0; pointer-events: none; }
+.seg { display: flex; background: #fff; border-radius: 16px; padding: 4px; margin: 12px 0 8px; box-shadow: 0 3px 0 var(--line); }
+.seg b { flex: 1; text-align: center; padding: 7px 0 5px; border-radius: 12px; font-size: 18px; cursor: pointer; line-height: 1.1; }
+.seg b small { display: block; font-size: 10px; font-weight: 700; }
+.seg b.on { background: var(--butter); }
+.rec { display: flex; justify-content: space-between; align-items: center; background: #fff; border-radius: 14px; padding: 9px 12px; font-weight: 700; margin-bottom: 10px; }
+.pag { display: flex; justify-content: center; gap: 5px; margin: 8px 0 12px; }
+.pag i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.pag i.on { background: var(--ink); width: 18px; border-radius: 4px; }
+
+/* C — Mondes */
+.world { margin: 14px 0 6px; display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: 14px; }
+.world .chip { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; font-size: 15px; }
+.world small { margin-left: auto; font-family: var(--body); font-weight: 700; color: var(--muted); }
+.line { background: #fff; border-radius: 16px; margin-bottom: 8px; box-shadow: 0 3px 0 var(--line); overflow: hidden; }
+.line .head { display: flex; gap: 10px; align-items: center; padding: 8px 10px; cursor: pointer; }
+.line .thumb { width: 46px; height: 46px; border-radius: 12px; flex: none; position: relative; }
+.line .thumb svg { position: absolute; inset: 5px; width: 36px; height: 36px; }
+.line .nm { font-weight: 700; font-size: 14px; line-height: 1.15; }
+.line .badges { display: flex; gap: 4px; margin-top: 3px; }
+.line .badges span { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 7px; background: #f3ebe0; color: var(--muted); }
+.line .badges span.done { background: #fff1b8; color: var(--ink); }
+.line .more { padding: 0 10px 10px; display: none; }
+.line.open .more { display: block; }
+.mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.mini b { background: #f7f0e6; border-radius: 12px; padding: 7px 2px; text-align: center; font-size: 17px; cursor: pointer; border: 2px solid transparent; }
+.mini b small { display: block; font-size: 10px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mini b.on { border-color: var(--butter-d); background: #fff4c7; }
+.mini b.lock { opacity: .45; }
+.floatgo { position: absolute; left: 14px; right: 14px; bottom: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Choix du circuit : 3 propositions</h1>
+  <p>Les tracés sont les vrais circuits du jeu, raccourci en pointillé. Les écrans sont cliquables : touche une carte, un mode (Normal, Nuit, Pluie, Inverse), les flèches du carrousel.</p>
+</header>
+<div class="props">
+
+  <section class="prop">
+    <h2>A · Galerie + feuille de modes</h2>
+    <p class="why">Une grille de cartes illustrées (couleur du décor + tracé). Un toucher ouvre une feuille en bas avec les 4 modes, chacun avec son record et ses étoiles. Les petites pastilles sur la carte montrent les modes déjà terminés.</p>
+    <div class="phones">
+      <div><div class="phone"><div class="scroll" id="a1"></div></div><div class="cap">1. La grille : 2 circuits par ligne, on voit 6 circuits sans défiler.</div></div>
+      <div><div class="phone" id="a2wrap"><div class="scroll" id="a2"></div><div class="dim"></div><div class="sheet" id="a2s"></div></div><div class="cap">2. Après un toucher : la feuille des modes. Nuit, Pluie et Inverse se débloquent avec 2 ★ en Normal.</div></div>
+    </div>
+  </section>
+
+  <section class="prop">
+    <h2>B · Carrousel, un circuit à la fois</h2>
+    <p class="why">Un grand aperçu par circuit, on glisse pour changer. L'aperçu change d'ambiance selon le mode choisi (nuit étoilée, pluie, flèche de sens). Plus spectaculaire, mais il faut glisser pour voir les autres circuits.</p>
+    <div class="phones">
+      <div><div class="phone"><div class="scroll" id="b1"></div><div class="floatgo"><button class="go">COURIR</button></div></div><div class="cap">Touche les modes et les flèches ‹ › : l'aperçu suit.</div></div>
+    </div>
+  </section>
+
+  <section class="prop">
+    <h2>C · Liste par mondes</h2>
+    <p class="why">Les circuits regroupés par monde (Cuisine, Plage, Forêt, Neige, Ville, Chambre) avec le total d'étoiles. Chaque ligne montre ses 4 modes en badges et s'ouvre d'un toucher. Le plus compact, et la progression se lit d'un coup d'œil.</p>
+    <div class="phones">
+      <div><div class="phone"><div class="scroll" id="c1"></div><div class="floatgo"><button class="go" id="cgo">COURIR · La Dune ☀️</button></div></div><div class="cap">Touche une ligne pour l'ouvrir, puis un mode.</div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const BG = { matin: ['#ffd9a8', '#f2a865'], midi: ['#cfe8fb', '#8cc3ea'], minuit: ['#2b3570', '#141b3c'], sable: ['#ffe0a3', '#f0b45e'], foret: ['#cfe6b8', '#8fbf6e'], neige: ['#eaf4fd', '#a9cdec'], ville: ['#3a3378', '#1b1f42'], chambre: ['#fbe3f1', '#e6b4d4'] };
+const WORLDS = [['Cuisine', '🍳', ['bol', 'tartine', 'minuit'], 'matin'], ['Plage', '🏖️', ['dune', 'chateau'], 'sable'], ['Forêt', '🌿', ['sentier'], 'foret'], ['Neige', '❄️', ['banquise', 'glacier'], 'neige'], ['Ville', '🏙️', ['ville'], 'ville'], ['Chambre', '🧸', ['doudou', 'coffre'], 'chambre']];
+const MODES = [['normal', '☀️', 'Normal'], ['nuit', '🌙', 'Nuit'], ['pluie', '🌧️', 'Pluie'], ['inverse', '🔄', 'Inverse']];
+const IDS = Object.keys(TR);
+// Progression fictive : records du Normal repris de la capture, quelques modes déjà faits.
+const REC = { bol: '0:19.47', tartine: '0:18.23', minuit: '0:20.12', dune: '0:16.68', sentier: '0:19.98', chateau: '0:18.42', banquise: '0:20.42', glacier: '0:19.71', ville: '0:21.05', doudou: '0:23.40', coffre: '0:22.16' };
+const DONE = { bol: { nuit: 3, pluie: 2 }, dune: { nuit: 2 }, tartine: { inverse: 1 }, minuit: { pluie: 3 } };
+const stars = (n) => '★'.repeat(n) + '<i>' + '★'.repeat(3 - n) + '</i>';
+const normalStars = (id) => (id === 'coffre' ? 1 : id === 'doudou' ? 2 : 3);
+const modeStars = (id, m) => (m === 'normal' ? normalStars(id) : (DONE[id] || {})[m] || 0);
+const locked = (id, m) => m !== 'normal' && normalStars(id) < 2;
+const modeRec = (id, m) => (m === 'normal' ? REC[id] : modeStars(id, m) ? REC[id].replace(/\d\d$/, (d) => String((+d + 37 * m.length) % 100).padStart(2, '0')) : '—');
+
+function art(id, mode, stroke) {
+  const t = TR[id], dark = mode === 'nuit', w = stroke || 7;
+  const rev = mode === 'inverse';
+  return `<svg class="map" viewBox="0 0 100 100"><path d="${t.p}" fill="none" stroke="${dark ? '#0b0f26' : 'rgba(43,34,48,.28)'}" stroke-width="${w + 4}" stroke-linejoin="round"/>
+    <path d="${t.p}" fill="none" stroke="${dark ? '#c9d2ff' : '#fff'}" stroke-width="${w}" stroke-linejoin="round"/>
+    ${t.sc ? `<path d="${t.sc}" fill="none" stroke="#ffd23f" stroke-width="${w * 0.45}" stroke-dasharray="3 3" stroke-linecap="round"/>` : ''}
+    <circle cx="${t.start.split(' ')[0]}" cy="${t.start.split(' ')[1]}" r="${w * 0.7}" fill="#e5352b" stroke="#fff" stroke-width="1.5"/>
+    ${rev ? `<text x="50" y="56" text-anchor="middle" font-size="22" fill="#e5352b" font-weight="800">↺</text>` : ''}</svg>`;
+}
+function bg(id, mode) {
+  let [a, b] = BG[TR[id].mood];
+  if (mode === 'nuit') { a = '#1d2552'; b = '#070a1c'; }
+  if (mode === 'pluie') { a = '#a9b4bf'; b = '#6d7886'; }
+  return `linear-gradient(160deg, ${a}, ${b})`;
+}
+function fx(mode) {
+  if (mode === 'nuit') return '<svg class="fx" viewBox="0 0 100 100" preserveAspectRatio="none">' + Array.from({ length: 22 }, (_, i) => `<circle cx="${(i * 37) % 100}" cy="${(i * 53) % 40}" r="${i % 3 ? 0.4 : 0.7}" fill="#fff" opacity=".8"/>`).join('') + '<circle cx="84" cy="12" r="5" fill="#fff4cf"/></svg>';
+  if (mode === 'pluie') return '<svg class="fx" viewBox="0 0 100 100" preserveAspectRatio="none">' + Array.from({ length: 40 }, (_, i) => { const x = (i * 29) % 104, y = (i * 47) % 100; return `<line x1="${x}" y1="${y}" x2="${x - 2}" y2="${y + 7}" stroke="#fff" stroke-width=".5" opacity=".6"/>`; }).join('') + '</svg>';
+  return '';
+}
+const topBar = '<div class="top"><span class="back">←</span><span class="coins">🪙 2292</span></div><h3>Choisis un circuit</h3><div class="tabs"><b class="on">🏁 Course</b><b>⏱️ Contre-la-montre</b></div>';
+
+// A
+function cardA(id) {
+  const dots = MODES.map(([m, ic]) => `<span class="${modeStars(id, m) ? 'done' : ''}">${ic}</span>`).join('');
+  return `<div class="card" data-id="${id}"><div class="art" style="background:${bg(id, 'normal')}">${art(id, 'normal')}</div>
+    <div class="info"><div class="nm">${TR[id].name}</div><div class="row"><span class="stars">${stars(normalStars(id))}</span><span class="dots">${dots}</span></div></div></div>`;
+}
+document.getElementById('a1').innerHTML = topBar + '<div class="grid">' + IDS.map(cardA).join('') + '</div>';
+document.getElementById('a2').innerHTML = topBar + '<div class="grid">' + IDS.map(cardA).join('') + '</div>';
+let aSel = 'dune', aMode = 'normal';
+function sheetA() {
+  const id = aSel;
+  document.getElementById('a2s').innerHTML = `<div class="grab"></div>
+    <div style="display:flex;gap:12px;align-items:center"><div style="width:62px;height:62px;border-radius:16px;position:relative;background:${bg(id, aMode)}">${art(id, aMode, 9).replace('class="map"', 'class="map" style="position:absolute;inset:6px;width:50px;height:50px"')}</div>
+    <div><div style="font-family:var(--display);font-weight:800;font-size:16px">${TR[id].name}</div><div class="stars">${stars(normalStars(id))} <span style="color:var(--muted);font-weight:700">en Normal</span></div></div></div>
+    <div class="modes">${MODES.map(([m, ic, n]) => `<div class="mode ${m === aMode ? 'on' : ''} ${locked(id, m) ? 'lock' : ''}" data-m="${m}"><div class="ic">${ic}</div><div class="t">${n}</div><div class="r">${locked(id, m) ? '2 ★ en Normal' : modeRec(id, m) + ' · <span class="stars">' + stars(modeStars(id, m)) + '</span>'}</div></div>`).join('')}</div>
+    <button class="go">COURIR</button>`;
+}
+sheetA();
+document.getElementById('a2wrap').addEventListener('click', (e) => {
+  const c = e.target.closest('.card'), m = e.target.closest('.mode');
+  if (c) { aSel = c.dataset.id; aMode = 'normal'; sheetA(); }
+  if (m && !m.classList.contains('lock')) { aMode = m.dataset.m; sheetA(); }
+});
+
+// B
+let bI = IDS.indexOf('dune'), bMode = 'normal';
+function drawB() {
+  const id = IDS[bI];
+  document.getElementById('b1').innerHTML = topBar +
+    `<div class="big" style="background:${bg(id, bMode)}">${fx(bMode)}${art(id, bMode, 5)}<div class="lbl">${TR[id].name}</div><span class="nav" data-d="-1" style="left:8px">‹</span><span class="nav" data-d="1" style="right:8px">›</span></div>
+    <div class="pag">${IDS.map((x, i) => `<i class="${i === bI ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="seg">${MODES.map(([m, ic, n]) => `<b class="${m === bMode ? 'on' : ''}" data-m="${m}" style="${locked(id, m) ? 'opacity:.4' : ''}">${locked(id, m) ? '🔒' : ic}<small>${n}</small></b>`).join('')}</div>
+    <div class="rec"><span>${locked(id, bMode) ? 'Gagne 2 ★ en Normal pour débloquer' : 'Record ' + modeRec(id, bMode)}</span><span class="stars">${stars(modeStars(id, bMode))}</span></div>`;
+}
+drawB();
+document.getElementById('b1').addEventListener('click', (e) => {
+  const n = e.target.closest('.nav'), m = e.target.closest('.seg b');
+  if (n) { bI = (bI + +n.dataset.d + IDS.length) % IDS.length; if (locked(IDS[bI], bMode)) bMode = 'normal'; drawB(); }
+  if (m && !locked(IDS[bI], m.dataset.m)) { bMode = m.dataset.m; drawB(); }
+});
+
+// C
+let cOpen = 'dune', cMode = 'normal';
+function drawC() {
+  document.getElementById('c1').innerHTML = topBar + WORLDS.map(([w, ic, ids, mood]) => {
+    const got = ids.reduce((s, id) => s + MODES.reduce((k, [m]) => k + modeStars(id, m), 0), 0);
+    return `<div class="world"><span class="chip" style="background:linear-gradient(160deg,${BG[mood][0]},${BG[mood][1]})">${ic}</span>${w}<small>${got} / ${ids.length * 12} ★</small></div>` + ids.map((id) => `
+      <div class="line ${id === cOpen ? 'open' : ''}" data-id="${id}"><div class="head"><div class="thumb" style="background:${bg(id, 'normal')}">${art(id, 'normal', 9)}</div>
+        <div style="flex:1"><div class="nm">${TR[id].name}</div><div class="badges">${MODES.map(([m, mi]) => `<span class="${modeStars(id, m) ? 'done' : ''}">${locked(id, m) ? '🔒' : mi} ${modeStars(id, m)}★</span>`).join('')}</div></div></div>
+        <div class="more"><div class="mini">${MODES.map(([m, mi, n]) => `<b class="${id === cOpen && m === cMode ? 'on' : ''} ${locked(id, m) ? 'lock' : ''}" data-m="${m}">${locked(id, m) ? '🔒' : mi}<small>${locked(id, m) ? '2★ Normal' : modeRec(id, m)}</small></b>`).join('')}</div></div></div>`).join('');
+  }).join('');
+  const mi = MODES.find(([m]) => m === cMode)[1];
+  document.getElementById('cgo').textContent = 'COURIR · ' + TR[cOpen].name.replace(/^(Le |La |L’|L')/, '') + ' ' + mi;
+}
+drawC();
+document.getElementById('c1').addEventListener('click', (e) => {
+  const m = e.target.closest('.mini b'), l = e.target.closest('.line');
+  if (m) { if (!m.classList.contains('lock')) { cMode = m.dataset.m; drawC(); } return; }
+  if (l && l.dataset.id !== cOpen) { cOpen = l.dataset.id; cMode = 'normal'; drawC(); }
+});
+</script>
+</body>
+</html>
