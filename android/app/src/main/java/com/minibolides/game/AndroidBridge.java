@@ -1,0 +1,117 @@
+package com.minibolides.game;
+
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebView;
+
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * Pont exposé au jeu sous le nom window.AndroidBridge.
+ *
+ * Vibrations : opérationnelles.
+ * Pubs (AdMob) et achats (Play Billing) : simulés dans le jeu tant que MB.FEATURES.demo est à true.
+ * Pour la vraie version : ajouter les dépendances, implémenter les méthodes ci-dessous, appeler sur le
+ * thread UI window.mbOnAd(true|false), window.mbOnPurchase(id, true|false) et window.mbOnRestored("id1,id2"),
+ * puis passer MB.FEATURES.demo à false dans js/data.js.
+ */
+public class AndroidBridge {
+    private static final String JOURNAL_URL = "http://192.168.91.48:8791/journal";
+    private static final int MAX_PENDING = 30;
+    private volatile String lastError = "";
+    private static final ExecutorService JOURNAL = Executors.newSingleThreadExecutor();
+
+    private final Context context;
+    private final WebView web;
+
+    public AndroidBridge(Context context, WebView web) {
+        this.context = context;
+        this.web = web;
+    }
+
+    @JavascriptInterface
+    public void vibrate(int ms) {
+        Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (v == null || !v.hasVibrator()) return;
+        v.vibrate(VibrationEffect.createOneShot(Math.max(5, Math.min(ms, 400)), VibrationEffect.DEFAULT_AMPLITUDE));
+    }
+
+    /** Journal des parties : versions de test uniquement. */
+    @JavascriptInterface
+    public boolean journalOn() { return (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0; }
+
+    @JavascriptInterface
+    public String appVersion() {
+        try { return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName; }
+        catch (Exception e) { return "?"; }
+    }
+
+    /** Garde le journal sur le téléphone, puis l'envoie : hors du réseau local, il attend la partie suivante. */
+    @JavascriptInterface
+    public void sendJournal(String json) {
+        if (!journalOn()) return;
+        JOURNAL.execute(() -> {
+            File dir = new File(context.getFilesDir(), "journaux");
+            dir.mkdirs();
+            try (FileOutputStream out = new FileOutputStream(new File(dir, System.currentTimeMillis() + ".json"))) {
+                out.write(json.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) { return; }
+            File[] pending = dir.listFiles();
+            if (pending == null) return;
+            Arrays.sort(pending);
+            for (int i = 0; i < pending.length - MAX_PENDING; i++) pending[i].delete();
+            for (File f : pending) if (f.exists() && !upload(f)) { report("Journal en attente, envoi impossible : " + lastError); return; }
+            report("Journal envoyé au serveur");
+        });
+    }
+
+    private void report(String text) {
+        web.post(() -> web.evaluateJavascript("window.mbJournal&&mbJournal(" + JSONObject.quote(text) + ")", null));
+    }
+
+    private boolean upload(File f) {
+        HttpURLConnection c = null;
+        try {
+            byte[] body = Files.readAllBytes(f.toPath());
+            c = (HttpURLConnection) new URL(JOURNAL_URL).openConnection();
+            c.setConnectTimeout(3000); c.setReadTimeout(5000); c.setDoOutput(true); c.setFixedLengthStreamingMode(body.length);
+            c.setRequestProperty("Content-Type", "application/json");
+            try (OutputStream out = c.getOutputStream()) { out.write(body); }
+            int code = c.getResponseCode();
+            if (code != 200) { lastError = "réponse " + code; return false; }
+            f.delete();
+            return true;
+        } catch (IOException e) { lastError = e.getClass().getSimpleName() + " " + e.getMessage(); return false; }
+        finally { if (c != null) c.disconnect(); }
+    }
+
+    @JavascriptInterface
+    public boolean adsReady() { return false; }
+
+    @JavascriptInterface
+    public void showRewarded(String placement) { }
+
+    @JavascriptInterface
+    public void showInterstitial() { }
+
+    @JavascriptInterface
+    public void buy(String offerId) { }
+
+    @JavascriptInterface
+    public void restorePurchases() { }
+}

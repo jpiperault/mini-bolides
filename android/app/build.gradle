@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.minibolides.game'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.minibolides.game'
+        minSdk 26
+        targetSdk 36
+        versionCode 46
+        versionName '0.9.16'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
