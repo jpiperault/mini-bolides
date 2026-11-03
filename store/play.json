@@ -14,7 +14,7 @@
   "contact": {
     "email": "contact@jupistudio.com",
     "website": "https://jupistudio.com",
-    "privacy": ""
+    "privacy": "https://jupistudio.com/mini-bolides/privacy/"
   },
   "langs": {
     "en-US": {
@@ -136,7 +136,7 @@
       ],
       [
         "Autorisations",
-        "VIBRATE uniquement"
+        "VIBRATE, POST_NOTIFICATIONS (rappel quotidien local, facultatif) et RECEIVE_BOOT_COMPLETED (reprogrammer ce rappel après un redémarrage)"
       ],
       [
         "Données chiffrées en transit",
