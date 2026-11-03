@@ -1,0 +1,17 @@
+<!doctype html>
+<!-- Icône d'appli « écusson » : #fg = calque avant transparent (432 px, icône adaptative 108 dp), #full = icône 512 px du store. -->
+<html><head><meta charset="utf-8"><style>html, body { margin: 0; background: transparent; } svg { display: block; }</style></head><body>
+<script>
+const full = location.hash === '#full', S = full ? 512 : 432;
+// Icône adaptative : le lanceur découpe ~72 dp au centre des 108 dp ; tout tient dans un cercle de 66 dp.
+const k = full ? 512 / 120 : (432 / 108) * 72 / 120, o = (S - 120 * k) / 2;
+const cells = []; for (let i = 0; i < 10; i++) for (let j = 0; j < 2; j++) cells.push(`<rect x="${14 + i * 9.2}" y="${76 + j * 6}" width="9.4" height="6.2" fill="${(i + j) % 2 ? '#2b2230' : '#fff6e6'}"/>`);
+document.body.innerHTML = `<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}"><g transform="translate(${o} ${o}) scale(${k})">
+  ${full ? '<rect width="120" height="120" fill="#2b2230"/>' : ''}
+  <circle cx="60" cy="60" r="50" fill="none" stroke="#fff6e6" stroke-width="2.5"/><circle cx="60" cy="60" r="44" fill="#e5352b"/>
+  <clipPath id="c"><circle cx="60" cy="60" r="44"/></clipPath><g clip-path="url(#c)">${cells.join('')}<rect x="14" y="88" width="92" height="20" fill="#b8241c"/></g>
+  <g transform="translate(23 47) scale(.62)"><path d="M6 43 C6 35 12 32 22 31 L40 29 C47 21 55 17 67 17 L77 17 C86 17 92 23 96 29 L109 32 C115 34 117 38 117 43 L117 45 L6 45 Z" fill="#fff6e6"/>
+    <path d="M47 29 C52 23 57 21 64 21 L66 21 L66 29 Z M70 21 L77 21 C82 21 86 24 89 29 L70 29 Z" fill="#2b2230"/>
+    <circle cx="31" cy="45" r="10.5" fill="#2b2230"/><circle cx="31" cy="45" r="4.2" fill="#ffd23f"/><circle cx="94" cy="45" r="10.5" fill="#2b2230"/><circle cx="94" cy="45" r="4.2" fill="#ffd23f"/></g>
+</g></svg>`;
+</script></body></html>

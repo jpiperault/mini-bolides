@@ -23,9 +23,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   max-height: 78vh; overflow-y: auto; touch-action: pan-y; }
 h1, h2 { font-family: var(--display); margin: 0; letter-spacing: -.01em; }
 h2 { font-size: 22px; font-weight: 800; }
-.logo { margin: calc(var(--top) + 26px) auto 0; text-align: center; font-family: var(--display); font-weight: 800; font-size: clamp(38px, 12.5vw, 62px); line-height: .98; color: #fff;
-  -webkit-text-stroke: 2px var(--tomato-d); paint-order: stroke fill; text-shadow: 0 5px 0 var(--tomato-d); transform: rotate(-3deg); }
-.logo b { display: block; color: var(--butter); font-weight: 800; }
+.logo { display: block; width: min(60vw, 32vh, 250px); height: auto; margin: calc(var(--top) + 14px) auto 0; filter: drop-shadow(0 6px 10px rgba(43, 34, 48, .35)); }
 .btn { display: block; width: 100%; min-height: 58px; padding: 12px 16px; margin-top: 12px; border-radius: 18px; font-family: var(--display); font-weight: 800; font-size: 17px;
   background: #fff; box-shadow: inset 0 0 0 2px var(--line), 0 4px 0 var(--line); transition: transform .08s; }
 .btn:active { transform: translateY(3px); }
@@ -163,7 +161,18 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
 <div id="coinbar" hidden>🪙 <span id="coinval">0</span></div>
 
 <section class="screen" id="home" hidden>
-  <div class="logo">Mini<b>Bolides</b></div>
+  <svg class="logo" viewBox="0 0 300 300" role="img" aria-label="Mini Bolides">
+    <defs><path id="lgT" d="M45 150 A105 105 0 0 1 255 150"/><path id="lgB" d="M36 150 A114 114 0 0 0 264 150"/><clipPath id="lgK"><circle cx="150" cy="150" r="84"/></clipPath>
+      <pattern id="lgC" x="60" y="186" width="30" height="24" patternUnits="userSpaceOnUse"><rect width="30" height="24" fill="#fff6e6"/><rect width="15" height="12" fill="#2b2230"/><rect x="15" y="12" width="15" height="12" fill="#2b2230"/></pattern></defs>
+    <circle cx="150" cy="150" r="140" fill="#2b2230"/><circle cx="150" cy="150" r="131" fill="none" stroke="#fff6e6" stroke-width="2.5"/><circle cx="150" cy="150" r="86" fill="none" stroke="#fff6e6" stroke-width="2.5"/>
+    <text font-family="Unbounded" font-weight="800" font-size="27" letter-spacing="5" fill="#fff6e6"><textPath href="#lgT" startOffset="50%" text-anchor="middle">MINI BOLIDES</textPath></text>
+    <text font-family="Saira" font-weight="600" font-size="14.5" letter-spacing="2.6" fill="#ffd23f"><textPath href="#lgB" startOffset="50%" text-anchor="middle" dominant-baseline="hanging" data-t="tagline"></textPath></text>
+    <circle cx="32" cy="150" r="4" fill="#e5352b"/><circle cx="268" cy="150" r="4" fill="#e5352b"/>
+    <g clip-path="url(#lgK)"><rect x="60" y="60" width="180" height="180" fill="#e5352b"/><rect x="60" y="186" width="180" height="24" fill="url(#lgC)"/><rect x="60" y="210" width="180" height="40" fill="#b8241c"/></g>
+    <g transform="translate(80 118) scale(1.18)"><path d="M6 43 C6 35 12 32 22 31 L40 29 C47 21 55 17 67 17 L77 17 C86 17 92 23 96 29 L109 32 C115 34 117 38 117 43 L117 45 L6 45 Z" fill="#fff6e6"/>
+      <path d="M47 29 C52 23 57 21 64 21 L66 21 L66 29 Z M70 21 L77 21 C82 21 86 24 89 29 L70 29 Z" fill="#2b2230"/><rect x="24" y="35" width="14" height="3" rx="1.5" fill="#2b2230" opacity=".5"/>
+      <circle cx="31" cy="45" r="10.5" fill="#2b2230"/><circle cx="31" cy="45" r="4.2" fill="#ffd23f"/><circle cx="94" cy="45" r="10.5" fill="#2b2230"/><circle cx="94" cy="45" r="4.2" fill="#ffd23f"/></g>
+  </svg>
   <div class="sheet">
     <button class="btn primary" data-go="cups" data-t="play"></button>
     <button class="btn dbtn" data-go="challenge"><b>🎯</b><span id="chalBtn"></span></button>

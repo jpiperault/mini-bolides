@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="splash">#FFE6C4</color>
-    <color name="icon_bg">#FFD23F</color>
+    <color name="icon_bg">#2B2230</color>
     <style name="GameTheme" parent="android:Theme.Material.Light.NoActionBar.Fullscreen">
         <item name="android:windowBackground">@color/splash</item>
         <item name="android:statusBarColor">@color/splash</item>
