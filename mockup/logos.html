@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logos Mini Bolides</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700&family=Saira+Condensed:wght@600;800&family=Unbounded:wght@600;800;900&family=Fraunces:ital,opsz,wght@1,9..144,800;1,9..144,900&display=swap" rel="stylesheet">
+<style>
+:root { --cream: #fff6e6; --ink: #2b2230; --muted: #7b6c72; --tomato: #e5352b; --butter: #ffd23f; --line: rgba(43,34,48,.14); }
+* { box-sizing: border-box; }
+body { margin: 0; background: #f3ead9; color: var(--ink); font-family: 'Saira', sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 16px 48px; }
+h1 { font-family: 'Unbounded', sans-serif; font-size: clamp(22px, 5vw, 32px); margin: 0 0 6px; }
+h2 { font-family: 'Unbounded', sans-serif; font-size: 19px; margin: 0 0 4px; }
+.lead { color: var(--muted); font-weight: 600; max-width: 760px; margin: 0; }
+.prop { margin-top: 30px; }
+.why { color: var(--muted); font-weight: 600; margin: 0 0 12px; max-width: 760px; }
+.row { display: grid; grid-template-columns: 1.4fr 1.4fr .8fr; gap: 14px; }
+.tile { border-radius: 20px; display: grid; place-items: center; padding: 20px; min-height: 250px; box-shadow: 0 6px 18px rgba(43,34,48,.12); }
+.tile svg { width: 100%; max-width: 380px; height: auto; display: block; }
+.light { background: #fffaf1; } .dark { background: #1d1a2b; }
+.icons { display: grid; gap: 14px; place-items: center; background: #e9dfcc; border-radius: 20px; padding: 18px; }
+.icons svg { width: 118px; height: 118px; border-radius: 28px; box-shadow: 0 8px 18px rgba(43,34,48,.25); }
+.icons small { font-weight: 700; color: var(--muted); font-size: 12px; }
+.names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 12px; }
+.names div { background: #fffaf1; border-radius: 18px; padding: 16px; box-shadow: 0 4px 12px rgba(43,34,48,.1); }
+.names b { font-family: 'Unbounded', sans-serif; font-size: 16px; display: block; margin-bottom: 4px; }
+.names p { margin: 0; color: var(--muted); font-weight: 600; font-size: 14px; }
+.names .rec { outline: 3px solid var(--tomato); }
+@media (max-width: 760px) { .row, .names { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mini Bolides : 5 logos plus classe</h1>
+  <p class="lead">Chaque proposition est montrée sur fond clair, sur fond sombre et en icône d'appli (la taille réelle sur un téléphone est encore plus petite). La petite voiture est redessinée en profil de course, plus basse et plus fine que l'icône actuelle.</p>
+
+  <section class="prop">
+    <h2>Le nom en anglais</h2>
+    <p class="why">« Bolide » existe en anglais, mais au sens de météore : un anglophone ne comprend pas « voiture de course ». En revanche, le mot sonne bien, se prononce facilement et a un petit charme français. Le plus simple est de garder le nom et d'ajouter un sous-titre qui explique le jeu, sur le store et sous le logo.</p>
+    <div class="names">
+      <div class="rec"><b>Mini Bolides</b><p>+ sous-titre « Toy Car Racing » en anglais, « Course de petites voitures » en français. Un seul nom partout, rien à refaire. Mon conseil.</p></div>
+      <div><b>Mini Bolides: Toy Racers</b><p>Titre du store anglais plus parlant pour la recherche, le logo reste « Mini Bolides ».</p></div>
+      <div><b>Un nom différent par langue</b><p>Par exemple « Tiny Turbo » en anglais. Plus clair, mais deux marques à faire vivre et à vérifier (noms déjà pris sur le store).</p></div>
+    </div>
+  </section>
+
+  <div id="props"></div>
+</div>
+
+<script>
+const INK = '#2b2230', TOM = '#e5352b', BUT = '#ffd23f', CRE = '#fff6e6', NIGHT = '#1d1a2b';
+let uid = 0;
+// Voiture de course jouet, de profil, regardant à droite (boîte 120 x 60).
+function car(body, glass, tyre, hub, x = 0, y = 0, s = 1) {
+  return `<g transform="translate(${x} ${y}) scale(${s})">
+    <path d="M6 43 C6 35 12 32 22 31 L40 29 C47 21 55 17 67 17 L77 17 C86 17 92 23 96 29 L109 32 C115 34 117 38 117 43 L117 45 L6 45 Z" fill="${body}"/>
+    <path d="M47 29 C52 23 57 21 64 21 L66 21 L66 29 Z M70 21 L77 21 C82 21 86 24 89 29 L70 29 Z" fill="${glass}"/>
+    <rect x="24" y="35" width="14" height="3" rx="1.5" fill="${glass}" opacity=".5"/>
+    ${[31, 94].map((cx) => `<circle cx="${cx}" cy="45" r="10.5" fill="${tyre}"/><circle cx="${cx}" cy="45" r="4.2" fill="${hub}"/>`).join('')}
+  </g>`;
+}
+// Damier : n colonnes x 2 rangées
+function checker(x, y, w, h, n, a, b) {
+  const c = w / n, r = h / 2; let s = '';
+  for (let i = 0; i < n; i++) for (let j = 0; j < 2; j++) s += `<rect x="${x + i * c}" y="${y + j * r}" width="${c + .2}" height="${r + .2}" fill="${(i + j) % 2 ? a : b}"/>`;
+  return s;
+}
+
+// 1. Écusson Grand Prix
+function badge(dark) {
+  const id = 'c' + uid++, bg = INK, ring = dark ? BUT : CRE;
+  return `<svg viewBox="0 0 300 300"><defs><path id="${id}t" d="M45 150 A105 105 0 0 1 255 150"/><path id="${id}b" d="M38 150 A112 112 0 0 0 262 150"/>
+    <clipPath id="${id}k"><circle cx="150" cy="150" r="84"/></clipPath></defs>
+    <circle cx="150" cy="150" r="140" fill="${bg}"/><circle cx="150" cy="150" r="131" fill="none" stroke="${ring}" stroke-width="2.5"/>
+    <circle cx="150" cy="150" r="86" fill="none" stroke="${ring}" stroke-width="2.5"/>
+    <text font-family="Unbounded" font-weight="800" font-size="27" letter-spacing="5" fill="${CRE}"><textPath href="#${id}t" startOffset="50%" text-anchor="middle">MINI BOLIDES</textPath></text>
+    <text font-family="Saira Condensed" font-weight="800" font-size="17" letter-spacing="6" fill="${BUT}"><textPath href="#${id}b" startOffset="50%" text-anchor="middle" dominant-baseline="hanging">TOY CAR RACING</textPath></text>
+    <circle cx="32" cy="150" r="4" fill="${TOM}"/><circle cx="268" cy="150" r="4" fill="${TOM}"/>
+    <g clip-path="url(#${id}k)"><rect x="60" y="60" width="180" height="180" fill="${TOM}"/>${checker(60, 186, 180, 24, 12, INK, CRE)}
+      <rect x="60" y="210" width="180" height="40" fill="#b8241c"/></g>
+    ${car(CRE, INK, INK, BUT, 80, 118, 1.18)}
+  </svg>`;
+}
+function badgeIcon() {
+  return `<svg viewBox="0 0 120 120"><rect width="120" height="120" fill="${INK}"/><circle cx="60" cy="60" r="44" fill="${TOM}"/>
+    <circle cx="60" cy="60" r="50" fill="none" stroke="${CRE}" stroke-width="2.5"/>
+    <clipPath id="ib"><circle cx="60" cy="60" r="44"/></clipPath><g clip-path="url(#ib)">${checker(14, 76, 92, 12, 10, INK, CRE)}<rect x="14" y="88" width="92" height="20" fill="#b8241c"/></g>
+    ${car(CRE, INK, INK, BUT, 24, 47, .6)}</svg>`;
+}
+
+// 2. Vitesse : mot penché, trois traits de vitesse
+function speed(dark) {
+  const fg = dark ? CRE : INK;
+  return `<svg viewBox="0 0 360 170">
+    <text x="62" y="54" font-family="Saira Condensed" font-weight="800" font-size="26" letter-spacing="12" fill="${TOM}">MINI</text>
+    <g transform="skewX(-12)">
+      <text x="72" y="112" font-family="Unbounded" font-weight="900" font-size="54" letter-spacing="-1" fill="${fg}">BOLIDES</text>
+      ${[0, 1, 2].map((i) => `<rect x="${18 + i * 9}" y="${76 + i * 13}" width="${40 - i * 9}" height="6" rx="3" fill="${TOM}"/>`).join('')}
+    </g>
+    <rect x="62" y="128" width="262" height="3" fill="${TOM}"/>
+    <text x="62" y="154" font-family="Saira Condensed" font-weight="600" font-size="16" letter-spacing="7.4" fill="${dark ? '#b9b0c6' : '#7b6c72'}">TOY CAR RACING</text>
+  </svg>`;
+}
+function speedIcon() {
+  return `<svg viewBox="0 0 120 120"><rect width="120" height="120" fill="${CRE}"/>
+    <g transform="skewX(-12)"><text x="36" y="80" font-family="Unbounded" font-weight="900" font-size="54" fill="${INK}">B</text>
+    ${[0, 1, 2].map((i) => `<rect x="${24 + i * 7}" y="${48 + i * 11}" width="${26 - i * 6}" height="5" rx="2.5" fill="${TOM}"/>`).join('')}</g>
+    <rect x="30" y="92" width="62" height="3" fill="${TOM}"/></svg>`;
+}
+
+// 3. Boîte de jouet ancienne
+function vintage(dark) {
+  const paper = dark ? '#2a2540' : CRE, fg = dark ? CRE : INK;
+  return `<svg viewBox="0 0 360 220">
+    <rect x="8" y="8" width="344" height="204" rx="22" fill="${paper}" stroke="${fg}" stroke-width="3"/>
+    <rect x="18" y="18" width="324" height="184" rx="15" fill="none" stroke="${fg}" stroke-width="1.2"/>
+    <text x="180" y="44" text-anchor="middle" font-family="Saira Condensed" font-weight="600" font-size="12" letter-spacing="5" fill="${TOM}">★ GRAND PRIX ★</text>
+    <text x="180" y="110" text-anchor="middle" font-family="Fraunces" font-style="italic" font-weight="900" font-size="50" fill="${fg}">Mini Bolides</text>
+    ${car(TOM, fg, fg, BUT, 122, 118, 1)}
+    <path d="M40 175 L320 175" stroke="${fg}" stroke-width="1.2"/>
+    <text x="180" y="196" text-anchor="middle" font-family="Saira Condensed" font-weight="600" font-size="13" letter-spacing="6" fill="${fg}">TOY CAR RACING</text>
+  </svg>`;
+}
+function vintageIcon() {
+  return `<svg viewBox="0 0 120 120"><rect width="120" height="120" fill="${CRE}"/><rect x="9" y="9" width="102" height="102" rx="20" fill="none" stroke="${INK}" stroke-width="2"/>
+    <text x="60" y="66" text-anchor="middle" font-family="Fraunces" font-style="italic" font-weight="900" font-size="44" fill="${INK}">MB</text>
+    ${car(TOM, INK, INK, BUT, 33, 68, .45)}</svg>`;
+}
+
+// 4. La roue : le O de BOLIDES est une roue
+function wheel(cx, cy, r, tyre, rim, hub) {
+  let spokes = '';
+  for (let i = 0; i < 5; i++) { const a = (i * 72 - 90) * Math.PI / 180; spokes += `<line x1="${cx}" y1="${cy}" x2="${cx + Math.cos(a) * r * .55}" y2="${cy + Math.sin(a) * r * .55}" stroke="${rim}" stroke-width="${r * .14}" stroke-linecap="round"/>`; }
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${tyre}"/><circle cx="${cx}" cy="${cy}" r="${r * .66}" fill="${hub}"/>${spokes}<circle cx="${cx}" cy="${cy}" r="${r * .16}" fill="${rim}"/>`;
+}
+function wheelLogo(dark) {
+  const fg = dark ? CRE : INK;
+  return `<svg viewBox="0 0 380 170">
+    <text x="190" y="52" text-anchor="middle" font-family="Unbounded" font-weight="600" font-size="22" letter-spacing="16" fill="${TOM}">MINI</text>
+    <text x="48" y="122" font-family="Unbounded" font-weight="800" font-size="56" fill="${fg}">B</text>
+    ${wheel(126, 101, 25, fg, TOM, dark ? NIGHT : '#fffaf1')}
+    <text x="156" y="122" font-family="Unbounded" font-weight="800" font-size="56" fill="${fg}">LIDES</text>
+    ${checker(48, 138, 284, 12, 24, fg, dark ? NIGHT : '#fffaf1')}
+  </svg>`;
+}
+function wheelIcon() {
+  return `<svg viewBox="0 0 120 120"><rect width="120" height="120" fill="${TOM}"/>${wheel(60, 56, 34, INK, BUT, CRE)}${checker(0, 100, 120, 20, 10, INK, CRE)}</svg>`;
+}
+
+// 5. Plaque de course : numéro rond, bandes
+function plate(dark) {
+  const fg = dark ? CRE : INK;
+  return `<svg viewBox="0 0 380 190">
+    <rect x="20" y="40" width="340" height="96" rx="48" fill="${TOM}"/>
+    <rect x="34" y="78" width="312" height="7" fill="${CRE}"/><rect x="34" y="91" width="312" height="7" fill="${CRE}"/>
+    <circle cx="80" cy="88" r="40" fill="${CRE}" stroke="${INK}" stroke-width="4"/>
+    <text x="80" y="104" text-anchor="middle" font-family="Unbounded" font-weight="900" font-size="44" fill="${INK}">M</text>
+    <rect x="130" y="58" width="208" height="60" rx="14" fill="${INK}"/>
+    <text x="234" y="84" text-anchor="middle" font-family="Saira Condensed" font-weight="800" font-size="20" letter-spacing="10" fill="${BUT}">MINI</text>
+    <text x="234" y="111" text-anchor="middle" font-family="Unbounded" font-weight="800" font-size="25" letter-spacing="2" fill="${CRE}">BOLIDES</text>
+    <text x="190" y="170" text-anchor="middle" font-family="Saira Condensed" font-weight="600" font-size="15" letter-spacing="7" fill="${dark ? '#b9b0c6' : '#7b6c72'}">TOY CAR RACING</text>
+  </svg>`;
+}
+function plateIcon() {
+  return `<svg viewBox="0 0 120 120"><rect width="120" height="120" fill="${TOM}"/><rect x="0" y="52" width="120" height="6" fill="${CRE}"/><rect x="0" y="64" width="120" height="6" fill="${CRE}"/>
+    <circle cx="60" cy="61" r="34" fill="${CRE}" stroke="${INK}" stroke-width="4"/><text x="60" y="78" text-anchor="middle" font-family="Unbounded" font-weight="900" font-size="42" fill="${INK}">M</text></svg>`;
+}
+
+const PROPS = [
+  ['1 · Écusson Grand Prix', 'Un médaillon rond comme les affiches de courses anciennes : nom en arc, damier, voiture crème sur fond rouge. Le plus « classe » et le plus reconnaissable en petit.', badge, badgeIcon],
+  ['2 · Vitesse', 'Typographie seule, penchée, avec trois traits de vitesse. Sobre et moderne, se lit très bien sur l\'écran titre au-dessus du décor 3D.', speed, speedIcon],
+  ['3 · Boîte de jouet ancienne', 'Étiquette crème à double filet, nom en italique à empattements, comme une boîte de petites voitures des années 60. Élégant, un peu nostalgique, idéal pour les parents.', vintage, vintageIcon],
+  ['4 · La roue', 'Le O de BOLIDES devient une roue à 5 branches, posé sur un liseré damier. Moderne et ludique sans faire enfantin.', wheelLogo, wheelIcon],
+  ['5 · Plaque de course', 'Une plaque rouge à bandes avec un numéro rond, comme sur le capot d\'une voiture de course. Très jeu vidéo, colle aux couleurs actuelles du jeu.', plate, plateIcon],
+];
+document.getElementById('props').innerHTML = PROPS.map(([t, why, f, ic]) => `<section class="prop"><h2>${t}</h2><p class="why">${why}</p>
+  <div class="row"><div class="tile light">${f(false)}</div><div class="tile dark">${f(true)}</div><div class="icons">${ic()}<small>icône d'appli</small></div></div></section>`).join('');
+</script>
+</body>
+</html>
