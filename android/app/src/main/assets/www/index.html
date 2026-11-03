@@ -81,6 +81,23 @@ dd u { display: block; height: 100%; background: var(--mint); border-radius: 5px
 .look small { font: 600 10px Saira, Arial, sans-serif; } .look.sel { background: var(--butter); box-shadow: inset 0 0 0 2px var(--butter-d); } .look:disabled { opacity: .45; }
 .vars { display: flex; gap: 6px; margin: -2px 0 8px; } .vars button { flex: 1; min-height: 34px; border-radius: 11px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 4px; }
 .vars small { font: 600 11px Saira, Arial, sans-serif; } .vars button:disabled { opacity: .4; }
+/* Course libre : mondes en carrousel */
+#tracks .sheet { max-height: 86vh; padding-left: 0; padding-right: 0; } #tracks .sheet > h2, #tracks .seg, #tracks .small, .wchips, .wgo { margin-left: 18px; margin-right: 18px; } #tracks .wgo { width: calc(100% - 36px); }
+.wchips { display: flex; gap: 5px; margin-top: 10px; } .wchips button { flex: 1; height: 40px; border-radius: 12px; font-size: 19px; box-shadow: 0 2px 0 var(--line); transition: transform .15s; }
+.wchips button.sel { transform: translateY(-2px); box-shadow: 0 0 0 3px var(--ink); } .wchips button.lock { filter: grayscale(1); opacity: .5; }
+.wrail { position: relative; display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px 0 4px; scrollbar-width: none; touch-action: pan-x pan-y; } .wrail::-webkit-scrollbar { display: none; }
+.wpage { flex: 0 0 86%; scroll-snap-align: center; min-height: 330px; } .wpage:first-child { margin-left: 7%; } .wpage:last-child { margin-right: 7%; }
+.whero { position: relative; height: 118px; border-radius: 20px; padding: 11px 14px; color: #fff; overflow: hidden; box-shadow: 0 4px 0 var(--line); text-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.whero h3 { font: 800 21px var(--display); margin: 0; } .whero small { font-weight: 700; font-size: 12px; } .wem { position: absolute; right: 8px; top: 0; font-size: 58px; text-shadow: none; }
+.whero em { position: absolute; left: 14px; bottom: 24px; font: 800 14px var(--display); font-style: normal; } .whero u { position: absolute; left: 14px; right: 14px; bottom: 11px; height: 9px; border-radius: 5px; background: rgba(255,255,255,.35); } .whero u i { display: block; height: 100%; border-radius: 5px; background: var(--butter); }
+.wlock { margin-top: 10px; background: #fff; border-radius: 16px; padding: 22px 14px; text-align: center; font-weight: 600; color: var(--muted); box-shadow: inset 0 0 0 2px var(--line); } .wlock b { display: block; font: 800 17px var(--display); color: var(--ink); margin-bottom: 6px; }
+.wline { margin-top: 8px; background: #fff; border-radius: 16px; box-shadow: inset 0 0 0 2px var(--line); } .wline.open { box-shadow: inset 0 0 0 2px var(--butter-d); }
+.whead { display: flex; gap: 10px; align-items: center; width: 100%; padding: 8px 10px; text-align: left; } .wthumb { position: relative; flex: none; width: 50px; height: 50px; border-radius: 12px; } .wthumb svg { position: absolute; inset: 5px; width: 40px; height: 40px; }
+.wnm { flex: 1; font-weight: 700; font-size: 14px; line-height: 1.15; } .wbadges { display: flex; gap: 4px; margin-top: 4px; } .wbadges span { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 7px; background: #f3ebe0; color: var(--muted); } .wbadges span.done { background: #fff1b8; color: var(--ink); }
+.wmodes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 10px 10px; } .wmodes button { background: #f7f0e6; border-radius: 12px; padding: 6px 2px; font-size: 17px; box-shadow: inset 0 0 0 2px transparent; }
+.wmodes small { display: block; font: 600 10px Saira, Arial, sans-serif; color: var(--muted); font-variant-numeric: tabular-nums; } .wmodes button.sel { background: #fff4c7; box-shadow: inset 0 0 0 2px var(--butter-d); } .wmodes button:disabled { opacity: .45; }
+.wdots { display: flex; justify-content: center; gap: 5px; margin: 8px 0 0; } .wdots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); } .wdots i.sel { width: 18px; border-radius: 4px; background: var(--ink); }
+.wgo small { display: block; font: 700 12px var(--body); opacity: .9; margin-top: 2px; }
 #trophyList { display: flex; flex-direction: column; gap: 8px; max-height: 62vh; overflow-y: auto; }
 .troph { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); opacity: .7; }
 .troph.on { opacity: 1; background: #fff6d8; box-shadow: inset 0 0 0 2px var(--butter-d); }

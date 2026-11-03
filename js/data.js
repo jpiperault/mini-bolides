@@ -166,6 +166,16 @@
   ];
   MB.cupUnlocked = (cup, stars) => stars >= cup.stars;
 
+  // Mondes de la course libre : un monde s'ouvre avec les étoiles (tous modes confondus).
+  MB.WORLDS = [
+    { id: 'cuisine', icon: '🍳', name: { fr: 'Cuisine', en: 'Kitchen' }, stars: 0, tracks: ['bol', 'tartine', 'minuit'], col: ['#ffb36b', '#e5652b'] },
+    { id: 'plage', icon: '🏖️', name: { fr: 'Plage', en: 'Beach' }, stars: 5, tracks: ['dune', 'chateau'], col: ['#ffc95c', '#ef8f3a'] },
+    { id: 'foret', icon: '🌿', name: { fr: 'Forêt', en: 'Forest' }, stars: 10, tracks: ['sentier'], col: ['#7fc26a', '#3c8a4a'] },
+    { id: 'neige', icon: '❄️', name: { fr: 'Neige', en: 'Snow' }, stars: 15, tracks: ['banquise', 'glacier'], col: ['#8cc6f0', '#4c84c9'] },
+    { id: 'ville', icon: '🏙️', name: { fr: 'Ville', en: 'City' }, stars: 21, tracks: ['ville'], col: ['#5b4bb0', '#241f55'] },
+    { id: 'chambre', icon: '🧸', name: { fr: 'Chambre', en: 'Bedroom' }, stars: 27, tracks: ['doudou', 'coffre'], col: ['#f29cc9', '#b45d9a'] },
+  ];
+
   // ★ podium, ★★ victoire, ★★★ victoire avec au moins 20 pièces ramassées.
   MB.STAR_COINS = 20;
   MB.starsFor = (pos, coins) => (pos === 1 ? (coins >= MB.STAR_COINS ? 3 : 2) : pos <= 3 ? 1 : 0);

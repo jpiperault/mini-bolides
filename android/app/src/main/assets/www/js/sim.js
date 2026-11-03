@@ -9,7 +9,7 @@
 
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const STEER_BASE = 0.5, STEER_LOOK = 9, WALL_OFF = 0.2, ASSIST_BACK = 0.8, NEUTRAL_BACK = 0.22, DRIFT_ARM = 0.3, DRIFT_L1 = 0.35, DRIFT_L2 = 0.8, DUEL_GAP = 30;
-  const SC_EDGE = 4.8;                                     // entrée du raccourci : il faut longer le bord
+  const SC_EDGE = 5.4;                                     // entrée du raccourci : coller au bord, entre les deux poteaux
   const CAR_R = 2.3, BOX_R = 2.7, COIN_R = 3.4, SYRUP_R = 3.4, RAMP_H = 1.6, RAMP_N = 5;
 
   class Race {
@@ -169,8 +169,8 @@
       for (const q of t.shortcuts) {
         const to = (q.a - c.idx + t.count) % t.count, into = (c.idx - q.a + t.count) % t.count;
         if (to > 55 && to <= 65 && c.scLap !== this.lap(c) * 100 + q.a) { c.scLap = this.lap(c) * 100 + q.a; c.scWant = this.random() < this.diff.sc * st.sc ? q : null; }
-        if (c.scWant === q && (to <= 55 || into < q.win)) { c.aiLane = q.side * 7; c.aiLaneT = 0.3; }
-        else if (c.scWant === q && into >= q.win && into < 60) c.scWant = null;   // entrée manquée
+        if (c.scWant === q && (to <= 55 || into < q.door)) { c.aiLane = q.side * 7; c.aiLaneT = 0.3; }
+        else if (c.scWant === q && into >= q.door && into < 60) c.scWant = null;   // entrée manquée
       }
       const j = c.scWant ? (c.idx + Math.round(look * 0.45)) % t.count : i;   // vers une entrée, il vise plus près pour serrer le bord
       const tx = t.px[j] - t.tz[j] * c.aiLane, tz = t.pz[j] + t.tx[j] * c.aiLane;
@@ -201,7 +201,7 @@
       c.branch = null;
       if (isP && !c.sc && inSteer) for (const q of t.shortcuts) {
         const into = (c.idx - q.a + t.count) % t.count;
-        if (Math.sign(inSteer) === q.side && c.lat * q.side > SC_EDGE - 1.5 && (into < q.win + 4 || into > t.count - 20)) c.branch = q;
+        if (Math.sign(inSteer) === q.side && c.lat * q.side > SC_EDGE - 1.5 && (into < q.door + 4 || into > t.count - 20)) c.branch = q;
       }
       if (isP) {
         // Le doigt répond tout de suite ; au-delà, le braquage n'augmente que si la route le demande :
@@ -225,7 +225,6 @@
       // Pneus collants : on braque sans lever le pied.
       if (isP && !c.sc && !(c.sticky > 0)) target *= 1 - (0.3 - 0.22 * c.dk) * c.steer * c.steer;
       else if (!(c.sticky > 0)) target *= 1 - 0.07 * Math.abs(c.steer);
-      if (c.sc && c.sci >= c.sc.slowA && c.sci <= c.sc.slowB && !(c.boost > 0)) target = Math.min(target, s.vmax * c.sc.slow);
       if (c.boost > 0) { c.boost -= DT; target = Math.max(target, s.vmax) * c.boostPow; }
       if (c.magnet > 0) {
         c.magnet -= DT;
@@ -356,7 +355,7 @@
         c.idx = pr.i; c.lat = pr.lat; c.onWall = false;
         if (c.isPlayer || c.scWant) for (const q of t.shortcuts) {
           const into = (pr.i - q.a + t.count) % t.count;
-          if ((into >= q.win && into < t.count - 6) || pr.lat * q.side < SC_EDGE || (!c.isPlayer && c.scWant !== q)) continue;   // le mur s'ouvre un peu avant a
+          if ((into >= q.door && into < t.count - 6) || pr.lat * q.side < SC_EDGE || (!c.isPlayer && c.scWant !== q)) continue;   // le mur s'ouvre un peu avant a
           // Il faut longer le bord pour entrer : la trajectoire normale, même large, reste sur le circuit.
           // La voiture glisse alors en douceur sur la branche (scEase) au lieu d'être poussée comme contre un mur.
           const sp = MB.projectPath(q, c.x, c.z, into > t.count / 2 ? 0 : Math.min(into, q.count - 1)), on = Math.abs(sp.lat) <= q.width / 2 - CAR_R * 0.6;
@@ -593,7 +592,7 @@
     for (const o of race.cars) if (o !== c && o.prog > c.prog && o.prog - c.prog < 14 && Math.abs(o.lat - c.lat) < 4.2) lane = o.lat > 0 ? -4.5 : 4.5;
     if (opts && opts.shortcut) for (const q of t.shortcuts) {
       const to = (q.a - c.idx + t.count) % t.count;           // comme un joueur : doigt tenu vers l'entrée
-      if ((to < 25 || (c.idx - q.a + t.count) % t.count < q.win) && c.lat * q.side < 5) return { steer: q.side, item: !!c.item };
+      if ((to < 25 || (c.idx - q.a + t.count) % t.count < q.win) && c.lat * q.side < 6.5) return { steer: q.side, item: !!c.item };
     }
     const d = angleDiff(Math.atan2(t.pz[i] + t.tx[i] * lane - c.z, t.px[i] - t.tz[i] * lane - c.x), c.h);
     return { steer: Math.abs(d) < 0.09 ? 0 : Math.sign(d), item: !!c.item };

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mondes en carrousel — maquette</title>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+<script src="circuits-data.js"></script>
+<style>
+:root { --cream: #fff6e6; --ink: #2b2230; --muted: #7b6c72; --tomato: #e5352b; --butter: #ffd23f; --butter-d: #d9a514; --line: rgba(43, 34, 48, .14);
+  --display: 'Unbounded', 'Arial Black', sans-serif; --body: 'Saira', 'Segoe UI', sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #ffe6c4; color: var(--ink); font-family: var(--body); }
+header { max-width: 1180px; margin: 0 auto; padding: 28px 16px 8px; }
+header h1 { font-family: var(--display); font-size: clamp(22px, 5vw, 32px); margin: 0 0 6px; }
+header p { margin: 0 0 4px; color: var(--muted); font-weight: 600; max-width: 760px; }
+.phones { max-width: 1180px; margin: 0 auto; padding: 18px 16px 40px; display: flex; gap: 22px; flex-wrap: wrap; }
+.phone { width: 340px; max-width: 100%; height: 690px; border-radius: 34px; background: var(--cream); border: 8px solid #2b2230; overflow: hidden; position: relative; box-shadow: 0 14px 30px rgba(43,34,48,.25); }
+.cap { font-size: 13px; color: var(--muted); font-weight: 700; margin: 8px 4px 0; max-width: 340px; }
+.head { padding: 16px 14px 0; }
+.top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.back, .coins { background: #fff; border-radius: 14px; padding: 8px 12px; font-family: var(--display); font-weight: 800; font-size: 14px; box-shadow: 0 3px 0 var(--line); }
+.tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+.tabs b { flex: 1; text-align: center; padding: 8px 4px; border-radius: 14px; background: #fff; border: 2px solid var(--line); font-size: 13px; }
+.tabs b.on { background: var(--butter); border-color: var(--butter-d); }
+.stars { color: var(--tomato); letter-spacing: 1px; font-size: 13px; white-space: nowrap; }
+.stars i { color: #d9cfc3; font-style: normal; }
+
+/* bande d'icônes des mondes */
+.chips { display: flex; justify-content: space-between; gap: 4px; margin-bottom: 8px; }
+.chips span { flex: 1; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; background: #fff; box-shadow: 0 2px 0 var(--line); cursor: pointer; position: relative; transition: transform .15s; }
+.chips span.on { transform: translateY(-2px); box-shadow: 0 0 0 3px var(--ink); }
+.chips span.lock { filter: grayscale(1); opacity: .5; }
+
+/* carrousel */
+.rail { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 22px 100px; scrollbar-width: none; height: calc(100% - 152px); }
+.rail::-webkit-scrollbar { display: none; }
+.page { flex: 0 0 100%; scroll-snap-align: center; overflow-y: auto; scrollbar-width: none; }
+.hero { border-radius: 22px; height: 132px; position: relative; overflow: hidden; color: #fff; padding: 12px 14px; box-shadow: 0 4px 0 var(--line); }
+.hero .em { position: absolute; right: 8px; top: 2px; font-size: 64px; opacity: .9; }
+.hero .shapes { position: absolute; right: 74px; bottom: 6px; display: flex; gap: 2px; opacity: .55; }
+.hero .shapes svg { width: 38px; height: 38px; }
+.hero .n { font-family: var(--display); font-weight: 800; font-size: 22px; text-shadow: 0 2px 0 rgba(0,0,0,.2); }
+.hero .k { font-weight: 700; font-size: 12px; opacity: .95; text-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.hero .bar { position: absolute; left: 14px; right: 14px; bottom: 12px; height: 10px; border-radius: 5px; background: rgba(255,255,255,.35); }
+.hero .bar i { display: block; height: 100%; border-radius: 5px; background: var(--butter); }
+.hero .tot { position: absolute; left: 14px; bottom: 26px; font-family: var(--display); font-weight: 800; font-size: 14px; text-shadow: 0 1px 0 rgba(0,0,0,.25); }
+.hero.dark { color: #fff; }
+.locked { margin-top: 10px; background: #fff; border-radius: 16px; padding: 20px 14px; text-align: center; font-weight: 700; color: var(--muted); box-shadow: 0 3px 0 var(--line); }
+.locked b { display: block; font-family: var(--display); color: var(--ink); font-size: 16px; margin: 6px 0 4px; }
+
+.line { background: #fff; border-radius: 16px; margin-top: 8px; box-shadow: 0 3px 0 var(--line); overflow: hidden; border: 2px solid transparent; cursor: pointer; }
+.line.open { border-color: var(--butter-d); }
+.line .row { display: flex; gap: 10px; align-items: center; padding: 8px 10px; }
+.thumb { width: 50px; height: 50px; border-radius: 12px; flex: none; position: relative; }
+.thumb svg { position: absolute; inset: 5px; width: 40px; height: 40px; }
+.line .nm { font-weight: 700; font-size: 14px; line-height: 1.15; }
+.badges { display: flex; gap: 4px; margin-top: 3px; }
+.badges span { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 7px; background: #f3ebe0; color: var(--muted); }
+.badges span.done { background: #fff1b8; color: var(--ink); }
+.line .more { padding: 0 10px 10px; display: none; }
+.line.open .more { display: block; }
+.mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.mini b { background: #f7f0e6; border-radius: 12px; padding: 7px 2px; text-align: center; font-size: 17px; cursor: pointer; border: 2px solid transparent; }
+.mini b small { display: block; font-size: 10px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mini b.on { border-color: var(--butter-d); background: #fff4c7; }
+.mini b.lock { opacity: .45; }
+.dots { position: absolute; left: 0; right: 0; bottom: 92px; display: flex; justify-content: center; gap: 5px; pointer-events: none; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width .2s; }
+.dots i.on { background: var(--ink); width: 18px; border-radius: 4px; }
+.floatgo { position: absolute; left: 14px; right: 14px; bottom: 14px; }
+.go { display: block; width: 100%; padding: 14px; border: 0; border-radius: 18px; background: var(--tomato); color: #fff; font-family: var(--display); font-weight: 800; font-size: 15px; box-shadow: 0 4px 0 #a82018; cursor: pointer; line-height: 1.1; }
+.go small { display: block; font-family: var(--body); font-weight: 700; font-size: 12px; opacity: .9; margin-top: 2px; }
+.go.off { background: #b9aeb0; box-shadow: 0 4px 0 #8d8284; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mondes en carrousel</h1>
+  <p>Un monde par page : on glisse à gauche ou à droite pour changer de monde, ou on touche son icône en haut. Dans le monde, ses circuits en liste avec les 4 modes ; on touche un circuit puis un mode, et COURIR.</p>
+  <p>Écrans cliquables, et on peut glisser dans le carrousel. Les tracés sont les vrais circuits, raccourci en pointillé jaune.</p>
+</header>
+<div class="phones">
+  <div><div class="phone" id="p1"></div><div class="cap">1. Monde Plage, La Dune ouverte en Normal. Le bout du monde suivant dépasse à droite pour inviter à glisser.</div></div>
+  <div><div class="phone" id="p2"></div><div class="cap">2. Monde Neige, La Banquise choisie en Nuit : le bouton dit exactement ce qu'on va courir.</div></div>
+  <div><div class="phone" id="p3"></div><div class="cap">3. Option : les mondes se débloquent avec les étoiles (ici la Chambre à 40 ★). À garder ou non.</div></div>
+</div>
+
+<script>
+const BG = { matin: ['#ffd9a8', '#f2a865'], midi: ['#cfe8fb', '#8cc3ea'], minuit: ['#2b3570', '#141b3c'], sable: ['#ffe0a3', '#f0b45e'], foret: ['#cfe6b8', '#8fbf6e'], neige: ['#eaf4fd', '#a9cdec'], ville: ['#3a3378', '#1b1f42'], chambre: ['#fbe3f1', '#e6b4d4'] };
+const HERO = { Cuisine: ['#ffb36b', '#e5652b'], Plage: ['#ffc95c', '#ef8f3a'], 'Forêt': ['#7fc26a', '#3c8a4a'], Neige: ['#8cc6f0', '#4c84c9'], Ville: ['#5b4bb0', '#241f55'], Chambre: ['#f29cc9', '#b45d9a'] };
+const WORLDS = [['Cuisine', '🍳', ['bol', 'tartine', 'minuit'], 0], ['Plage', '🏖️', ['dune', 'chateau'], 0], ['Forêt', '🌿', ['sentier'], 0], ['Neige', '❄️', ['banquise', 'glacier'], 0], ['Ville', '🏙️', ['ville'], 0], ['Chambre', '🧸', ['doudou', 'coffre'], 40]];
+const MODES = [['normal', '☀️', 'Normal'], ['nuit', '🌙', 'Nuit'], ['pluie', '🌧️', 'Pluie'], ['inverse', '🔄', 'Inverse']];
+// Progression fictive.
+const REC = { bol: '0:19.47', tartine: '0:18.23', minuit: '0:20.12', dune: '0:16.68', sentier: '0:19.98', chateau: '0:18.42', banquise: '0:20.42', glacier: '0:19.71', ville: '0:21.05', doudou: '0:23.40', coffre: '0:22.16' };
+const DONE = { bol: { nuit: 3, pluie: 2 }, dune: { nuit: 2 }, tartine: { inverse: 1 }, minuit: { pluie: 3 }, banquise: { nuit: 1 } };
+const stars = (n) => '★'.repeat(n) + '<i>' + '★'.repeat(3 - n) + '</i>';
+const normalStars = (id) => ({ coffre: 1, doudou: 2, glacier: 1, ville: 2 })[id] ?? 3;
+const modeStars = (id, m) => (m === 'normal' ? normalStars(id) : (DONE[id] || {})[m] || 0);
+const locked = (id, m) => m !== 'normal' && normalStars(id) < 2;
+const modeRec = (id, m) => (m === 'normal' ? REC[id] : modeStars(id, m) ? REC[id].replace(/\d\d$/, (d) => String((+d + 37 * m.length) % 100).padStart(2, '0')) : '—');
+const worldStars = (ids) => ids.reduce((s, id) => s + MODES.reduce((k, [m]) => k + modeStars(id, m), 0), 0);
+
+function art(id, w) {
+  const t = TR[id];
+  return `<svg viewBox="0 0 100 100"><path d="${t.p}" fill="none" stroke="rgba(43,34,48,.28)" stroke-width="${w + 4}" stroke-linejoin="round"/>
+    <path d="${t.p}" fill="none" stroke="#fff" stroke-width="${w}" stroke-linejoin="round"/>
+    ${t.sc ? `<path d="${t.sc}" fill="none" stroke="#ffd23f" stroke-width="${w * 0.45}" stroke-dasharray="3 3" stroke-linecap="round"/>` : ''}
+    <circle cx="${t.start.split(' ')[0]}" cy="${t.start.split(' ')[1]}" r="${w * 0.7}" fill="#e5352b" stroke="#fff" stroke-width="1.5"/></svg>`;
+}
+const grad = (a, b) => `linear-gradient(160deg, ${a}, ${b})`;
+
+function phone(el, st) {
+  const total = WORLDS.reduce((s, [, , ids, need]) => s + (need ? 0 : worldStars(ids)), 0);
+  const isLocked = (need) => st.useLocks && need > total;
+  function pageHtml([w, ic, ids, need]) {
+    const got = worldStars(ids), max = ids.length * 12, [a, b] = HERO[w];
+    const hero = `<div class="hero" style="background:${grad(a, b)}"><span class="em">${isLocked(need) ? '🔒' : ic}</span>
+      <div class="n">${w}</div><div class="k">${ids.length} circuit${ids.length > 1 ? 's' : ''} · 4 modes chacun</div>
+      <div class="tot">${isLocked(need) ? '🔒 ' + total + ' / ' + need + ' ★' : got + ' / ' + max + ' ★'}</div>
+      <div class="bar"><i style="width:${isLocked(need) ? Math.round(100 * total / need) : Math.round(100 * got / max)}%"></i></div></div>`;
+    if (isLocked(need)) return `<div class="page">${hero}<div class="locked">🧸<b>Encore ${need - total} ★</b>Gagne des étoiles dans les autres mondes<br>pour ouvrir la Chambre.</div></div>`;
+    return `<div class="page">${hero}` + ids.map((id) => `
+      <div class="line ${id === st.sel ? 'open' : ''}" data-id="${id}"><div class="row"><div class="thumb" style="background:${grad(...BG[TR[id].mood])}">${art(id, 9)}</div>
+        <div style="flex:1"><div class="nm">${TR[id].name}</div><div class="badges">${MODES.map(([m, mi]) => `<span class="${modeStars(id, m) ? 'done' : ''}">${locked(id, m) ? '🔒' : mi} ${modeStars(id, m)}★</span>`).join('')}</div></div></div>
+        <div class="more"><div class="mini">${MODES.map(([m, mi, n]) => `<b class="${m === st.mode ? 'on' : ''} ${locked(id, m) ? 'lock' : ''}" data-m="${m}">${locked(id, m) ? '🔒' : mi}<small>${locked(id, m) ? '2★ Normal' : modeRec(id, m)}</small></b>`).join('')}</div></div></div>`).join('') + '</div>';
+  }
+  function draw() {
+    const keep = el.querySelector('.rail')?.scrollLeft;
+    const wi = st.world;
+    el.innerHTML = `<div class="head"><div class="top"><span class="back">←</span><span class="coins">🪙 2292</span></div>
+      <div class="tabs"><b class="on">🏁 Course</b><b>⏱️ Contre-la-montre</b></div>
+      <div class="chips">${WORLDS.map(([w, ic, , need], i) => `<span class="${i === wi ? 'on' : ''} ${isLocked(need) ? 'lock' : ''}" data-w="${i}" style="background:${grad(...HERO[w])}">${ic}</span>`).join('')}</div></div>
+      <div class="rail">${WORLDS.map(pageHtml).join('')}</div>
+      <div class="dots">${WORLDS.map((_, i) => `<i class="${i === wi ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="floatgo"><button class="go ${st.sel ? '' : 'off'}">${st.sel ? 'COURIR<small>' + TR[st.sel].name + ' · ' + MODES.find(([m]) => m === st.mode).slice(1).join(' ') + '</small>' : 'Choisis un circuit'}</button></div>`;
+    const rail = el.querySelector('.rail');
+    rail.scrollLeft = keep ?? 0;
+    if (keep == null) rail.scrollLeft = rail.children[wi].offsetLeft - 22;
+    let t;
+    rail.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(() => {
+      const i = Math.round(rail.scrollLeft / (rail.children[0].offsetWidth + 10));
+      if (i !== st.world) { st.world = i; el.querySelectorAll('.chips span').forEach((c, k) => c.classList.toggle('on', k === i)); el.querySelectorAll('.dots i').forEach((c, k) => c.classList.toggle('on', k === i)); }
+    }, 90); });
+  }
+  el.addEventListener('click', (e) => {
+    const c = e.target.closest('.chips span'), m = e.target.closest('.mini b'), l = e.target.closest('.line');
+    if (c) { st.world = +c.dataset.w; const rail = el.querySelector('.rail'); rail.scrollTo({ left: rail.children[st.world].offsetLeft - 22, behavior: 'smooth' }); el.querySelectorAll('.chips span').forEach((x, k) => x.classList.toggle('on', k === st.world)); el.querySelectorAll('.dots i').forEach((x, k) => x.classList.toggle('on', k === st.world)); return; }
+    if (m) { if (!m.classList.contains('lock')) { st.mode = m.dataset.m; draw(); } return; }
+    if (l && l.dataset.id !== st.sel) { st.sel = l.dataset.id; st.mode = 'normal'; draw(); }
+  });
+  draw();
+}
+phone(document.getElementById('p1'), { world: 1, sel: 'dune', mode: 'normal' });
+phone(document.getElementById('p2'), { world: 3, sel: 'banquise', mode: 'nuit' });
+phone(document.getElementById('p3'), { world: 5, sel: null, mode: 'normal', useLocks: true });
+</script>
+</body>
+</html>

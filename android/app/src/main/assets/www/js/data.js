@@ -131,25 +131,25 @@
     { id: 'minuit', name: { fr: "L'Épingle de Minuit", en: 'Midnight Hairpin' }, mood: 'minuit', seed: 37,
       pts: [[10, 10], [50, 4], [90, 6], [98, 22], [66, 32], [58, 44], [94, 50], [98, 68], [66, 64], [58, 80], [94, 88], [80, 100], [30, 98], [14, 78], [36, 66], [30, 42], [8, 44]] },
     { id: 'dune', name: { fr: 'La Dune du Bac à Sable', en: 'Sandbox Dune' }, mood: 'sable', seed: 41,
-      jumps: [0.36, 0.85], shortcuts: [[0.242, 0.535, 1, 0.63]],
+      jumps: [0.36, 0.85], shortcuts: [[0.242, 0.535, 1]],
       pts: [[38, 58], [25, 56], [23, 48], [17, 31], [32, 24], [37, 12], [60, 16], [71, 17], [66, 43], [76, 45], [75, 59], [67, 66], [64, 83], [53, 80], [33, 77]] },
     { id: 'sentier', name: { fr: 'Le Sentier des Fourmis', en: 'Ant Trail' }, mood: 'foret', seed: 53,
       jumps: [0.35, 0.74],
       pts: [[74, 20], [77, 35], [82, 48], [80, 55], [87, 68], [67, 69], [51, 68], [37, 70], [32, 63], [15, 60], [17, 50], [15, 40], [37, 37], [42, 27], [53, 27]] },
     { id: 'chateau', name: { fr: 'Le Château de Sable', en: 'Sandcastle' }, mood: 'sable', seed: 62,
-      jumps: [0.62, 0.76], shortcuts: [[0.121, 0.414, 1, 0.58]],
+      jumps: [0.62, 0.76], shortcuts: [[0.121, 0.414, 1]],
       pts: [[52, 88], [42, 68], [32, 64], [18, 55], [22, 43], [23, 28], [41, 24], [58, 8], [67, 22], [77, 40], [76, 48], [77, 69], [64, 68]] },
     { id: 'banquise', name: { fr: 'La Banquise du Congélo', en: 'Freezer Floe' }, mood: 'neige', seed: 71, grip: 0.94,
-      jumps: [0.66], shortcuts: [[0.7, 0.96, 1, 0.63]],
+      jumps: [0.66], shortcuts: [[0.7, 0.96, 1]],
       pts: [[85, 36], [72, 56], [71, 62], [65, 79], [53, 88], [45, 93], [43, 68], [29, 65], [17, 61], [26, 48], [35, 38], [40, 31], [44, 22], [58, 15], [65, 13], [76, 29]] },
     { id: 'glacier', name: { fr: 'Le Glacier Vanille', en: 'Vanilla Glacier' }, mood: 'neige', seed: 83, grip: 0.94,
-      jumps: [0.49, 0.8], shortcuts: [[0.307, 0.6, 1, 0.48]],
+      jumps: [0.49, 0.8], shortcuts: [[0.307, 0.6, 1]],
       pts: [[30, 58], [24, 43], [19, 31], [35, 23], [39, 17], [54, 29], [69, 15], [81, 24], [83, 41], [82, 51], [70, 68], [69, 76], [61, 93], [49, 91], [31, 87], [38, 63]] },
     { id: 'ville', name: { fr: 'Le Tapis de Ville', en: 'Playmat City' }, mood: 'ville', seed: 97,
       jumps: [0.52, 0.63],
       pts: [[17, 34], [31, 29], [44, 24], [61, 31], [85, 29], [86, 42], [86, 50], [93, 62], [65, 64], [57, 68], [46, 71], [33, 74], [12, 64], [23, 55], [8, 44]] },
     { id: 'doudou', name: { fr: 'La Course du Doudou', en: 'Teddy Dash' }, mood: 'chambre', seed: 109,
-      jumps: [0.18], shortcuts: [[0.5, 0.94, 1, 0.48]],
+      jumps: [0.18], shortcuts: [[0.52, 0.82, 1]],
       pts: [[20, 30], [45, 15], [70, 22], [88, 40], [80, 62], [62, 58], [50, 75], [30, 88], [12, 70], [10, 48]] },
     { id: 'coffre', name: { fr: 'Le Coffre à Jouets', en: 'Toy Box Twister' }, mood: 'chambre', seed: 113,
       jumps: [0.3],
@@ -165,6 +165,16 @@
     { id: 'champions', icon: '👑', name: { fr: 'Coupe des Champions', en: 'Champions Cup' }, stars: 20, tracks: ['minuit', 'chateau', 'glacier', 'ville'], prizes: [1200, 750, 360], first: 2000 },
   ];
   MB.cupUnlocked = (cup, stars) => stars >= cup.stars;
+
+  // Mondes de la course libre : un monde s'ouvre avec les étoiles (tous modes confondus).
+  MB.WORLDS = [
+    { id: 'cuisine', icon: '🍳', name: { fr: 'Cuisine', en: 'Kitchen' }, stars: 0, tracks: ['bol', 'tartine', 'minuit'], col: ['#ffb36b', '#e5652b'] },
+    { id: 'plage', icon: '🏖️', name: { fr: 'Plage', en: 'Beach' }, stars: 5, tracks: ['dune', 'chateau'], col: ['#ffc95c', '#ef8f3a'] },
+    { id: 'foret', icon: '🌿', name: { fr: 'Forêt', en: 'Forest' }, stars: 10, tracks: ['sentier'], col: ['#7fc26a', '#3c8a4a'] },
+    { id: 'neige', icon: '❄️', name: { fr: 'Neige', en: 'Snow' }, stars: 15, tracks: ['banquise', 'glacier'], col: ['#8cc6f0', '#4c84c9'] },
+    { id: 'ville', icon: '🏙️', name: { fr: 'Ville', en: 'City' }, stars: 21, tracks: ['ville'], col: ['#5b4bb0', '#241f55'] },
+    { id: 'chambre', icon: '🧸', name: { fr: 'Chambre', en: 'Bedroom' }, stars: 27, tracks: ['doudou', 'coffre'], col: ['#f29cc9', '#b45d9a'] },
+  ];
 
   // ★ podium, ★★ victoire, ★★★ victoire avec au moins 20 pièces ramassées.
   MB.STAR_COINS = 20;

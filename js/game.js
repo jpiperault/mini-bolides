@@ -16,7 +16,7 @@
     pos: ['Arrivée', 'Result'], coins: ['pièces', 'coins'], best: ['Meilleur tour', 'Best lap'], cup: ['Classement', 'Standings'],
     you: ['Toi', 'You'], choose: ['Choisis un circuit', 'Pick a track'], buy: ['Acheter', 'Buy'], use: ['Choisir', 'Select'], used: ['En piste', 'Selected'],
     diff: ['Difficulté', 'Difficulty'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'],
-    record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : variantes ouvertes dès une étoile sur le circuit.', '🌙 🌧️ 🔄: variants open once you have a star on the track.'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], assist: ['Volant magique', 'Magic wheel'],
+    record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : modes ouverts dès une étoile en Normal. Chaque mode rapporte ses étoiles.', '🌙 🌧️ 🔄: modes open with one star in Normal. Each mode earns its own stars.'], worldOpen: ['Nouveau monde :', 'New world:'], worldNeed: ['Encore', 'Still'], worldNeed2: ['étoiles pour ouvrir ce monde. Chaque mode de chaque circuit en rapporte.', 'stars to open this world. Every mode of every track earns them.'], pickTrack: ['Choisis un circuit', 'Pick a track'], run: ['COURIR', 'RACE'], normal: ['Normal', 'Normal'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], assist: ['Volant magique', 'Magic wheel'],
     assistHelp: ['Sans doigt posé, la voiture se recale seule.', 'With no finger down, the car straightens itself.'],
     back: ['Retour', 'Back'], how: ['Pose le pouce où tu veux et glisse à gauche ou à droite pour tourner. Braque fort pour drifter, relâche pour le turbo !', 'Put your thumb anywhere and slide left or right to steer. Steer hard to drift, release for turbo!'],
     won: ['Coupe gagnée !', 'Cup won!'], podium: ['Sur le podium !', 'On the podium!'], tryagain: ['Presque ! Encore une ?', 'So close! One more?'],
@@ -199,7 +199,10 @@
   const today = () => (MB.debug && MB.debug.today) || MB.dayKey(new Date());
   const starTotal = () => Object.values(save.stars).reduce((a, b) => a + b, 0);
   const openCups = () => MB.CUPS.filter((c) => MB.cupUnlocked(c, starTotal()));
-  const openTracks = () => MB.TRACKS.filter((d) => openCups().some((c) => c.tracks.includes(d.id))).map((d) => d.id);
+  // Un monde reste ouvert si on y a déjà couru (par exemple via une coupe).
+  const worldOpen = (w) => starTotal() >= w.stars || w.tracks.some((id) => save.tracksRaced[id] || save.stars[id]);
+  const openWorlds = () => MB.WORLDS.filter(worldOpen);
+  const openTracks = () => openWorlds().flatMap((w) => w.tracks);
   const starText = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
   const challenge = () => MB.dailyChallenge(today(), openTracks());
   const placeSuf = (p) => (lang === 'fr' ? (p === 1 ? 'er' : 'e') : ['st', 'nd', 'rd'][p - 1] || 'th');
@@ -581,7 +584,8 @@
     const key = trackKey();
     if (race.bestLap && (!save.best[key] || race.bestLap < save.best[key])) save.best[key] = race.bestLap;
     const stars = MB.starsFor(pos, race.coinCount);
-    if (!currentVariant && stars > (save.stars[id] || 0)) save.stars[id] = stars;   // les étoiles se gagnent sur le circuit normal
+    const worldsBefore = openWorlds().length;
+    if (stars > (save.stars[key] || 0)) save.stars[key] = stars;   // chaque mode (normal, nuit, pluie, inverse) a ses étoiles
     if (cup) race.ranked.forEach((c, i) => { cup.pts[c.id] += MB.POINTS[i]; });
     save.races++; save.sinceAd++;
     const notes = [];
@@ -591,6 +595,7 @@
       notes.push(met ? `${t('chalWin')} ! +${MB.CHALLENGE_COINS} 🪙` : t('chalFail'));
     }
     if (openCups().length > opened) notes.push(t('unlocked'));
+    if (openWorlds().length > worldsBefore) notes.push(`${t('worldOpen')} ${openWorlds().slice(worldsBefore).map((w) => w.icon + ' ' + L(w.name)).join(', ')} !`);
     notes.push(...trophiesAfter({ done: true, solo: false, pos, walls: stat.walls, l2: stat.l2, coins: race.coinCount, lastLapPos: stat.lastLapPos, diff: save.diff }, pendingCoins));
     persist();
 
@@ -638,17 +643,74 @@
 
   // ---------- Écrans ----------
   let trackMode = 'race', skipGap = false, marbleT = 0, honkT = 0;
+  // Course libre : un monde par page dans un carrousel, ses circuits en liste, 4 modes par circuit.
+  let selTrack = null, selVar = null, worldIdx = -1;
+  const MODES = [[null, '☀️']].concat(Object.keys(VARIANTS).map((v) => [v, VARIANTS[v].icon]));
+  const modeName = (v) => (v ? VARIANTS[v].name[lang === 'fr' ? 0 : 1] : t('normal'));
+  const keyOf = (id, v) => (v ? `${id}@${v}` : id);
+  const varOpen = (id) => (save.stars[id] || 0) >= 1;
+  const mapCache = {};
+  function trackMap(id) {
+    if (mapCache[id]) return mapCache[id];
+    const tr = getTrack(id), xs = [], zs = [];
+    for (let i = 0; i < tr.count; i++) { xs.push(tr.px[i]); zs.push(tr.pz[i]); }
+    const x0 = Math.min(...xs), z0 = Math.min(...zs), k = 88 / Math.max(Math.max(...xs) - x0, Math.max(...zs) - z0);
+    const ox = (100 - (Math.max(...xs) - x0) * k) / 2, oz = (100 - (Math.max(...zs) - z0) * k) / 2;
+    const pt = (x, z) => `${(ox + (x - x0) * k).toFixed(1)} ${(oz + (z - z0) * k).toFixed(1)}`;
+    const step = Math.max(1, Math.floor(tr.count / 70));
+    let d = '';
+    for (let i = 0; i < tr.count; i += step) d += (i ? 'L' : 'M') + pt(tr.px[i], tr.pz[i]);
+    let sc = '';
+    for (const q of tr.shortcuts || []) for (let i = 0; i < q.count; i += 3) sc += (i ? 'L' : 'M') + pt(q.px[i], q.pz[i]);
+    return (mapCache[id] = `<svg viewBox="0 0 100 100"><path d="${d}Z" fill="none" stroke="rgba(43,34,48,.3)" stroke-width="13" stroke-linejoin="round"/><path d="${d}Z" fill="none" stroke="#fff" stroke-width="9" stroke-linejoin="round"/>`
+      + (sc ? `<path d="${sc}" fill="none" stroke="#ffd23f" stroke-width="4" stroke-dasharray="3 3" stroke-linecap="round"/>` : '')
+      + `<circle cx="${pt(tr.px[0], tr.pz[0]).split(' ')[0]}" cy="${pt(tr.px[0], tr.pz[0]).split(' ')[1]}" r="6" fill="#e5352b" stroke="#fff" stroke-width="1.5"/></svg>`);
+  }
+  // Position de défilement qui centre la page du monde i.
+  const wLeft = (i) => { const r = $('wrail'), c = r.children[i]; return c.offsetLeft - (r.clientWidth - c.offsetWidth) / 2; };
   function renderTracks() {
-    const open = openTracks(), chrono = trackMode === 'chrono';
+    const chrono = trackMode === 'chrono', total = starTotal(), worlds = MB.WORLDS;
+    if (!selTrack || !openTracks().includes(selTrack)) { selTrack = openTracks().includes(currentTrack) ? currentTrack : openTracks()[0]; selVar = null; }
+    if (selVar && !varOpen(selTrack)) selVar = null;
+    if (worldIdx < 0) worldIdx = worlds.findIndex((w) => w.tracks.includes(selTrack));
+    const grad = (c) => `linear-gradient(160deg,${c[0]},${c[1]})`;
+    const page = (w) => {
+      const open = worldOpen(w), got = w.tracks.reduce((a, id) => a + MODES.reduce((b, [v]) => b + (save.stars[keyOf(id, v)] || 0), 0), 0), max = w.tracks.length * 12;
+      const hero = `<div class="whero" style="background:${grad(w.col)}"><b class="wem">${open ? w.icon : '🔒'}</b><h3>${L(w.name)}</h3>
+        <small>${w.tracks.length} ${lang === 'fr' ? 'circuit' : 'track'}${w.tracks.length > 1 ? 's' : ''} · 4 modes</small>
+        <em>${open ? `${got} / ${max} ★` : `🔒 ${total} / ${w.stars} ★`}</em><u><i style="width:${Math.round(100 * Math.min(1, open ? got / max : total / w.stars))}%"></i></u></div>`;
+      if (!open) return `<div class="wpage">${hero}<div class="wlock"><b>${t('worldNeed')} ${w.stars - total} ★</b>${t('worldNeed2')}</div></div>`;
+      return `<div class="wpage">${hero}${w.tracks.map((id) => {
+        const def = MB.TRACKS.find((d) => d.id === id), vo = varOpen(id), sel = id === selTrack;
+        const badge = MODES.map(([v, ic]) => {
+          const k = keyOf(id, v), lock = v && !vo, n = save.stars[k] || 0;
+          return chrono ? `<span class="${save.ghosts[k] ? 'done' : ''}">${lock ? '🔒' : ic} ${save.ghosts[k] ? '👻' : '–'}</span>` : `<span class="${n ? 'done' : ''}">${lock ? '🔒' : ic} ${n}★</span>`;
+        }).join('');
+        const modes = MODES.map(([v, ic]) => {
+          const k = keyOf(id, v), lock = v && !vo, rec = chrono ? (save.ghosts[k] ? fmt(save.ghosts[k].t) : '–') : (save.best[k] ? fmt(save.best[k]) : '–');
+          return `<button data-pick="${id}" data-pvar="${v || ''}" class="${sel && v === selVar ? 'sel' : ''}" ${lock ? 'disabled' : ''}>${lock ? '🔒' : ic}<small>${lock ? '1★ ' + t('normal') : rec}</small></button>`;
+        }).join('');
+        return `<div class="wline ${sel ? 'open' : ''}"><button class="whead" data-pick="${id}"><span class="wthumb" style="background:${grad(w.col)}">${trackMap(id)}</span>
+          <span class="wnm">${L(def.name)}<span class="wbadges">${badge}</span></span></button>${sel ? `<div class="wmodes">${modes}</div>` : ''}</div>`;
+      }).join('')}</div>`;
+    };
     $('trackList').innerHTML = `<div class="seg">${['race', 'chrono'].map((m) => `<button data-mode="${m}" class="${trackMode === m ? 'sel' : ''}">${t(m === 'race' ? 'modeRace' : 'modeChrono')}</button>`).join('')}</div>`
-      + MB.TRACKS.filter((d) => open.includes(d.id)).map((d) => {
-        const g = save.ghosts[d.id], on = (save.stars[d.id] || 0) >= 1;
-        const vars = `<div class="vars">${Object.keys(VARIANTS).map((v) => `<button data-track="${d.id}" data-variant="${v}" ${on ? '' : 'disabled'} aria-label="${VARIANTS[v].name[lang === 'fr' ? 0 : 1]}">${on ? VARIANTS[v].icon : '🔒'}<small>${on ? VARIANTS[v].name[lang === 'fr' ? 0 : 1] : ''}</small></button>`).join('')}</div>`;
-        return (chrono ? `<button class="row" data-track="${d.id}"><span>${L(d.name)}</span><small>${g ? '⏱ ' + fmt(g.t) : '–'}</small><i>${g ? '👻' : ''}</i></button>`
-          : `<button class="row" data-track="${d.id}"><span>${L(d.name)}</span><small>${save.best[d.id] ? fmt(save.best[d.id]) : '–'}</small><i>${starText(save.stars[d.id] || 0)}</i></button>`) + vars;
-      }).join('')
+      + `<div class="wchips">${worlds.map((w, i) => `<button data-world="${i}" class="${i === worldIdx ? 'sel' : ''} ${worldOpen(w) ? '' : 'lock'}" style="background:${grad(w.col)}" aria-label="${L(w.name)}">${w.icon}</button>`).join('')}</div>`
+      + `<div class="wrail" id="wrail">${worlds.map(page).join('')}</div>`
+      + `<div class="wdots">${worlds.map((w, i) => `<i class="${i === worldIdx ? 'sel' : ''}"></i>`).join('')}</div>`
+      + `<button class="btn primary wgo" data-track="${selTrack}" data-variant="${selVar || ''}">${t('run')}<small>${L(MB.TRACKS.find((d) => d.id === selTrack).name)} · ${MODES.find(([v]) => v === selVar)[1]} ${modeName(selVar)}</small></button>`
       + `<p class="small">${chrono ? t('ghostHelp') : t('goal')} ${t('varHelp')}</p>`;
     show('tracks');
+    const rail = $('wrail');
+    rail.scrollLeft = wLeft(worldIdx);
+    let tm = 0;
+    rail.onscroll = () => { clearTimeout(tm); tm = setTimeout(() => {
+      const i = Math.max(0, Math.min(worlds.length - 1, Math.round(rail.scrollLeft / (rail.children[1].offsetLeft - rail.children[0].offsetLeft))));
+      if (i === worldIdx) return;
+      worldIdx = i;
+      document.querySelectorAll('.wchips button').forEach((b, k) => b.classList.toggle('sel', k === i));
+      document.querySelectorAll('.wdots i').forEach((b, k) => b.classList.toggle('sel', k === i));
+    }, 80); };
   }
 
   function renderCups() {
@@ -759,6 +821,8 @@
     if (d.go === 'double') return MB.monet.showRewarded('double', (ok) => { if (ok) { save.coins += pendingCoins; persist(); $('resDouble').hidden = true; } });
     if (d.mode) { trackMode = d.mode; return renderTracks(); }
     if (d.track) { chal = null; return startRace(d.track, d.variant || null); }
+    if (d.pick) { if (d.pick !== selTrack) selVar = null; selTrack = d.pick; if (d.pvar !== undefined) selVar = d.pvar || null; return renderTracks(); }
+    if (d.world) { worldIdx = +d.world; const rail = $('wrail'); rail.scrollTo({ left: wLeft(worldIdx), behavior: 'smooth' }); document.querySelectorAll('.wchips button').forEach((b, k) => b.classList.toggle('sel', k === worldIdx)); document.querySelectorAll('.wdots i').forEach((b, k) => b.classList.toggle('sel', k === worldIdx)); return; }
     if (d.gstep) { gIdx = (gIdx + +d.gstep + MB.CARS.length) % MB.CARS.length; return renderGarage(); }
     if (d.gtab) { gTab = d.gtab; return renderGarage(); }
     if (d.look !== undefined) {
