@@ -36,6 +36,31 @@
       roof: [[-2.4, 1.18], [-2.3, 1.72], [-1.7, 1.86], [-0.3, 1.88], [0.45, 1.8], [1.05, 1.34], [1.75, 1.2], [2.3, 1.0]],
       belt: [[-2.4, 1.16], [-1, 1.22], [1.0, 1.2], [2.3, 0.98]],
       width: [[-2.4, 0.94], [-1.5, 1.08], [0, 1.04], [1.5, 1.08], [2.3, 0.92]], glass: [-2.05, 0.92] },
+    // wheels : rayon des roues [arrière, avant] ; zw : demi-voie ; extra : pièces ajoutées à la caisse.
+    bulle: { x: [-2.0, 2.0], axle: [-1.25, 1.3], bottom: 0.36, spoiler: 'none',
+      roof: [[-2.0, 0.9], [-1.85, 1.25], [-1.4, 1.62], [-0.6, 1.86], [0.2, 1.82], [0.9, 1.42], [1.5, 1.08], [2.0, 0.82]],
+      belt: [[-2.0, 0.9], [0, 1.0], [1.2, 0.98], [2.0, 0.8]],
+      width: [[-2.0, 0.82], [-1.25, 1.06], [0, 0.94], [1.3, 1.06], [2.0, 0.8]], glass: [-1.3, 0.75] },
+    buggy: { x: [-1.9, 2.0], axle: [-1.2, 1.3], bottom: 0.62, spoiler: 'none', wheels: [0.6, 0.56], zw: 1.12, extra: ['rollbar', 'lights'],
+      roof: [[-1.9, 1.0], [-1.4, 1.08], [-0.8, 1.22], [0.2, 1.22], [0.9, 1.04], [2.0, 0.86]],
+      belt: [[-1.9, 0.98], [0, 1.02], [2.0, 0.84]],
+      width: [[-1.9, 0.66], [-1.0, 0.8], [0, 0.78], [1.0, 0.76], [2.0, 0.58]], glass: [-0.6, 0.6] },
+    pickup: { x: [-2.5, 2.4], axle: [-1.55, 1.5], bottom: 0.5, spoiler: 'none', wheels: [0.52, 0.52], zw: 1.0, extra: ['bed'],
+      roof: [[-2.5, 1.24], [-0.6, 1.26], [-0.42, 1.86], [0.35, 1.9], [0.85, 1.42], [1.6, 1.26], [2.4, 1.06]],
+      belt: [[-2.5, 1.22], [0, 1.26], [1.2, 1.24], [2.4, 1.02]],
+      width: [[-2.5, 1.0], [-1.5, 1.06], [0, 1.04], [1.5, 1.06], [2.4, 0.94]], glass: [-0.5, 0.75] },
+    jeep: { x: [-2.1, 2.15], axle: [-1.3, 1.35], bottom: 0.56, spoiler: 'none', wheels: [0.56, 0.56], zw: 1.04, extra: ['spare', 'bullbar'],
+      roof: [[-2.1, 1.36], [-2.05, 1.98], [-1.6, 2.04], [0.25, 2.04], [0.5, 1.62], [0.75, 1.42], [2.15, 1.32]],
+      belt: [[-2.1, 1.34], [0, 1.38], [2.15, 1.3]],
+      width: [[-2.1, 1.0], [0, 1.02], [2.15, 0.98]], glass: [-1.7, 0.55] },
+    cale: { x: [-2.5, 2.7], axle: [-1.55, 1.7], bottom: 0.24, spoiler: 'wing',
+      roof: [[-2.5, 0.86], [-1.7, 0.96], [-0.9, 1.16], [-0.2, 1.22], [0.5, 0.98], [1.4, 0.7], [2.7, 0.4]],
+      belt: [[-2.5, 0.84], [-1.0, 0.86], [0.5, 0.76], [2.7, 0.38]],
+      width: [[-2.5, 0.9], [-1.5, 1.14], [0, 1.0], [1.6, 1.06], [2.7, 0.84]], glass: [-0.95, 0.55] },
+    dragster: { x: [-2.3, 2.9], axle: [-1.45, 2.2], bottom: 0.3, spoiler: 'wing', wingY: 1.7, wheels: [0.68, 0.36], zw: 1.06, extra: ['blower'],
+      roof: [[-2.3, 0.96], [-1.7, 1.06], [-1.0, 1.36], [-0.5, 1.42], [0.0, 1.1], [1.0, 0.72], [2.9, 0.5]],
+      belt: [[-2.3, 0.92], [-1.0, 0.95], [0, 0.8], [2.9, 0.48]],
+      width: [[-2.3, 0.8], [-1.4, 0.92], [-0.3, 0.8], [1.0, 0.6], [2.9, 0.48]], glass: [-1.3, -0.1] },
   };
 
   const lin = (pts, x) => {
@@ -109,8 +134,9 @@
       for (let k = 0; k < rows; k++) {
         const m = k - K, p = crPoint(ring, Math.abs(m) / K);
         let z = p[0] * Math.sign(m), vs = 1;
-        for (const ax of sp.axle) {                              // passages de roue creusés dans la caisse
-          const dist = Math.hypot(x - ax, p[1] - 0.46), s = (1 - sstep(0.52, 0.63, dist)) * (1 - sstep(0.46, 0.57, Math.abs(m) / K));
+        for (let ai = 0; ai < 2; ai++) {                          // passages de roue creusés dans la caisse
+          const ax = sp.axle[ai], wr = sp.wheels ? sp.wheels[ai] : 0.46, k = wr / 0.46;
+          const dist = Math.hypot(x - ax, p[1] - wr), s = (1 - sstep(0.52 * k, 0.63 * k, dist)) * (1 - sstep(0.46, 0.57, Math.abs(m) / K));
           if (s > 0) { z = Math.sign(z) * (Math.abs(z) - 0.2 * s); vs = Math.min(vs, 1 - s * 0.97); }
         }
         const a = (i * rows + k);
@@ -148,7 +174,8 @@
 
   const wheelGeo = {};
   function wheelGeometry(r, side) {
-    if (wheelGeo[side]) return wheelGeo[side];
+    const key = r + ':' + side;
+    if (wheelGeo[key]) return wheelGeo[key];
     const W = 0.27, R = r * 0.62;
     const prof = [[0, -W], [r * 0.66, -W], [r * 0.93, -W], [r, -W * 0.6], [r, W * 0.6], [r * 0.93, W], [r * 0.66, W], [r * 0.62, W * 0.5]];
     const tyre = new T.LatheGeometry(prof.map((p) => new T.Vector2(p[0], p[1])), 22); tyre.rotateX(Math.PI / 2);
@@ -164,7 +191,7 @@
     const rim = new T.TorusGeometry(R, 0.026, 6, 22); rim.translate(0, 0, side * (W - 0.04));
     const disc = new T.CircleGeometry(R * 0.96, 18); disc.translate(0, 0, side * (W - 0.14));
     if (side < 0) disc.rotateY(Math.PI);
-    return (wheelGeo[side] = { tyre, metal: merge([spokes, rim]), disc });
+    return (wheelGeo[key] = { tyre, metal: merge([spokes, rim]), disc });
   }
 
   function wheel(r, side, mats) {
@@ -202,19 +229,45 @@
     } else if (sp.spoiler === 'roof') {
       const lipM = new T.Mesh(new T.BoxGeometry(0.42, 0.05, 1.26), paint); lipM.position.set(x0 + 0.12, 1.55, 0); lipM.rotation.z = 0.14; body.add(lipM);
     } else if (sp.spoiler === 'wing') {
-      const wing = new T.Mesh(new T.BoxGeometry(0.44, 0.05, 2.0), paint); wing.position.set(x0 + 0.18, 1.2, 0); wing.rotation.z = 0.12; wing.castShadow = true; body.add(wing);
-      for (const s of [-1, 1]) { const p = new T.Mesh(new T.BoxGeometry(0.2, 0.42, 0.04), dark); p.position.set(x0 + 0.24, 1.0, s * 0.62); body.add(p); }
+      const wing = new T.Mesh(new T.BoxGeometry(0.44, 0.05, 2.0), paint); wing.position.set(x0 + 0.18, sp.wingY || 1.2, 0); wing.rotation.z = 0.12; wing.castShadow = true; body.add(wing);
+      for (const s of [-1, 1]) { const wy = sp.wingY || 1.2, p = new T.Mesh(new T.BoxGeometry(0.2, wy - 0.78, 0.04), dark); p.position.set(x0 + 0.24, (wy + 0.78) / 2 - 0.02, s * 0.62); body.add(p); }
+    }
+    const chrome = new T.MeshStandardMaterial({ color: 0xb8bcc4, metalness: 0.95, roughness: 0.25, envMap: env });
+    const bar = (len, ax, px, py, pz, rx, rz) => { const m = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, len, 10), ax ? chrome : dark); m.position.set(px, py, pz); m.rotation.set(rx || 0, 0, rz || 0); m.castShadow = true; body.add(m); };
+    for (const e of sp.extra || []) {
+      if (e === 'rollbar') {                                     // arceau du buggy
+        const at = b.at(-0.7), top = at.roof + 0.55;
+        for (const s of [-1, 1]) bar(top - at.belt, true, -0.7, (top + at.belt) / 2, s * 0.62);
+        bar(1.24, true, -0.7, top, 0, Math.PI / 2);
+        for (const s of [-1, 1]) bar(0.9, true, -1.05, top - 0.3, s * 0.62, 0, -0.85);
+      } else if (e === 'lights') {                               // rampe de phares sur l'arceau
+        for (const s of [-1, 0, 1]) { const l = new T.Mesh(new T.CylinderGeometry(0.1, 0.1, 0.08, 14), lamp); l.rotation.z = Math.PI / 2; l.position.set(-0.62, b.at(-0.7).roof + 0.62, s * 0.36); body.add(l); }
+      } else if (e === 'bed') {                                  // benne du pick-up, creuse et sombre
+        const at = b.at(-1.5), bed = new T.Mesh(new T.BoxGeometry(1.75, 0.04, at.w * 1.7), dark);
+        bed.position.set(-1.55, at.roof + 0.01, 0); body.add(bed);
+        for (const s of [-1, 1]) { const r = new T.Mesh(new T.BoxGeometry(1.85, 0.16, 0.08), paint); r.position.set(-1.55, at.roof + 0.08, s * at.w * 0.9); body.add(r); }
+        const gate = new T.Mesh(new T.BoxGeometry(0.08, 0.16, at.w * 1.8), paint); gate.position.set(x0 + 0.05, at.roof + 0.08, 0); body.add(gate);
+      } else if (e === 'spare') {                                // roue de secours accrochée derrière
+        const sw = wheel(0.42, 1, { tyre: new T.MeshStandardMaterial({ color: 0x17171b, roughness: 0.82 }), metal: chrome, disc: dark });
+        sw.rotation.y = Math.PI / 2; sw.position.set(x0 - 0.22, 1.25, 0); body.add(sw);
+      } else if (e === 'bullbar') {                              // pare-buffle
+        bar(1.5, true, x1 + 0.12, sp.bottom + 0.45, 0, Math.PI / 2);
+        for (const s of [-1, 1]) bar(0.62, true, x1 + 0.1, sp.bottom + 0.3, s * 0.5);
+      } else if (e === 'blower') {                               // compresseur qui sort du capot
+        const bx = new T.Mesh(new T.BoxGeometry(0.62, 0.34, 0.5), chrome); bx.position.set(0.75, b.at(0.75).roof + 0.15, 0); bx.castShadow = true; body.add(bx);
+        const sc = new T.Mesh(new T.BoxGeometry(0.4, 0.2, 0.56), dark); sc.position.set(0.8, b.at(0.75).roof + 0.4, 0); body.add(sc);
+      }
     }
     g.add(body);
     g.body = body; g.wheels = []; g.paint = paint; g.top = new T.Box3().setFromObject(b.mesh).max.y; g.roofX = (sp.glass[0] + sp.glass[1]) / 2;
-    const zw = 0.96, wheelMats = {
+    const zw = sp.zw || 0.96, wheelMats = {
       tyre: new T.MeshStandardMaterial({ color: 0x17171b, roughness: 0.82, envMap: env }),
       metal: new T.MeshStandardMaterial({ color: 0xcfd3da, metalness: 0.9, roughness: 0.28, envMap: env, envMapIntensity: 1.3 }),
       disc: new T.MeshStandardMaterial({ color: 0x24252b, metalness: 0.4, roughness: 0.6 }),
     };
-    for (const ax of [sp.axle[1], sp.axle[0]]) for (const s of [1, -1]) {
-      const w = wheel(R, s, wheelMats); w.position.set(ax, R, s * zw); g.add(w);
-      g.wheels.push(w); w.front = ax === sp.axle[1];
+    for (const a of [1, 0]) for (const s of [1, -1]) {
+      const r = sp.wheels ? sp.wheels[a] : R, w = wheel(r, s, wheelMats); w.position.set(sp.axle[a], r, s * zw); g.add(w);
+      g.wheels.push(w); w.front = a === 1; w.k = 0.62 * r / R;    // une grande roue tourne moins vite
     }
     g.rimMat = wheelMats.metal;
     return g;

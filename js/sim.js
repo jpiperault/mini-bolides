@@ -50,7 +50,7 @@
     _grid(opts) {
       const t = this.track, playerCar = opts.carSpec || MB.CARS.find((c) => c.id === opts.carId) || MB.CARS[0];
       const n = opts.solo ? 1 : opts.carCount || MB.CONFIG.carCount;
-      const rivals = MB.CARS.slice();
+      const rivals = MB.RIVAL_CARS.map((id) => MB.CARS.find((c) => c.id === id));
       for (let g = 0; g < n; g++) {
         const isPlayer = g === n - 1;                         // le joueur part dernier : doubler, c'est le plaisir du jeu
         const spec = isPlayer ? playerCar : rivals[g % rivals.length];

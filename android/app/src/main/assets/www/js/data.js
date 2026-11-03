@@ -20,18 +20,30 @@
       vmax: 37, accel: 1.05, turn: 1.32, driftBonus: 1.0, mass: 1.0 },
     { id: 'savon', name: 'La Savonnette', tag: { fr: 'Reine du drift', en: 'Drift queen' }, price: 300, shape: 'coupe',
       vmax: 36, accel: 0.95, turn: 1.42, driftBonus: 1.35, mass: 0.9 },
+    { id: 'tortue', name: 'La Tortue', tag: { fr: 'Ronde et collée à la route', en: 'Round and grippy' }, price: 400, shape: 'bulle',
+      vmax: 35.4, accel: 1.08, turn: 1.44, driftBonus: 1.15, mass: 1.05 },
     { id: 'puce', name: 'La Puce', tag: { fr: 'Minuscule et nerveuse', en: 'Tiny and nimble' }, price: 500, shape: 'citadine',
       vmax: 35, accel: 1.2, turn: 1.46, driftBonus: 1.05, mass: 0.8 },
+    { id: 'criquet', name: 'Le Criquet', tag: { fr: 'Buggy sauteur', en: 'Bouncy buggy' }, price: 650, shape: 'buggy',
+      vmax: 35.6, accel: 1.25, turn: 1.38, driftBonus: 1.25, mass: 0.85 },
     { id: 'tata', name: 'Le Fourgon de Tata', tag: { fr: 'Lourd mais turbo', en: 'Heavy but turbocharged' }, price: 800, shape: 'van',
       vmax: 34.8, accel: 1.3, turn: 1.2, driftBonus: 1.2, mass: 1.7 },
     { id: 'eclair', name: "L'Éclair", tag: { fr: 'Pointe de vitesse', en: 'Top speed' }, price: 1100, shape: 'formule',
       vmax: 39.5, accel: 0.9, turn: 1.22, driftBonus: 0.9, mass: 0.85 },
+    { id: 'papy', name: 'Le Pick-up de Papy', tag: { fr: 'Pousse tout le monde', en: 'Shoves everyone aside' }, price: 1300, shape: 'pickup',
+      vmax: 36, accel: 1.15, turn: 1.24, driftBonus: 1.15, mass: 1.65 },
     { id: 'pepere', name: 'Le Pépère', tag: { fr: 'Costaud, accélère fort', en: 'Tough, quick off the line' }, price: 1500, shape: 'camion',
       vmax: 35.5, accel: 1.35, turn: 1.28, driftBonus: 1.0, mass: 1.5 },
+    { id: 'yeti', name: 'Le Yéti', tag: { fr: 'Tout-terrain robuste', en: 'Rugged off-roader' }, price: 1800, shape: 'jeep',
+      vmax: 36.6, accel: 1.22, turn: 1.3, driftBonus: 1.05, mass: 1.4 },
     { id: 'tonton', name: 'Le Tonton', tag: { fr: 'Gros moteur, gros caractère', en: 'Big engine, big attitude' }, price: 2200, shape: 'muscle',
       vmax: 38.5, accel: 1.25, turn: 1.16, driftBonus: 1.1, mass: 1.3 },
     { id: 'comtesse', name: 'La Comtesse', tag: { fr: 'Élégante et rapide', en: 'Elegant and fast' }, price: 3200, shape: 'gt',
       vmax: 38.5, accel: 1.02, turn: 1.3, driftBonus: 0.95, mass: 1.0 },
+    { id: 'requin', name: 'Le Requin', tag: { fr: 'Fend l\'air, vire serré', en: 'Slices air, turns tight' }, price: 4200, shape: 'cale',
+      vmax: 39.8, accel: 1.05, turn: 1.3, driftBonus: 1.0, mass: 0.9 },
+    { id: 'dragster', name: 'Le Dragster', tag: { fr: 'Fusée en ligne droite', en: 'Rocket on the straights' }, price: 5200, shape: 'dragster',
+      vmax: 40.0, accel: 1.18, turn: 1.12, driftBonus: 0.85, mass: 1.1 },
   ];
 
   // Évolutions achetées uniquement avec les pièces gagnées en course, jamais avec de l'argent réel.
@@ -76,6 +88,7 @@
     { id: 'aurore', name: { fr: 'Aurore', en: 'Aurora' }, hex: 0x8a3ffc, price: 0, premium: true },
   ];
 
+  MB.RIVAL_CARS = ['bolide', 'savon', 'puce', 'tata', 'eclair', 'pepere'];   // voitures des rivaux : leur niveau ne bouge pas quand le garage s'agrandit
   MB.RIVALS = ['Loulou', 'Zébulon', 'Mamie Turbo', 'Biscotte', 'Max la Menace', 'Praline'];
   // Caractères : pace = allure, lane = délai entre changements de file, block = ferme la porte, late = finit fort, item = délai avant d'utiliser un objet.
   MB.RIVAL_STYLES = [

@@ -1254,7 +1254,7 @@
           e.flame.position.set(P.x - Math.cos(P.h) * 3.6, 0.8 + P.lift, P.z - Math.sin(P.h) * 3.6); e.flame.scale.set(fl, fl, 1);
         }
         for (const w of m.wheels) {
-          w.children[0].rotation.z = w.children[1].rotation.z -= c.v * dt / 0.62;
+          w.children[0].rotation.z = w.children[1].rotation.z -= c.v * dt / (w.k || 0.62);
           if (w.front) w.rotation.y = -c.steer * 0.4;
         }
         e.sh.position.x = P.x; e.sh.position.z = P.z; e.sh.rotation.z = -P.h - P.slip;
@@ -1400,7 +1400,7 @@
         const o = 1 + i * 5, x = lerp(o), z = lerp(o + 1), h = a[o + 2] + MB.angleDiff(b[o + 2], a[o + 2]) * u, slip = lerp(o + 3), lift = lerp(o + 4);
         const moved = e.rx === undefined ? 0 : Math.hypot(x - e.rx, z - e.rz); e.rx = x; e.rz = z;
         e.m.position.set(x, 0.2 + lift, z); e.m.rotation.y = -h - slip;
-        for (const wh of e.m.wheels) wh.children[0].rotation.z = wh.children[1].rotation.z -= moved / 0.62;
+        for (const wh of e.m.wheels) wh.children[0].rotation.z = wh.children[1].rotation.z -= moved / (wh.k || 0.62);
         e.sh.position.x = x; e.sh.position.z = z; e.sh.rotation.z = -h - slip;
         e.flame.visible = false; if (e.bub) e.bub.visible = false;
         if (e.c.id === pid) { px = x; pz = z; }
