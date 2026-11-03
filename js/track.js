@@ -123,11 +123,8 @@
     const inner = sc.wallHole[-side];
     sc.mouth = 0; while (sc.mouth < count && inner[sc.mouth]) sc.mouth++;
     sc.tail = 0; while (sc.tail < count && inner[count - 1 - sc.tail]) sc.tail++;
+    sc.door = Math.min(sc.win, 6);                            // porte d'entrée étroite (~12 m) : on la vise, on n'y tombe pas
     sc.pad = Math.max(1, count - 9);                          // dalle turbo des derniers mètres : la sortie relance la voiture
-    // Gravier au milieu : sans turbo la branche ne fait gagner qu'environ une demi-seconde par tour, avec un turbo
-    // ou un drift bien sorti nettement plus. Sa vitesse (d[3], fraction de la pointe) est calibrée par circuit en simulation.
-    sc.slowA = Math.round(count * 0.2); sc.slowB = Math.min(Math.round(count * 0.8), sc.pad - 4);
-    sc.slow = d[3] || 0.6;
     return sc;
   }
 
@@ -160,7 +157,7 @@
     return Object.assign({}, def, {
       pts: [def.pts[0], ...def.pts.slice(1).reverse()],
       jumps: (def.jumps || []).map(flip),
-      shortcuts: (def.shortcuts || []).map(([a, b, side, slow]) => [flip(b), flip(a) || 1, -side, slow]),
+      shortcuts: (def.shortcuts || []).map(([a, b, side]) => [flip(b), flip(a) || 1, -side]),
     });
   };
 

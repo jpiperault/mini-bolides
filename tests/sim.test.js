@@ -45,7 +45,7 @@ for (const def of MB.TRACKS) {
       while (slow.state !== 'done' && n++ < 60 * 400) { slow.step(1 / 60, MB.botInput(slow)); if (slow.events.some((e) => e.t === 'shortcut')) natural = true; slow.events.length = 0; }
       gain += slow.player.time - fast.player.time;
     }
-    check(taken >= 8 && res === 0 && gain > 0 && gain / 5 < 2.5, `${def.id}: raccourci pris ${taken}/15, ${res} remise(s), gain moyen ${(gain / 5).toFixed(1)} s`);
+    check(taken >= 8 && res === 0 && gain > 0 && gain / 5 < 8, `${def.id}: raccourci pris ${taken}/15, ${res} remise(s), gain moyen ${(gain / 5).toFixed(1)} s`);
     // Il faut longer le bord pour entrer : la trajectoire normale ne s'y engage jamais par hasard.
     check(!natural, `${def.id}: la trajectoire normale reste sur le circuit`);
     // Des rivaux l'empruntent aussi (en Normal, sur quelques courses).

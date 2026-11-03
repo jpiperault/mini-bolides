@@ -434,7 +434,7 @@
     drift: ['↪️ Virage ! Braque fort et garde : tu drifts', '↪️ Corner! Steer hard and hold to drift'],
     release: ['🔥 Relâche maintenant : TURBO !', '🔥 Release now: TURBO!'],
     item: ['🎁 Touche le bouton en bas pour utiliser ton bonus', '🎁 Tap the button below to use your bonus'],
-    shortcut: ['»» Colle-toi au bord vers les chevrons : raccourci ! Un turbo passe mieux le gravier', '»» Hug the edge at the yellow arrows: shortcut! A boost beats the gravel'],
+    shortcut: ['»» Colle-toi au bord vers les chevrons : raccourci !', '»» Hug the edge at the yellow arrows: shortcut!'],
   };
   let coachT = null;
   function coach(key) {

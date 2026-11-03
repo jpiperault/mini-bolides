@@ -950,18 +950,6 @@
           g.lineWidth = 26; g.beginPath(); g.moveTo(10, 104); g.lineTo(W / 2, 30); g.lineTo(W - 10, 104); g.stroke();
         });
         padTex.wrapS = padTex.wrapT = T.RepeatWrapping;
-        // Gravier du milieu : cailloux bien visibles, on sait d'avance qu'on y ralentit sans turbo.
-        const gravel = canvas(128, 128, (g, W, H) => {
-          g.fillStyle = '#9c8f7e'; g.fillRect(0, 0, W, H);
-          for (let k = 0; k < 140; k++) {
-            const x = (k * 37.3) % W, y = (k * 71.7 + (k % 7) * 13) % H, r = 2 + (k % 5);
-            g.fillStyle = ['#d8ccb8', '#7a6e60', '#bfb29d', '#655a4e', '#e6dccb'][k % 5];
-            g.beginPath(); g.ellipse(x, y, r, r * 0.75, k, 0, 7); g.fill();
-          }
-        });
-        gravel.wrapS = gravel.wrapT = T.RepeatWrapping;
-        const sub = (a, b) => ({ open: true, count: b - a + 1, length: (b - a) * p.ds, px: p.px.slice(a, b + 1), pz: p.pz.slice(a, b + 1), tx: p.tx.slice(a, b + 1), tz: p.tz.slice(a, b + 1) });
-        s.add(ribbon(sub(p.slowA, p.slowB), -hw + 0.4, hw - 0.4, 0.17, 0.17, 4, new T.MeshLambertMaterial({ map: gravel })));
         const pad = { open: true, count: p.count - p.pad, length: (p.count - p.pad) * p.ds, px: p.px.slice(p.pad), pz: p.pz.slice(p.pad), tx: p.tx.slice(p.pad), tz: p.tz.slice(p.pad) };
         const padMesh = ribbon(pad, -hw + 1, hw - 1, 0.19, 0.19, 7, new T.MeshBasicMaterial({ map: padTex, transparent: true, opacity: 0.92 }));
         this.pads.push(padTex);
@@ -970,6 +958,13 @@
           g.fillStyle = '#ffd23f'; g.fillRect(0, 0, W, H); g.strokeStyle = '#2b2230'; g.lineWidth = 10; g.strokeRect(5, 5, W - 10, H - 10);
           g.fillStyle = '#2b2230'; g.font = '900 96px Arial Black, Arial'; g.textAlign = 'center'; g.fillText(p.side > 0 ? '»»' : '««', W / 2, 100);
         }) }));
+        // Porte d'entrée : deux poteaux rayés au bord, le passage est entre eux, contre le mur.
+        const postMat = new T.MeshLambertMaterial({ map: stripeTexture('#ffd23f', '#2b2230') });
+        for (const k of [0, p.door]) {
+          const m = (p.a + k + track.count) % track.count, post = new T.Mesh(new T.CylinderGeometry(0.55, 0.65, 5, 12), postMat);
+          post.position.set(track.px[m] - track.tz[m] * p.side * (w + 1.2), 2.5, track.pz[m] + track.tx[m] * p.side * (w + 1.2));
+          post.castShadow = true; s.add(post);
+        }
         sign.scale.set(12, 6, 1);
         sign.position.set(track.px[i] - track.tz[i] * p.side * (w + 7), 8, track.pz[i] + track.tx[i] * p.side * (w + 7));
         s.add(sign);
