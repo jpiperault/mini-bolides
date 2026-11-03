@@ -10,7 +10,15 @@
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const STEER_BASE = 0.5, STEER_LOOK = 9, WALL_OFF = 0.2, ASSIST_BACK = 0.8, NEUTRAL_BACK = 0.22, DRIFT_ARM = 0.3, DRIFT_L1 = 0.35, DRIFT_L2 = 0.8, DUEL_GAP = 30;
   const SC_EDGE = 5.4;                                     // entrée du raccourci : coller au bord, entre les deux poteaux
-  const CAR_R = 2.3, BOX_R = 2.7, COIN_R = 3.4, SYRUP_R = 3.4, RAMP_H = 1.6, RAMP_N = 5;
+  const CAR_R = 2.3, COIN_R = 3.4, RAMP_H = 1.6, RAMP_N = 5;
+  // Contacts avec les objets au sol : la voiture est une gélule (axe ±CAR_AXIS, rayon CAR_SIDE) qui suit
+  // sa carrosserie (~4,9 m sur 2,3 m), et non plus un point au centre : le nez ou le flanc comptent aussi.
+  const CAR_AXIS = 1.3, CAR_SIDE = 1.15, BOX_HALF = 1.2, HONEY_R = 3.3, HONEY_DIP = 0.7;
+  const bodyDist = (c, x, z) => {
+    const dx = x - c.x, dz = z - c.z, ch = Math.cos(c.h), sh = Math.sin(c.h);
+    const along = dx * ch + dz * sh, lat = -dx * sh + dz * ch, a = Math.max(-CAR_AXIS, Math.min(CAR_AXIS, along));
+    return Math.hypot(along - a, lat);
+  };
 
   class Race {
     constructor(opts) {
@@ -505,8 +513,7 @@
       for (const b of this.boxes) {
         if (b.wait > 0) { b.wait -= DT; continue; }
         for (const c of this.cars) {
-          const dx = c.x - b.x, dz = c.z - b.z;
-          if (dx * dx + dz * dz < BOX_R * BOX_R) {
+          if (bodyDist(c, b.x, b.z) < BOX_HALF + CAR_SIDE) {
             b.wait = c.isPlayer ? 2.5 : 1;                      // les rivaux en tête ne vident pas la piste devant le joueur
             if (!c.item && !c.finished) {
               c.item = this._rollItem(c);
@@ -532,8 +539,7 @@
         s.life -= DT;
         if (s.life <= 0) { this.syrups.splice(i, 1); continue; }
         for (const c of this.cars) {
-          const dx = c.x - s.x, dz = c.z - s.z;
-          if (c.y < 0.6 && dx * dx + dz * dz < SYRUP_R * SYRUP_R) {   // en l'air, on passe au-dessus
+          if (c.y < 0.6 && bodyDist(c, s.x, s.z) < HONEY_R + CAR_SIDE - HONEY_DIP) {   // une roue dans la flaque suffit ; en l'air, on passe au-dessus
             if (c.shield > 0) { c.shield = 0; this.events.push({ t: 'pop', car: c.id, x: c.x, z: c.z }); } else {
               c.spin = 0.6; c.drifting = false; c.charge = 0; c.v *= 0.85;   // le miel colle, sans ruiner la course
               this.events.push({ t: 'splat', car: c.id, x: c.x, z: c.z });
@@ -547,7 +553,7 @@
     }
   }
 
-  MB.MARBLE_R = 2.6;
+  MB.MARBLE_R = 1.1;                                                 // rayon de la bille dessinée
   // Billes : elles roulent tout droit, rebondissent sur les murs du circuit et font tourner la voiture touchée.
   Race.prototype._marbles = function () {
     const t = this.track, lim = t.width / 2 - 0.7;
@@ -564,9 +570,12 @@
         if (this.player && Math.hypot(m.x - this.player.x, m.z - this.player.z) < 60) this.events.push({ t: 'marbleBounce' });
       }
       for (const c of this.cars) {
-        if (c.id === m.owner || c.y > 0.8 || c.finished) continue;           // sa propre bille, même revenue d'un rebond, ne touche pas
-        const dx = c.x - m.x, dz = c.z - m.z;
-        if (dx * dx + dz * dz > MB.MARBLE_R * MB.MARBLE_R) continue;
+        if (c.y > 0.8 || c.finished || bodyDist(c, m.x, m.z) > MB.MARBLE_R + CAR_SIDE) continue;
+        if (c.id === m.owner) {                                           // sa propre bille revenue d'un rebond : elle ricoche sur la carrosserie
+          const nx = m.x - c.x, nz = m.z - c.z, nl = Math.hypot(nx, nz) || 1, vx = Math.cos(m.h) * m.v - Math.cos(c.h) * c.v, vz = Math.sin(m.h) * m.v - Math.sin(c.h) * c.v;
+          if (vx * nx + vz * nz < 0) { const away = Math.atan2(nz, nx); m.h = away; m.v = Math.max(m.v * 0.7, c.v + 8); if (c.isPlayer) this.events.push({ t: 'marbleBounce' }); }
+          continue;
+        }
         if (c.shield > 0) { c.shield = 0; this.events.push({ t: 'pop', car: c.id, x: c.x, z: c.z }); }
         else {
           c.spin = 0.6; c.drifting = false; c.charge = 0; c.v *= 0.8;
