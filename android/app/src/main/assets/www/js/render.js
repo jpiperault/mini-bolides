@@ -3,6 +3,7 @@
   const T = THREE;
   const CUISINE = ['bol', 'boite', 'tasse', 'salieres', 'assiette', 'grillepain', 'crepes', 'brique', 'pot', 'cubes', 'pomme', 'tartine', 'couvert', 'tasse', 'pomme', 'assiette', 'pot', 'crepes', 'couvert'];
   const PROP_REACH = 300;
+  const bubV = new T.Vector3(), sstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const MOODS = {
     matin: { sky: 0xffe6c4, fog: [260, 720], hemi: [0xfff4e0, 0xb98f62, 0.74], sun: [0xfff0d0, 0.42], ground: 'bois', exposure: 1, life: 'cuisine', verge: '60,32,14', hills: ['cuisine', '#d8c2a2', '#b48e68'] },
     midi: { sky: 0xcfe8fb, fog: [280, 760], hemi: [0xffffff, 0xc9a9a0, 0.76], sun: [0xffffff, 0.4], ground: 'vichy', exposure: 1, life: 'cuisine', verge: '90,40,40', hills: ['cuisine', '#b9cfe2', '#c99e96'] },
@@ -1260,7 +1261,16 @@
         e.sh.position.x = P.x; e.sh.position.z = P.z; e.sh.rotation.z = -P.h - P.slip;
         if (e.bub) {
           e.bubT -= dt; e.bub.visible = e.bubT > 0;
-          if (e.bub.visible) { e.bub.position.set(P.x, 6.2 + P.lift + (1.8 - e.bubT < 0.2 ? (1.8 - e.bubT) * 5 - 1 : 0), P.z); e.bub.material.opacity = Math.min(1, e.bubT * 3); }
+          if (e.bub.visible) {
+            e.bub.position.set(P.x, 6.2 + P.lift + (1.8 - e.bubT < 0.2 ? (1.8 - e.bubT) * 5 - 1 : 0), P.z);
+            // Taille bornée à l'écran : un rival qui vient d'être doublé passe souvent tout près de la caméra,
+            // et la bulle remplissait alors un tiers de l'écran. Trop près ou à moitié hors champ : on ne l'affiche pas.
+            const d = e.bub.position.distanceTo(this.cam.position), view = 2 * d * Math.tan((this.cam.fov * Math.PI) / 360) * this.cam.aspect;
+            const k = Math.min(1, (0.34 * view) / 8), ndc = bubV.copy(e.bub.position).project(this.cam);
+            e.bub.scale.set(8 * k, 4 * k, 1);
+            const fade = sstep(5, 8, d) * (1 - sstep(0.6, 0.78, Math.abs(ndc.x))) * (ndc.z < 1 ? 1 : 0);
+            e.bub.material.opacity = Math.min(1, e.bubT * 3) * fade; e.bub.visible = fade > 0.02;
+          }
         }
         const ss = Math.max(0.45, 1 - P.lift * 0.11); e.sh.scale.set(ss, ss, 1);
         // Fumée et traces à cadence fixe : même rendu à 60 ou 120 Hz, et moins de surdessin.
