@@ -1200,11 +1200,11 @@
 
     // Stries posées dans le décor de part et d'autre de la route : la vitesse les étire.
     _windFx(P, ratio, hot) {
-      const on = !this.calm && ratio > 0.72, m = this.windM;
+      const on = !this.calm && ratio > 0.6, m = this.windM;
       m.visible = on;
       if (!on) return;
-      const ch = Math.cos(P.h), sh = Math.sin(P.h), len = 2 + (ratio - 0.72) * 34 * (hot ? 1.5 : 1), O = this.windO;
-      m.material.opacity = Math.min(0.5, (ratio - 0.72) * (hot ? 2 : 1.3)) * (this.mood && this.mood.night && !hot ? 0.35 : 1);
+      const ch = Math.cos(P.h), sh = Math.sin(P.h), len = 2 + (ratio - 0.6) * 30 * (hot ? 1.5 : 1), O = this.windO;
+      m.material.opacity = Math.min(0.5, (ratio - 0.6) * (hot ? 1.8 : 1.1)) * (this.mood && this.mood.night && !hot ? 0.35 : 1);
       m.material.color.setHex(hot ? 0xffd27a : 0xffffff);
       for (let i = 0; i < WIND_N; i++) {
         const w = this.wind[i], dx = w.x - P.x, dz = w.z - P.z, f = dx * ch + dz * sh;
@@ -1391,7 +1391,7 @@
         for (let i = 1; i < a.array.length; i += 3) { a.array[i] -= dt * 7; if (a.array[i] < 0) a.array[i] += 40; }
         a.needsUpdate = true;
       }
-      const want = p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 58 + ratio * ratio * 10;   // l'objectif s'ouvre avec la vitesse
+      const want = p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 55 + ratio * ratio * 16;   // l'objectif s'ouvre nettement avec la vitesse : c'est lui qui la fait sentir
       this.fov += (want - this.fov) * ease(3);
       if (Math.abs(this.cam.fov - this.fov) > 0.01) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
       this._windFx(P, finished ? 0 : ratio, p.boost > 0);

@@ -264,12 +264,12 @@
         if (inSteer === 0) c.h += clamp(off * 2.6, -back, back) * (1 - Math.abs(c.steer)) * DT;
       }
       // Les lignes droites courbent un peu, presque toujours du côté où tourne le circuit : sans ce suivi léger, la voiture
-      // filait vers l'extérieur et semblait tirer d'un côté. Mais dès que la route tourne vraiment (au-delà de ~0,2 rad/s),
-      // le suivi s'efface : avec 0,45 rad/s partout, la voiture bouclait le Bol seule sans qu'on touche l'écran.
-      // Le Volant magique, lui, suit aussi les courbes.
+      // filait vers l'extérieur et semblait tirer d'un côté. Dès que la route tourne vraiment (au-delà de ~0,2 rad/s),
+      // le suivi plafonne à 0,25 rad/s : à 0,45 la voiture bouclait le Bol seule, à 0 chaque courbe demandait le doigt
+      // à fond et le pilotage devenait pénible. Le Volant magique, lui, suit aussi les courbes.
       if (isP) {
         const road = (angleDiff(this._dirAt(c, 6), dir) / (6 * t.ds)) * c.v;
-        const want = this.assist ? clamp(road, -0.7, 0.7) : road * (1 - sstep(0.18, 0.32, Math.abs(road)));
+        const want = this.assist ? clamp(road, -0.7, 0.7) : road + (clamp(road, -0.25, 0.25) - road) * sstep(0.18, 0.32, Math.abs(road));
         c.ff += (want - c.ff) * Math.min(1, 8 * DT);
         c.h += c.ff * (1 - Math.abs(c.steer)) * DT;
       }
