@@ -266,7 +266,7 @@
       // Les lignes droites courbent un peu, presque toujours du côté où tourne le circuit : sans ce suivi léger, même
       // sans Volant magique, la voiture filait vers l'extérieur et semblait tirer d'un côté. Le Volant magique va plus loin.
       if (isP) {
-        const road = (angleDiff(this._dirAt(c, 6), dir) / (6 * t.ds)) * c.v, cap = this.assist ? 0.35 : 0.15;
+        const road = (angleDiff(this._dirAt(c, 6), dir) / (6 * t.ds)) * c.v, cap = this.assist ? 0.7 : 0.45;   // 0,45 rad/s : les courbes douces se suivent seules, les vrais virages restent au joueur
         c.ff += (clamp(road, -cap, cap) - c.ff) * Math.min(1, 8 * DT);
         c.h += c.ff * (1 - Math.abs(c.steer)) * DT;
       }
@@ -488,10 +488,12 @@
         w = this._wallPush(b, bx, bz); if (w) { bx -= w[0]; bz -= w[1]; ax -= w[0]; az -= w[1]; }
         a.x += ax; a.z += az; b.x += bx; b.z += bz;
         const rear = a.prog < b.prog ? a : b;                  // celui qui percute perd un peu de vitesse
-        rear.v *= 0.9975;
+        rear.v *= 0.999;                                       // ~6 %/s au contact : avant 14 %/s, on se sentait aspiré par la voiture de devant
         // Petit décalage latéral : deux voitures se frottent et se dépassent au lieu de rester en file (pas vers un mur tout proche).
-        const front = rear === a ? b : a, side = rear.lat >= front.lat ? 1 : -1, path = rear.sc || this.track, k = rear.sc ? rear.sci : rear.idx;
-        if (side * rear.lat < path.width / 2 - CAR_R * 0.6 - 1.2) { rear.x += -path.tz[k] * side * 8 * DT; rear.z += path.tx[k] * side * 8 * DT; }
+        // Le joueur n'est jamais déporté par ce décalage : c'est le rival qui s'écarte, de l'autre côté.
+        const front = rear === a ? b : a, side = rear.lat >= front.lat ? 1 : -1, mover = rear.isPlayer ? front : rear, sgn = rear.isPlayer ? -side : side;
+        const path = mover.sc || this.track, k = mover.sc ? mover.sci : mover.idx;
+        if (!mover.isPlayer && sgn * mover.lat < path.width / 2 - CAR_R * 0.6 - 1.2) { mover.x += -path.tz[k] * sgn * 5 * DT; mover.z += path.tx[k] * sgn * 5 * DT; }
         if (a.isPlayer || b.isPlayer) { if (!this.bumpT || this.clock - this.bumpT > 0.4) { this.bumpT = this.clock; this.events.push({ t: 'bump' }); } }
       }
     }
