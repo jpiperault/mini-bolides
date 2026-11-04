@@ -3,7 +3,7 @@
   "default_lang": "en-US",
   "icon": "icon-512.png",
   "developer": "Julien Piperault",
-  "category": "Course · Arcade",
+  "category": "Course",
   "tags": [
     "Course",
     "Arcade",
@@ -14,13 +14,15 @@
   "contact": {
     "email": "contact@jupistudio.com",
     "website": "https://jupistudio.com",
+    "phone": "",
     "privacy": "https://jupistudio.com/mini-bolides/privacy/"
   },
+  "privacy_slug": "mini-bolides",
   "langs": {
     "en-US": {
       "title": "Mini Bolides: Toy Car Racing",
       "short": "Drift toy cars around the kitchen, the beach and the snow. Win every cup!",
-      "full": "Six toy cars, one tiny track, three laps. Ready, set… drift!\n\nMini Bolides is an arcade racing game with toy cars. Put your thumb anywhere on the screen and slide left or right to steer. Steer hard through a corner to drift, then let go for a turbo boost: hold the drift longer for a super turbo.\n\n11 TRACKS, 6 WORLDS\nRace round a bowl in the kitchen, through the sandbox, across a sandcastle, along an ant trail, over a freezer floe, on a playmat city and around a teddy bear's bedroom. Some tracks have jumps, and four of them hide a narrow shortcut for those who dare.\n\n4 MODES PER TRACK\nEach track can also be raced at night with headlights, in the rain on a slippery road, or in reverse. Every mode earns its own stars, and stars open new worlds and new cups.\n\nCHAMPIONSHIP\n5 cups of 3 or 4 races, from the Kitchen Cup to the Champions Cup. Points at every finish line, a trophy at the end. Three difficulty levels: Easy, Normal and Expert.\n\nBONUSES ON THE TRACK\nGrab gift boxes for a honey puddle, a rubber-band turbo, a magnet, a bubble, a spring, sticky tyres, a piggy bank, a lightning charge or a marble to bowl over a rival. Racers at the back get more boosts, never nasty items.\n\nRIVALS WITH ATTITUDE\nLoulou, Zébulon, Mamie Turbo, Biscotte, Max la Menace and Praline each have their own driving style. Some block, some finish strong, and they all sulk when you pass them.\n\nYOUR GARAGE\n8 cars, each with a strength and a weakness: the drift queen, the tiny nimble one, Auntie's heavy van, the top-speed racer… Upgrade the engine, gearbox, tyres and turbo with the coins you win on the track. Choose a paint, a roof number, rims and the colour of your turbo flame.\n\nALWAYS SOMETHING TO DO\nTime trial against your own ghost, a daily challenge, a daily gift, 15 trophies to collect, and a slow-motion replay (or photo finish!) of every finish.\n\n- Plays offline\n- One-thumb controls, with an optional steering assist and adjustable sensitivity\n- English and French",
+      "full": "Six toy cars, one tiny track, three laps. Ready, set… drift!\n\nMini Bolides is an arcade racing game with toy cars. Put your thumb anywhere on the screen and slide left or right to steer. Steer hard through a corner to drift, then let go for a turbo boost: hold the drift longer for a super turbo.\n\n11 TRACKS, 6 WORLDS\nRace round a bowl in the kitchen, through the sandbox, across a sandcastle, along an ant trail, over a freezer floe, on a playmat city and around a teddy bear's bedroom. Some tracks have jumps, and four of them hide a narrow shortcut for those who dare.\n\n4 MODES PER TRACK\nEach track can also be raced at night with headlights, in the rain on a slippery road, or in reverse. Every mode earns its own stars, and stars open new worlds and new cups.\n\nCHAMPIONSHIP\n5 cups of 3 or 4 races, from the Kitchen Cup to the Champions Cup. Points at every finish line, a trophy at the end. Three difficulty levels: Easy, Normal and Expert.\n\nBONUSES ON THE TRACK\nGrab gift boxes for a honey puddle, a rubber-band turbo, a magnet, a bubble, a spring, sticky tyres, a piggy bank, a lightning charge or a marble to bowl over a rival. Racers at the back get more boosts, never nasty items.\n\nRIVALS WITH ATTITUDE\nLoulou, Zébulon, Mamie Turbo, Biscotte, Max la Menace and Praline each have their own driving style. Some block, some finish strong, and they all sulk when you pass them.\n\nYOUR GARAGE\n14 cars, each with a strength and a weakness: the drift queen, the tiny nimble one, Auntie's heavy van, the top-speed racer, the dragster, the 4x4… Upgrade the engine, gearbox, tyres and turbo with the coins you win on the track. Choose a paint, a roof number, rims and the colour of your turbo flame.\n\nALWAYS SOMETHING TO DO\nTime trial against your own ghost, three daily missions with a coin chest, a daily challenge, a daily gift, 15 trophies to collect, and a slow-motion replay (or photo finish!) of every finish.\n\n- Plays offline\n- Optional daily reminder when your gift is ready\n- One-thumb controls, with an optional steering assist and adjustable sensitivity\n- English and French",
       "feature": "play-en/feature-graphic.png",
       "shots": [
         "play-en/screenshot-1.png",
@@ -36,7 +38,7 @@
     "fr-FR": {
       "title": "Mini Bolides : Voitures jouets",
       "short": "Drifte en petite voiture dans la cuisine, à la plage, sur la neige… et gagne !",
-      "full": "Six petites voitures, un circuit grandeur jouet, trois tours. À vos marques… drifte !\n\nMini Bolides est un jeu de course arcade en petites voitures jouets. Pose le pouce n'importe où sur l'écran et glisse à gauche ou à droite pour tourner. Braque fort dans un virage pour drifter, puis relâche pour un coup de turbo : garde le drift plus longtemps pour un super turbo.\n\n11 CIRCUITS, 6 MONDES\nFais le tour du bol dans la cuisine, traverse le bac à sable et le château de sable, suis le sentier des fourmis, glisse sur la banquise du congélo, file sur le tapis de ville et cours dans la chambre du doudou. Certains circuits ont des sauts, et quatre cachent un raccourci étroit pour les plus audacieux.\n\n4 MODES PAR CIRCUIT\nChaque circuit se court aussi de nuit à la lumière des phares, sous la pluie sur une route glissante, ou en sens inverse. Chaque mode rapporte ses propres étoiles, et les étoiles ouvrent de nouveaux mondes et de nouvelles coupes.\n\nLE CHAMPIONNAT\n5 coupes de 3 ou 4 courses, de la Coupe de la Cuisine à la Coupe des Champions. Des points à chaque arrivée, un trophée à la fin. Trois niveaux : Facile, Normal et Expert.\n\nDES BONUS SUR LA PISTE\nRamasse les cadeaux : flaque de miel, élastique turbo, aimant, bulle, ressort, pneus collants, tirelire, recharge éclair ou bille pour faire un strike sur un rival. Les derniers reçoivent plus d'accélérations, jamais d'objet punitif.\n\nDES RIVAUX QUI ONT DU CARACTÈRE\nLoulou, Zébulon, Mamie Turbo, Biscotte, Max la Menace et Praline ont chacun leur style de conduite. Certains ferment la porte, d'autres finissent fort, et tous boudent quand tu les doubles.\n\nTON GARAGE\n8 voitures, chacune avec sa force et sa faiblesse : la reine du drift, la minuscule nerveuse, le fourgon de Tata, la pointe de vitesse… Améliore le moteur, la boîte, les pneus et le turbo avec les pièces gagnées en course. Choisis la peinture, le numéro sur le toit, les jantes et la couleur de la flamme du turbo.\n\nTOUJOURS UNE COURSE À FAIRE\nContre-la-montre face à ton fantôme, défi du jour, cadeau du jour, 15 trophées à décrocher, et un ralenti (ou une photo-finish !) à chaque arrivée.\n\n- Fonctionne hors ligne\n- Se joue d'un seul pouce, avec un volant magique facultatif et une direction réglable\n- En français et en anglais",
+      "full": "Six petites voitures, un circuit grandeur jouet, trois tours. À vos marques… drifte !\n\nMini Bolides est un jeu de course arcade en petites voitures jouets. Pose le pouce n'importe où sur l'écran et glisse à gauche ou à droite pour tourner. Braque fort dans un virage pour drifter, puis relâche pour un coup de turbo : garde le drift plus longtemps pour un super turbo.\n\n11 CIRCUITS, 6 MONDES\nFais le tour du bol dans la cuisine, traverse le bac à sable et le château de sable, suis le sentier des fourmis, glisse sur la banquise du congélo, file sur le tapis de ville et cours dans la chambre du doudou. Certains circuits ont des sauts, et quatre cachent un raccourci étroit pour les plus audacieux.\n\n4 MODES PAR CIRCUIT\nChaque circuit se court aussi de nuit à la lumière des phares, sous la pluie sur une route glissante, ou en sens inverse. Chaque mode rapporte ses propres étoiles, et les étoiles ouvrent de nouveaux mondes et de nouvelles coupes.\n\nLE CHAMPIONNAT\n5 coupes de 3 ou 4 courses, de la Coupe de la Cuisine à la Coupe des Champions. Des points à chaque arrivée, un trophée à la fin. Trois niveaux : Facile, Normal et Expert.\n\nDES BONUS SUR LA PISTE\nRamasse les cadeaux : flaque de miel, élastique turbo, aimant, bulle, ressort, pneus collants, tirelire, recharge éclair ou bille pour faire un strike sur un rival. Les derniers reçoivent plus d'accélérations, jamais d'objet punitif.\n\nDES RIVAUX QUI ONT DU CARACTÈRE\nLoulou, Zébulon, Mamie Turbo, Biscotte, Max la Menace et Praline ont chacun leur style de conduite. Certains ferment la porte, d'autres finissent fort, et tous boudent quand tu les doubles.\n\nTON GARAGE\n14 voitures, chacune avec sa force et sa faiblesse : la reine du drift, la minuscule nerveuse, le fourgon de Tata, la pointe de vitesse, le dragster, le 4x4… Améliore le moteur, la boîte, les pneus et le turbo avec les pièces gagnées en course. Choisis la peinture, le numéro sur le toit, les jantes et la couleur de la flamme du turbo.\n\nTOUJOURS UNE COURSE À FAIRE\nContre-la-montre face à ton fantôme, trois missions du jour avec un coffre de pièces, défi du jour, cadeau du jour, 15 trophées à décrocher, et un ralenti (ou une photo-finish !) à chaque arrivée.\n\n- Fonctionne hors ligne\n- Rappel quotidien facultatif quand ton cadeau est prêt\n- Se joue d'un seul pouce, avec un volant magique facultatif et une direction réglable\n- En français et en anglais",
       "feature": "play-fr/banniere.png",
       "shots": [
         "play-fr/capture-1.png",
@@ -51,120 +53,78 @@
     }
   },
   "console": {
-    "app_info": [
-      [
-        "Appli ou jeu",
-        "Jeu"
+    "app": {
+      "type": "game",
+      "free": true
+    },
+    "access": {
+      "restricted": false,
+      "instructions": ""
+    },
+    "ads": false,
+    "rating": {
+      "category": "game",
+      "answers": {
+        "violence": false,
+        "fear": false,
+        "sexuality": false,
+        "gambling": false,
+        "language": false,
+        "substances": false,
+        "crude_humor": false,
+        "purchases": false,
+        "user_interaction": false,
+        "shares_location": false,
+        "extremist": false,
+        "china": false,
+        "terrorism": false,
+        "crime": false
+      },
+      "details": {},
+      "expected": {
+        "PEGI": "3",
+        "ESRB": "Everyone",
+        "USK": "0",
+        "IARC": "3+"
+      }
+    },
+    "audience": {
+      "ages": [
+        "6-8",
+        "9-12",
+        "13-15",
+        "16-17",
+        "18+"
       ],
-      [
-        "Gratuite ou payante",
-        "Gratuite"
-      ],
-      [
-        "Langue par défaut",
-        "Anglais (États-Unis) – en-US"
-      ],
-      [
-        "Catégorie",
-        "Course"
+      "teacher_approved": false
+    },
+    "data_safety": {
+      "collects": false,
+      "families_commitment": true,
+      "encrypted": true,
+      "deletion": "",
+      "types": []
+    },
+    "government": false,
+    "financial": [],
+    "health": [],
+    "ad_id": false,
+    "ai": {
+      "declare": true,
+      "elements": [
+        "Textes de la fiche (titre, descriptions, notes de version) écrits avec Claude",
+        "Légendes des captures et texte de la bannière écrits avec Claude (les images elles-mêmes sont de vraies captures du jeu et une mise en page générée par du code)"
       ]
-    ],
-    "content_rating": [
-      [
-        "Catégorie du questionnaire",
-        "Jeu"
-      ],
-      [
-        "Violence, sang, armes",
-        "Non (voitures jouets qui se bousculent, aucun personnage blessé)"
-      ],
-      [
-        "Peur, contenu effrayant",
-        "Non"
-      ],
-      [
-        "Langage grossier",
-        "Non"
-      ],
-      [
-        "Drogues, alcool, tabac",
-        "Non"
-      ],
-      [
-        "Contenu sexuel",
-        "Non"
-      ],
-      [
-        "Jeux d'argent, achats",
-        "Non (pièces gagnées en course uniquement, sans argent réel)"
-      ],
-      [
-        "Échanges entre joueurs",
-        "Non (rivaux pilotés par l'ordinateur, aucun mode en ligne)"
-      ],
-      [
-        "Partage de position",
-        "Non"
-      ],
-      [
-        "Classification attendue",
-        "PEGI 3 / ESRB Everyone"
-      ]
-    ],
-    "target_audience": [
-      [
-        "Tranches d'âge",
-        "13-15, 16-17, 18 ans et plus"
-      ],
-      [
-        "Attire les enfants",
-        "Possiblement (univers de jouets) : à confirmer, voir notes"
-      ],
-      [
-        "S'adresse principalement aux enfants",
-        "Non"
-      ]
-    ],
-    "data_safety": [
-      [
-        "Collecte ou partage de données",
-        "Non"
-      ],
-      [
-        "Accès réseau",
-        "Aucun : la version Play n'a pas l'autorisation INTERNET (le journal de parties n'existe que dans les versions de test)"
-      ],
-      [
-        "Autorisations",
-        "VIBRATE, POST_NOTIFICATIONS (rappel quotidien local, facultatif) et RECEIVE_BOOT_COMPLETED (reprogrammer ce rappel après un redémarrage)"
-      ],
-      [
-        "Données chiffrées en transit",
-        "Sans objet"
-      ],
-      [
-        "Suppression des données sur demande",
-        "Sans objet (progression enregistrée seulement sur l'appareil)"
-      ]
-    ],
-    "ads_access": [
-      [
-        "L'appli contient des annonces",
-        "Non (aucun SDK publicitaire ; écrans de pub simulés en mode démo, voir notes)"
-      ],
-      [
-        "Achats intégrés",
-        "Non (aucune bibliothèque Play Billing ; boutique simulée en mode démo)"
-      ],
-      [
-        "Accès à l'appli",
-        "Tout est accessible sans identifiants"
-      ],
-      [
-        "Appli gouvernementale, financière, santé, actualités",
-        "Non"
-      ]
-    ]
+    },
+    "why": {
+      "create": "Jeu de course (WebView three.js, Java natif). Aucune bibliothèque Play Billing dans l'APK de release : gratuit au téléchargement.",
+      "access": "Aucun compte, aucune connexion ni code : tout le jeu s'ouvre sans identifiants (progression enregistrée en localStorage).",
+      "ads": "Aucun SDK publicitaire dans l'APK (check_play : ads []) ni promotion d'autres applis. ATTENTION : js/data.js a MB.FEATURES.demo=true et ads=true, donc le build de release affiche des écrans « Pub de test » (rewarded et entre les courses) et une boutique simulée (Pack Sans pub 2,99 €, Collection Prestige 1,99 €, sans paiement) : à passer à false avant la publication.",
+      "rating": "Petites voitures jouets qui se bousculent, bonus inoffensifs (miel, bille, aimant), aucun personnage blessé, aucun texte grossier ; pièces gagnées en course uniquement, pas d'argent réel (boutique seulement simulée) ; aucun mode en ligne, rivaux pilotés par l'ordinateur.",
+      "audience": "Univers de jouets (cuisine, bac à sable, chambre du doudou), dessin simple, contrôles à un pouce, PEGI 3 : le jeu attire les enfants, donc 6-8 et 9-12 sont inclus et le règlement Familles s'applique (aucun SDK tiers, aucune collecte).",
+      "data_safety": "L'APK de release n'a pas l'autorisation INTERNET (seulement POST_NOTIFICATIONS, RECEIVE_BOOT_COMPLETED, VIBRATE) : rien ne quitte l'appareil. Le journal de parties (AndroidBridge.sendJournal vers 192.168.91.48) n'existe que dans les builds debug (FLAG_DEBUGGABLE + INTERNET dans src/debug/AndroidManifest.xml).",
+      "declarations": "Ni appli gouvernementale, ni fonction financière ou de santé ; pas de com.google.android.gms.permission.AD_ID dans le manifeste final ; textes de la fiche écrits avec Claude."
+    }
   },
   "notes": {
     "48": {
@@ -174,6 +134,10 @@
     "50": {
       "en-US": "New shield logo on the title screen and a new app icon, with the subtitle Toy Car Racing. The turbo pad on narrow shortcuts now sits before the junction, so it really boosts you instead of spilling onto the main road.",
       "fr-FR": "Nouveau logo écusson sur l'écran titre et nouvelle icône d'appli, avec le sous-titre Course de petites voitures. Sur les raccourcis étroits, la dalle turbo est placée avant la jonction : elle te propulse vraiment au lieu de déborder sur la route."
+    },
+    "56": {
+      "en-US": "Three daily missions: complete them over your races to earn coins, and finish all three to open a chest of 250 to 450 coins. Six new cars in the garage, from La Tortue to Le Dragster. New optional daily reminder when your gift is ready, which you can turn off in the settings.",
+      "fr-FR": "Trois missions du jour : remplis-les au fil des courses pour gagner des pièces, et finis les trois pour ouvrir un coffre de 250 à 450 pièces. Six nouvelles voitures au garage, de la Tortue au Dragster. Nouveau rappel quotidien facultatif quand ton cadeau est prêt, désactivable dans les réglages."
     }
   }
 }
