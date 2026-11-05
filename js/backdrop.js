@@ -259,7 +259,7 @@
   MB.backdrop = function (scene, mood, track, horizon) {
     const kind = mood.hills ? mood.hills[0] : 'cuisine', night = !!mood.night, seed = track.def.seed || 1;
     const skyCol = '#' + new T.Color(mood.sky).getHexString();
-    haze = null; const tSky = sky(kind, night, seed);
+    haze = mood.rain ? ['#6d7886', 0.55] : null; const tSky = sky(kind, night, seed);   // sous la pluie, nuages gris
     haze = [skyCol, night ? 0.12 : 0.3]; const tFar = far(kind, night, seed);
     haze = [skyCol, night ? 0.05 : 0.12]; const tMid = mid(kind, night, seed);
     haze = null;

@@ -906,7 +906,9 @@
       let far = 0;
       for (let i = 0; i < track.count; i++) far = Math.max(far, Math.hypot(track.px[i], track.pz[i]));
       this.horizon = Math.min(Math.max(far + 260, 420), 540);
-      if (mood.hills) mood.hills.slice(1).forEach((col, k) => {
+      // Arrière-plan peint sur trois plans (ciel, lointain, second plan) ; #decor=1 garde les anciennes silhouettes unies.
+      if (MB.backdrop && !/decor=1/.test(location.hash)) MB.backdrop(s, mood, track, this.horizon);
+      else if (mood.hills) mood.hills.slice(1).forEach((col, k) => {
         const tex = hillsTexture(mood.hills[0], col, k === 1, track.def.seed), r = this.horizon + (k ? 0 : 110), H = k ? 120 : 170;
         tex.repeat.set(k ? 4 : 3, 1);
         const ring = new T.Mesh(new T.CylinderGeometry(r, r, H, 160, 1, true), new T.MeshBasicMaterial({ map: tex, transparent: true, side: T.BackSide, depthWrite: false }));
