@@ -621,11 +621,32 @@
     return out;
   }
   function toast(text) { window.mbJournal ? window.mbJournal(text) : flash(text); }
+  // Salle des trophées : à l'ouverture, on regarde le dernier trophée gagné.
+  let tIdx = -1;
   function renderTrophies() {
-    const got = MB.TROPHIES.filter((x) => save.troph[x.id]).length;
-    $('trophyCount').textContent = `${got} / ${MB.TROPHIES.length}`;
-    $('trophyList').innerHTML = MB.TROPHIES.map((x) => `<div class="troph ${save.troph[x.id] ? 'on' : ''}"><b>${save.troph[x.id] ? x.icon : '🔒'}</b><span>${L(x.name)}<small>${L(x.desc)}</small></span><i>${save.troph[x.id] ? '✓' : `+${x.coins} 🪙`}</i></div>`).join('');
+    const got = MB.TROPHIES.filter((x) => save.troph[x.id]);
+    $('trophyCount').textContent = `${got.length} / ${MB.TROPHIES.length}`;
+    if (tIdx < 0) {
+      const last = got.reduce((a, x) => (!a || (+save.troph[x.id] || 0) > (+save.troph[a.id] || 0) ? x : a), null);
+      tIdx = last ? MB.TROPHIES.indexOf(last) : 0;
+    }
+    view.showTrophies(got.map((x) => x.id), tIdx);
     show('trophies');
+    trophyCard();
+  }
+  function trophyCard() {
+    const x = MB.TROPHIES[tIdx], when = save.troph[x.id];
+    $('tName').textContent = `${when ? x.icon + ' ' : ''}${L(x.name)}`;
+    $('tDesc').textContent = L(x.desc);
+    const date = +when > 1e12 ? new Date(+when).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long' }) : '';
+    $('tState').textContent = when ? (lang === 'fr' ? `✓ Gagné${date ? ' le ' + date : ''} · +${x.coins} 🪙` : `✓ Won${date ? ' on ' + date : ''} · +${x.coins} 🪙`) : (lang === 'fr' ? `🔒 À gagner · +${x.coins} 🪙` : `🔒 To win · +${x.coins} 🪙`);
+    $('tState').className = `tstate${when ? ' on' : ''}`;
+    $('tChips').innerHTML = MB.TROPHIES.map((y, i) => `<button data-tsel="${i}" class="${save.troph[y.id] ? 'on' : ''}${i === tIdx ? ' sel' : ''}" aria-label="${L(y.name)}">${save.troph[y.id] ? y.icon : '🔒'}</button>`).join('');
+  }
+  function trophyGo(i) {
+    tIdx = (i + MB.TROPHIES.length) % MB.TROPHIES.length;
+    view.selectTrophy(tIdx); trophyCard();
+    Sound.play('tap', [660, 0.05, 'triangle', 0.06]);
   }
 
   function finishSolo() {
@@ -919,7 +940,9 @@
       if (!save.looks.includes(k)) { if (save.coins < o.price) return; save.coins -= o.price; save.looks.push(k); Sound.play('buy', [880, 0.3, 'triangle', 0.16, 1320], 0); }
       save.look[kind] = id; persist(); $('coinval').textContent = save.coins; return renderGarage();
     }
-    if (d.go === 'trophies') return renderTrophies();
+    if (d.go === 'trophies') { tIdx = -1; return renderTrophies(); }
+    if (d.tstep) return trophyGo(tIdx + +d.tstep);
+    if (d.tsel !== undefined) return trophyGo(+d.tsel);
     if (d.gbuy) {
       const c = MB.CARS[gIdx];
       if (save.coins >= c.price) { save.coins -= c.price; save.cars.push(c.id); save.car = c.id; save.carPaint[c.id] = carPaint(c.id); Sound.play('buy', [880, 0.3, 'triangle', 0.16, 1320], 0); persist(); }
@@ -1070,7 +1093,19 @@
     drag.addEventListener('pointermove', (e) => { if (dragX !== null) { view.spinGarage(e.clientX - dragX); dragX = e.clientX; } });
     drag.addEventListener('pointerup', () => { dragX = null; });
     drag.addEventListener('pointercancel', () => { dragX = null; });
-    MB.debug = { go: (k) => { if (k === 'garage') renderGarage(); if (k === 'gup') { gTab = 'up'; renderGarage(); } if (k === 'settings') renderSettings(); if (k === 'tracks') renderTracks(); if (k === 'cups') renderCups(); if (k === 'shop') renderShop(); if (k === 'finish') { race.player.prog = race.laps * race.track.length - 2; } },
+    // Salle des trophées : on glisse pour passer d'un trophée à l'autre.
+    const tDrag = $('tDrag');
+    let tX = null;
+    tDrag.addEventListener('pointerdown', (e) => { tX = e.clientX; try { tDrag.setPointerCapture(e.pointerId); } catch (x) { /* rien */ } });
+    tDrag.addEventListener('pointermove', (e) => { if (tX !== null) view.dragTrophies(e.clientX - tX); });
+    const tUp = (e) => {
+      if (tX === null) return;
+      const dx = e.clientX - tX; tX = null; view.dragTrophies(0);
+      if (Math.abs(dx) > 40) trophyGo(tIdx + (dx < 0 ? 1 : -1));
+    };
+    tDrag.addEventListener('pointerup', tUp);
+    tDrag.addEventListener('pointercancel', () => { tX = null; view.dragTrophies(0); });
+    MB.debug = { go: (k) => { if (k === 'garage') renderGarage(); if (k === 'gup') { gTab = 'up'; renderGarage(); } if (k === 'settings') renderSettings(); if (k === 'tracks') renderTracks(); if (k === 'cups') renderCups(); if (k === 'shop') renderShop(); if (k === 'trophies') { tIdx = -1; renderTrophies(); } if (k === 'finish') { race.player.prog = race.laps * race.track.length - 2; } },
       race: () => race, sound: () => Sound, finishNow: () => { while (race.state !== 'done') { race.step(1 / 60, MB.botInput(race)); recordFrame(); } race.events = []; startReplay(); }, start: buildRace, save: () => save, menu, setSave: (o) => Object.assign(save, o), view: () => view };
     menu();
     const m = location.hash.match(/race=(\w+)/);

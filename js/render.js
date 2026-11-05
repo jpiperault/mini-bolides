@@ -1634,6 +1634,7 @@
 
     frameMenu(dt) {
       if (this.mode === 'garage') return this.frameGarage(dt);
+      if (this.mode === 'troph') return this.frameTrophies(dt);
       if (!this.shop) return;
       this.t += dt;
       const a = 0.55 + this.t * 0.28, o = this.shop.position;
