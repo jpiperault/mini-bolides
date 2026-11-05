@@ -29,7 +29,7 @@
     double: ['Doubler les gains (pub)', 'Double rewards (ad)'], paint: ['Peinture', 'Paint'], racePlus: ['Prime de course', 'Race prize'], cupPlus: ['Prime de coupe', 'Cup prize'],
     sSpeed: ['Vitesse', 'Speed'], sAccel: ['Accélération', 'Acceleration'], sTurn: ['Maniabilité', 'Handling'], sDrift: ['Drift', 'Drift'],
     tabCar: ['Voiture', 'Car'], tabUp: ['Évolutions', 'Upgrades'], tabPaint: ['Peinture', 'Paint'], tabStyle: ['Style', 'Style'], lookNum: ['Numéro sur le toit', 'Roof number'], lookRim: ['Jantes', 'Rims'], lookTrail: ['Flamme du turbo', 'Turbo flame'],
-    lookHelp: ['Acheté une fois, il va sur toutes tes voitures.', 'Bought once, it fits all your cars.'], trophies: ['Trophées', 'Trophies'], trophy: ['Trophée', 'Trophy'], sens: ['Sensibilité de la direction', 'Steering sensitivity'],
+    lookHelp: ['Acheté une fois, il va sur toutes tes voitures.', 'Bought once, it fits all your cars.'], trophies: ['Trophées', 'Trophies'], toyHint: ['🔍 Un jouet est caché sur ce circuit', '🔍 A toy is hidden on this track'], toyFound: ['Jouet trouvé !', 'Toy found!'], toys: ['Jouets', 'Toys'], trophy: ['Trophée', 'Trophy'], sens: ['Sensibilité de la direction', 'Steering sensitivity'],
     buyFirst: ['Achète cette voiture pour la faire évoluer.', 'Buy this car to upgrade it.'], max: ['Max', 'Max'], need: ['Pièces insuffisantes', 'Not enough coins'],
     earned: ['Les évolutions se gagnent avec tes pièces de course.', 'Upgrades are paid with coins earned in races.'],
     credits: ['Modèles maison.', 'Home-made models.'],
@@ -40,9 +40,10 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0 }, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
+  if (save.tot.wins === undefined) save.tot.wins = save.troph.win ? 1 : 0;   // victoires comptées depuis les paliers de trophées
   if (!save.v4) {                                             // anciennes médailles : 1er = 2 étoiles, podium = 1 étoile
     for (const id of Object.keys(save.medals)) if (id !== 'cup') save.stars[id] = save.medals[id] === 3 ? 2 : 1;
     if (save.medals.cup) save.cups.cuisine = save.medals.cup;
@@ -371,7 +372,8 @@
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
     const solo = trackMode === 'chrono' && !cup && !chal;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo });
+    const toyDef = MB.TOYS.find((y) => y.track === trackId);
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toy: !!toyDef && !save.toys[toyDef.id] && !auto });
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -478,7 +480,20 @@
       switch (e.t) {
         case 'count': if (e.n >= 1 && e.n <= 3) { flash(String(e.n), 'big'); Sound.play('count', [440, 0.14, 'square', 0.14], 0); } break;
         case 'go': if (journal) { const a = Sound.diag(); window.mbJournal(`Son : ${a.actif ? 'activé' : 'coupé'}, ${a.etat}, ${a.sons} sons${a.erreurs.length ? ' · ' + a.erreurs[0] : ''}`); }
-          flash('GO !', 'big'); Sound.play('go', [880, 0.4, 'square', 0.18], 0); $('hint').hidden = true; if (!save.seen) { save.seen = true; persist(); } break;
+          flash('GO !', 'big'); Sound.play('go', [880, 0.4, 'square', 0.18], 0); $('hint').hidden = true; if (!save.seen) { save.seen = true; persist(); }
+          if (race.toy && (save.toyHint[currentTrack] || 0) < 2) {         // les deux premières fois : on prévient qu'un jouet attend quelque part
+            save.toyHint[currentTrack] = (save.toyHint[currentTrack] || 0) + 1; persist();
+            const r0 = race; setTimeout(() => { if (race === r0 && !r0.toy.taken) flash(t('toyHint')); }, 1600);
+          }
+          break;
+        case 'toy': {
+          const y = MB.TOYS.find((q) => q.track === currentTrack);
+          if (!y) break;
+          save.toys[y.id] = Date.now(); save.coins += MB.TOY_COINS; persist();
+          view.toyFx(); buzz(60); Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0);
+          flash(`${y.icon} ${t('toyFound')} ${L(y.name)} · ${Object.keys(save.toys).length}/${MB.TOYS.length} · +${MB.TOY_COINS} 🪙`);
+          break;
+        }
         case 'coin': Sound.play('coin', [1320, 0.09, 'triangle', 0.14, 1760]); view.coinFx(); break;
         case 'lap': flash(`${t('lap')} ${e.n}/${race.laps}`); Sound.play('lap', [660, 0.22, 'triangle', 0.18, 990], 0); view.lapFx(); if (e.n === race.laps) { stat.lastLapPos = race.position(race.player); if (Sound.tunes) Sound.tunes.tempo(1.07); } break;   // dernier tour : la musique presse
         case 'charge': Sound.play(e.lvl === 2 ? 'charge2' : 'charge1', [e.lvl === 2 ? 990 : 660, 0.1, 'triangle', 0.12], 0); buzz(12); break;
@@ -610,12 +625,23 @@
   // ---------- Trophées ----------
   // Met à jour les totaux, débloque ce qui est atteint, crédite les pièces ; renvoie les lignes à afficher.
   function trophiesAfter(r, earned) {
-    if (r.done) { save.tot.coins += earned; save.tot.turbos += stat.boosts; save.tot.marbles += stat.marbles; save.tracksRaced[currentTrack] = 1; }
+    if (r.done) { save.tot.coins += earned; save.tot.turbos += stat.boosts; save.tot.marbles += stat.marbles; save.tracksRaced[currentTrack] = 1; if (!r.solo && r.pos === 1) save.tot.wins++; }
     const out = [];
     for (const tr of MB.TROPHIES) {
-      if (save.troph[tr.id] || !tr.ok(r, save)) continue;
-      save.troph[tr.id] = Date.now(); save.coins += tr.coins;
-      out.push(`${tr.icon} ${t('trophy')} : ${L(tr.name)} +${tr.coins} 🪙`);
+      if (!save.troph[tr.id]) {
+        if (!tr.ok(r, save)) continue;
+        save.troph[tr.id] = Date.now();
+        const tier = MB.trophyTier(tr, save), gain = tr.coins * tier;
+        save.trophT[tr.id] = tier; save.coins += gain;
+        out.push(`${tr.icon} ${t('trophy')}${tr.tiers ? ' ' + L(MB.TIER_NAMES[tier - 1]) : ''} : ${L(tr.name)} +${gain} 🪙`);
+        continue;
+      }
+      // Palier supérieur atteint : argent puis or, chacun récompensé à son tour.
+      const was = save.trophT[tr.id] || 1, tier = MB.trophyTier(tr, save);
+      if (tier <= was) continue;
+      let gain = 0; for (let k = was + 1; k <= tier; k++) gain += tr.coins * k;
+      save.trophT[tr.id] = tier; save.coins += gain;
+      out.push(`${tr.icon} ${t('trophy')} ${L(MB.TIER_NAMES[tier - 1])} : ${L(tr.name)} +${gain} 🪙`);
     }
     if (out.length) { persist(); Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0); }
     return out;
@@ -625,24 +651,40 @@
   let tIdx = -1;
   function renderTrophies() {
     const got = MB.TROPHIES.filter((x) => save.troph[x.id]);
-    $('trophyCount').textContent = `${got.length} / ${MB.TROPHIES.length}`;
+    $('trophyCount').textContent = `${got.length} / ${MB.TROPHIES.length} · 🧸 ${Object.keys(save.toys).length} / ${MB.TOYS.length}`;
     if (tIdx < 0) {
       const last = got.reduce((a, x) => (!a || (+save.troph[x.id] || 0) > (+save.troph[a.id] || 0) ? x : a), null);
       tIdx = last ? MB.TROPHIES.indexOf(last) : 0;
     }
-    view.showTrophies(got.map((x) => x.id), tIdx);
+    const tiers = {};
+    for (const x of MB.TROPHIES) tiers[x.id] = MB.trophyTier(x, save);
+    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys) }, tIdx);
     show('trophies');
     trophyCard();
   }
   function trophyCard() {
-    const x = MB.TROPHIES[tIdx], when = save.troph[x.id];
-    $('tName').textContent = `${when ? x.icon + ' ' : ''}${L(x.name)}`;
+    const x = MB.TROPHIES[tIdx], when = save.troph[x.id], tier = MB.trophyTier(x, save), fr = lang === 'fr';
+    $('tName').textContent = `${when ? (x.tiers ? ['🥉', '🥈', '🥇'][tier - 1] : x.icon) + ' ' : ''}${L(x.name)}`;
     $('tDesc').textContent = L(x.desc);
+    // Trophée à paliers : palier atteint, total, et barre vers le palier suivant.
+    const bar = $('tBar');
+    if (x.tiers && when) {
+      const n = x.count(save), next = x.tiers[tier], prev = x.tiers[tier - 1];
+      $('tDesc').textContent = `${fr ? 'Palier' : ''} ${L(MB.TIER_NAMES[tier - 1])}${fr ? '' : ' tier'} · ${n.toLocaleString(fr ? 'fr-FR' : 'en-GB')} ${L(x.unit)}`;
+      bar.hidden = !next;
+      if (next) bar.firstChild.style.width = `${Math.round((100 * (n - prev)) / (next - prev))}%`;
+      if (next) { $('tState').textContent = `${['🥈', '🥇'][tier - 1]} ${L(MB.TIER_NAMES[tier])} ${fr ? 'à' : 'at'} ${next.toLocaleString(fr ? 'fr-FR' : 'en-GB')} ${L(x.unit)} · +${x.coins * (tier + 1)} 🪙`; $('tState').className = 'tstate'; }
+      else { $('tState').textContent = fr ? '🥇 Palier or atteint !' : '🥇 Gold tier reached!'; $('tState').className = 'tstate on'; }
+      $('tChips').innerHTML = chipsHtml();
+      return;
+    }
+    bar.hidden = true;
     const date = +when > 1e12 ? new Date(+when).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long' }) : '';
     $('tState').textContent = when ? (lang === 'fr' ? `✓ Gagné${date ? ' le ' + date : ''} · +${x.coins} 🪙` : `✓ Won${date ? ' on ' + date : ''} · +${x.coins} 🪙`) : (lang === 'fr' ? `🔒 À gagner · +${x.coins} 🪙` : `🔒 To win · +${x.coins} 🪙`);
     $('tState').className = `tstate${when ? ' on' : ''}`;
-    $('tChips').innerHTML = MB.TROPHIES.map((y, i) => `<button data-tsel="${i}" class="${save.troph[y.id] ? 'on' : ''}${i === tIdx ? ' sel' : ''}" aria-label="${L(y.name)}">${save.troph[y.id] ? y.icon : '🔒'}</button>`).join('');
+    $('tChips').innerHTML = chipsHtml();
   }
+  const chipsHtml = () => MB.TROPHIES.map((y, i) => `<button data-tsel="${i}" class="${save.troph[y.id] ? 'on' : ''}${i === tIdx ? ' sel' : ''}" aria-label="${L(y.name)}">${save.troph[y.id] ? y.icon : '🔒'}</button>`).join('');
   function trophyGo(i) {
     tIdx = (i + MB.TROPHIES.length) % MB.TROPHIES.length;
     view.selectTrophy(tIdx); trophyCard();

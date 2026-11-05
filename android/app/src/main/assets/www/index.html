@@ -110,6 +110,7 @@ dd u { display: block; height: 100%; background: var(--mint); border-radius: 5px
 .tcard .tstate { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 99px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); font-weight: 800; opacity: 1; }
 .tcard .tstate.on { background: #fff1c4; box-shadow: inset 0 0 0 2px var(--butter-d); }
 .tcard button { width: 46px; height: 46px; flex: none; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 var(--line); font-size: 26px; font-weight: 800; }
+.tbar { margin: 8px auto 0; width: 86%; height: 10px; border-radius: 9px; background: #eadfcf; overflow: hidden; } .tbar i { display: block; height: 100%; background: linear-gradient(90deg, #f2c14e, #e5a92b); }
 #tChips { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin-top: 14px; }
 #tChips button { aspect-ratio: 1; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); font-size: 18px; filter: grayscale(1); opacity: .55; padding: 0; }
 #tChips button.on { filter: none; opacity: 1; background: #fff6d8; box-shadow: inset 0 0 0 2px var(--butter-d); }
@@ -214,7 +215,7 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
   <button class="iconbtn" data-go="home" aria-label="Retour">←</button>
   <div class="tcount"><span data-t="trophies"></span> · <b id="trophyCount"></b></div>
   <div class="sheet tsheet">
-    <div class="tcard"><button data-tstep="-1" aria-label="Trophée précédent">‹</button><div><h2 id="tName"></h2><p id="tDesc"></p><p class="tstate" id="tState"></p></div><button data-tstep="1" aria-label="Trophée suivant">›</button></div>
+    <div class="tcard"><button data-tstep="-1" aria-label="Trophée précédent">‹</button><div><h2 id="tName"></h2><p id="tDesc"></p><div class="tbar" id="tBar" hidden><i></i></div><p class="tstate" id="tState"></p></div><button data-tstep="1" aria-label="Trophée suivant">›</button></div>
     <div id="tChips"></div>
   </div>
 </section>

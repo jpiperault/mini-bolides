@@ -107,23 +107,50 @@
   };
 
   // Trophées : vérifiés à l'arrivée (r : résumé de la course, s : sauvegarde), récompensés une seule fois.
+  // Ceux qui ont des paliers (tiers) se gagnent d'abord en bronze, puis passent argent et or quand le total (count) grandit ;
+  // chaque palier rapporte coins × son rang.
   MB.TROPHIES = [
-    { id: 'first', icon: '🏁', coins: 50, name: { fr: 'Première ligne', en: 'First finish' }, desc: { fr: 'Termine une course', en: 'Finish a race' }, ok: (r) => r.done },
-    { id: 'win', icon: '🥇', coins: 100, name: { fr: 'Champion du tapis', en: 'Top of the rug' }, desc: { fr: 'Gagne une course', en: 'Win a race' }, ok: (r) => !r.solo && r.pos === 1 },
+    { id: 'first', icon: '🏁', coins: 50, tiers: [1, 25, 100], count: (s) => s.races, unit: { fr: 'courses', en: 'races' }, name: { fr: 'Première ligne', en: 'First finish' }, desc: { fr: 'Termine une course', en: 'Finish a race' }, ok: (r) => r.done },
+    { id: 'win', icon: '🥇', coins: 100, tiers: [1, 10, 50], count: (s) => s.tot.wins || 0, unit: { fr: 'victoires', en: 'wins' }, name: { fr: 'Champion du tapis', en: 'Top of the rug' }, desc: { fr: 'Gagne une course', en: 'Win a race' }, ok: (r) => !r.solo && r.pos === 1 },
     { id: 'clean', icon: '🧼', coins: 150, name: { fr: 'Sans une rayure', en: 'Not a scratch' }, desc: { fr: 'Finis une course sans toucher un mur', en: 'Finish without touching a wall' }, ok: (r) => !r.solo && r.walls === 0 },
     { id: 'turbo5', icon: '🔥', coins: 120, name: { fr: 'Pied au plancher', en: 'Pedal to the metal' }, desc: { fr: '5 super turbos dans une course', en: '5 super turbos in one race' }, ok: (r) => r.l2 >= 5 },
-    { id: 'drift50', icon: '🌪️', coins: 200, name: { fr: 'Roi du drift', en: 'Drift king' }, desc: { fr: '50 turbos de drift au total', en: '50 drift turbos in total' }, ok: (r, s) => s.tot.turbos >= 50 },
+    { id: 'drift50', icon: '🌪️', coins: 200, tiers: [50, 200, 1000], count: (s) => s.tot.turbos, unit: { fr: 'turbos', en: 'turbos' }, name: { fr: 'Roi du drift', en: 'Drift king' }, desc: { fr: '50 turbos de drift au total', en: '50 drift turbos in total' }, ok: (r, s) => s.tot.turbos >= 50 },
     { id: 'shortcuts', icon: '»»', coins: 200, name: { fr: 'Explorateur', en: 'Explorer' }, desc: { fr: 'Prends le raccourci des 4 circuits qui en ont', en: 'Take the shortcut on all 4 tracks that have one' }, ok: (r, s) => Object.keys(s.scTracks).length >= 4 },
     { id: 'coins40', icon: '🪙', coins: 120, name: { fr: 'Poches pleines', en: 'Full pockets' }, desc: { fr: '40 pièces dans une course', en: '40 coins in one race' }, ok: (r) => r.coins >= 40 },
-    { id: 'rich', icon: '💰', coins: 300, name: { fr: 'Petite fortune', en: 'Small fortune' }, desc: { fr: 'Gagne 3 000 pièces au total', en: 'Earn 3,000 coins in total' }, ok: (r, s) => s.tot.coins >= 3000 },
-    { id: 'bowling', icon: '🔵', coins: 150, name: { fr: 'Strike !', en: 'Strike!' }, desc: { fr: 'Touche 3 rivaux avec des billes', en: 'Hit 3 rivals with marbles' }, ok: (r, s) => s.tot.marbles >= 3 },
+    { id: 'rich', icon: '💰', coins: 300, tiers: [3000, 10000, 30000], count: (s) => s.tot.coins, unit: { fr: 'pièces', en: 'coins' }, name: { fr: 'Petite fortune', en: 'Small fortune' }, desc: { fr: 'Gagne 3 000 pièces au total', en: 'Earn 3,000 coins in total' }, ok: (r, s) => s.tot.coins >= 3000 },
+    { id: 'bowling', icon: '🔵', coins: 150, tiers: [3, 15, 50], count: (s) => s.tot.marbles, unit: { fr: 'rivaux touchés', en: 'rivals hit' }, name: { fr: 'Strike !', en: 'Strike!' }, desc: { fr: 'Touche 3 rivaux avec des billes', en: 'Hit 3 rivals with marbles' }, ok: (r, s) => s.tot.marbles >= 3 },
     { id: 'comeback', icon: '🚀', coins: 200, name: { fr: 'Remontada', en: 'Comeback' }, desc: { fr: 'Dernier au début du dernier tour, sur le podium à l\'arrivée', en: 'Last on the final lap, on the podium at the end' }, ok: (r) => !r.solo && r.lastLapPos >= 6 && r.pos <= 3 },
     { id: 'ghost', icon: '👻', coins: 150, name: { fr: 'Chasseur de fantôme', en: 'Ghostbuster' }, desc: { fr: 'Bats ton fantôme en contre-la-montre', en: 'Beat your ghost in time trial' }, ok: (r) => r.ghostBeat },
     { id: 'tour', icon: '🗺️', coins: 250, name: { fr: 'Tour de la maison', en: 'House tour' }, desc: { fr: 'Roule sur tous les circuits', en: 'Race on every track' }, ok: (r, s) => Object.keys(s.tracksRaced).length >= MB.TRACKS.length },
     { id: 'cup', icon: '🏆', coins: 300, name: { fr: 'Coupe en or', en: 'Golden cup' }, desc: { fr: 'Gagne une coupe', en: 'Win a cup' }, ok: (r) => r.cupWin },
-    { id: 'stars', icon: '⭐', coins: 300, name: { fr: 'Collectionneur', en: 'Collector' }, desc: { fr: 'Réunis 20 étoiles', en: 'Collect 20 stars' }, ok: (r, s) => Object.values(s.stars).reduce((a, b) => a + b, 0) >= 20 },
+    { id: 'stars', icon: '⭐', coins: 300, tiers: [20, 50, 100], count: (s) => Object.values(s.stars).reduce((a, b) => a + b, 0), unit: { fr: 'étoiles', en: 'stars' }, name: { fr: 'Collectionneur', en: 'Collector' }, desc: { fr: 'Réunis 20 étoiles', en: 'Collect 20 stars' }, ok: (r, s) => Object.values(s.stars).reduce((a, b) => a + b, 0) >= 20 },
     { id: 'expert', icon: '🛞', coins: 300, name: { fr: 'Pilote expert', en: 'Expert driver' }, desc: { fr: 'Gagne une course en Expert', en: 'Win a race in Expert' }, ok: (r) => !r.solo && r.pos === 1 && r.diff === 'expert' },
   ];
+
+  // Jouets cachés : un par circuit, ramassé une seule fois (toutes variantes confondues), exposé dans la salle des trophées.
+  MB.TOY_COINS = 100;
+  MB.TOYS = [
+    { id: 'canard', track: 'bol', icon: '🦆', name: { fr: 'Canard de bain', en: 'Rubber duck' } },
+    { id: 'yoyo', track: 'tartine', icon: '🪀', name: { fr: 'Yoyo', en: 'Yo-yo' } },
+    { id: 'robot', track: 'minuit', icon: '🤖', name: { fr: 'Robot', en: 'Robot' } },
+    { id: 'bateau', track: 'dune', icon: '⛵', name: { fr: 'Bateau en papier', en: 'Paper boat' } },
+    { id: 'toupie', track: 'sentier', icon: '🌀', name: { fr: 'Toupie', en: 'Spinning top' } },
+    { id: 'avion', track: 'chateau', icon: '✈️', name: { fr: 'Petit avion', en: 'Toy plane' } },
+    { id: 'ours', track: 'banquise', icon: '🧸', name: { fr: 'Ourson', en: 'Teddy' } },
+    { id: 'sifflet', track: 'glacier', icon: '📯', name: { fr: 'Sifflet', en: 'Whistle' } },
+    { id: 'voiture', track: 'ville', icon: '🚙', name: { fr: 'Petite voiture', en: 'Toy car' } },
+    { id: 'crayon', track: 'doudou', icon: '✏️', name: { fr: 'Crayon', en: 'Crayon' } },
+    { id: 'de', track: 'coffre', icon: '🎲', name: { fr: 'Dé', en: 'Die' } },
+  ];
+
+  MB.TIER_NAMES = [{ fr: 'Bronze', en: 'Bronze' }, { fr: 'Argent', en: 'Silver' }, { fr: 'Or', en: 'Gold' }];
+  // Palier atteint d'un trophée (0 : pas gagné ; 1 à 3 pour bronze, argent, or ; 1 pour un trophée sans paliers).
+  MB.trophyTier = (tr, s) => {
+    if (!s.troph[tr.id]) return 0;
+    if (!tr.tiers) return 1;
+    const n = tr.count(s);
+    return Math.max(1, tr.tiers.filter((x) => n >= x).length);
+  };
 
   // Ce que dit un rival qu'on vient de dépasser.
   MB.RIVAL_SULK = [

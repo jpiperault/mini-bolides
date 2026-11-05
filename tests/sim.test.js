@@ -200,4 +200,26 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   check(ok && noSc && kinds.size >= 7, `missions du jour : 3 types distincts et stables, ${kinds.size} types tirés, pas de raccourci sans circuit à raccourci`);
   check(/^Fais 1 super turbo$/.test(MB.missionText({ def: MB.MISSIONS.find((m) => m.kind === 'l2'), n: 1 }, 'fr')), 'mission au singulier sans « s »');
 }
+{
+  // Jouets cachés : un par circuit, posé sur la route (corde d'un virage ou raccourci), aussi en sens inverse ; on le ramasse en passant dessus.
+  let bad = [];
+  for (const def of MB.TRACKS) for (const d of [def, MB.reverseDef(def)]) {
+    const t = MB.buildTrack(d), dist = MB.trackDistance(t, t.toy.x, t.toy.z);
+    if (t.toy.sc ? dist > 3 : dist < t.width / 2 - 3 || dist > t.width / 2 - 0.5) bad.push(`${def.id}:${dist.toFixed(1)}`);
+  }
+  check(!bad.length && MB.TRACKS.every((d) => MB.TOYS.filter((y) => y.track === d.id).length === 1), `jouet caché sur chaque circuit, sur la route${bad.length ? ' : ' + bad.join(' ') : ''}`);
+  const w = new MB.Race({ trackId: 'bol', toy: true, carCount: 1, solo: true, seed: 2 }), t = w.track, p = w.player;
+  while (w.state !== 'run') w._tick({ steer: 0 });
+  const i = (p.idx + 40) % t.count; w.toy.x = t.px[i] - t.tz[i] * p.lat; w.toy.z = t.pz[i] + t.tx[i] * p.lat;
+  let n = 0;
+  for (let k = 0; k < 300; k++) { w._tick({ steer: 0 }); n += w.events.filter((e) => e.t === 'toy').length; w.events.length = 0; }
+  const none = new MB.Race({ trackId: 'bol', carCount: 1, solo: true, seed: 2 });
+  check(w.toy.taken && n === 1 && none.toy === null, `jouet ramassé une seule fois en roulant dessus (${n}), absent s'il est déjà trouvé`);
+}
+{
+  // Paliers des trophées : bronze au déblocage, argent puis or quand le total grandit.
+  const tr = MB.TROPHIES.find((x) => x.id === 'win'), s = { troph: { win: 1 }, tot: { wins: 1 }, stars: {} };
+  const a = MB.trophyTier(tr, s); s.tot.wins = 12; const b = MB.trophyTier(tr, s); s.tot.wins = 60; const c = MB.trophyTier(tr, s);
+  check(a === 1 && b === 2 && c === 3 && MB.trophyTier(tr, { troph: {}, tot: { wins: 99 } }) === 0, `paliers : ${a} ${b} ${c}`);
+}
 process.exit(failed ? 1 : 0);

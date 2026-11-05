@@ -1041,7 +1041,7 @@
       // Seuls le sol, la piste et les voitures reçoivent les ombres : les objets du décor n'en calculent plus pixel par pixel.
       for (const p of props) p.g.traverse((o) => { if (o.isMesh) o.receiveShadow = false; });
       this.track = track;
-      this.carMeshes = []; this.boxes = []; this.coins = []; this.syrups = [];
+      this.carMeshes = []; this.boxes = []; this.coins = []; this.syrups = []; this.toyG = null;
       this._fx();
       this._weather(mood);
     }
@@ -1144,6 +1144,17 @@
       for (const k of race.coins) {
         const m = new T.Mesh(this.coinGeo, this.coinMat); m.position.set(k.x, 1.7, k.z); this.scene.add(m); this.coins.push({ m, k });
       }
+      // Jouet caché pas encore trouvé : il flotte, tourne et brille pour qu'on le repère de loin.
+      this.toyG = null;
+      const toyDef = race.toy && MB.TOYS.find((y) => y.track === this.track.def.id);
+      if (toyDef && MB.TOY_MODELS) {
+        const g = new T.Group(), toy = MB.TOY_MODELS[toyDef.id](); toy.scale.setScalar(3); g.add(toy); g.toy = toy;
+        const halo = new T.Sprite(this.toyHaloMat || (this.toyHaloMat = new T.SpriteMaterial({ map: canvas(128, 128, (c) => { const r = c.createRadialGradient(64, 64, 2, 64, 64, 64); r.addColorStop(0, 'rgba(255,240,170,.95)'); r.addColorStop(0.4, 'rgba(255,214,90,.45)'); r.addColorStop(1, 'rgba(255,214,90,0)'); c.fillStyle = r; c.fillRect(0, 0, 128, 128); }), transparent: true, depthWrite: false })));
+        halo.scale.set(6, 6, 1); halo.position.y = 1.6; g.add(halo);
+        const ring = new T.Mesh(new T.TorusGeometry(2.2, 0.1, 8, 40), new T.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.8 })); ring.rotation.x = Math.PI / 2; ring.position.y = -0.4; g.add(ring);
+        this._linear(g);
+        g.position.set(race.toy.x, 0.6, race.toy.z); this.scene.add(g); this.toyG = g;
+      }
       // De nuit, les phares du joueur éclairent la route devant lui.
       this.headlight = null;
       if (this.mood && this.mood.nightVariant) {
@@ -1182,6 +1193,11 @@
     _burst(c, color, size, life, spread) { this._puff(c.x + (Math.random() - 0.5) * spread, 1 + Math.random() * 3, c.z + (Math.random() - 0.5) * spread, color, size, life); }
 
     coinFx() { const p = this.race.player; this._puff(p.x, 2.4, p.z, 0xffe27a, 1.4, 0.22); }
+    toyFx() {
+      const p = this.race.player; this._ringFx(p.x, p.z, 0xffd23f, 14);
+      for (let i = 0; i < 12; i++) this._burst(p, i % 2 ? 0xffd23f : 0xffffff, 2.4, 0.7, 6);
+      if (this.toyG) this.toyG.visible = false;
+    }
 
     itemFx(id, item) {
       const e = this.carMeshes.find((q) => q.c.id === id), c = e.c, col = item === 'elastique' ? 0xff8a1e : item === 'aimant' ? 0x2f8bff : item === 'bulle' ? 0x8fe8ff : item === 'ressort' ? 0x7ee05a : item === 'collant' ? 0x35c29a : item === 'tirelire' ? 0xff8fc0 : item === 'recharge' ? 0xffe14d : item === 'bille' ? 0x3f8fe0 : 0xf2a51c;
@@ -1307,6 +1323,10 @@
       for (const b of this.boxes) {
         b.m.visible = b.b.wait <= 0;
         b.m.rotation.y = this.t * 1.6; b.m.rotation.x = this.t * 0.8;
+      }
+      if (this.toyG && this.toyG.visible) {
+        if (this.race.toy.taken) this.toyG.visible = false;
+        else { this.toyG.toy.rotation.y += dt * 1.6; this.toyG.position.y = 0.6 + Math.sin(this.t * 3) * 0.25; }
       }
       for (const k of this.coins) {
         k.m.visible = !k.k.taken;

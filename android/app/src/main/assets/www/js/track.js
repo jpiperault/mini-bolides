@@ -62,8 +62,24 @@
     t.jumps = (def.jumps || []).map(t.at);
     t.wallGap = { '-1': new Uint8Array(count), 1: new Uint8Array(count) };
     t.shortcuts = (def.shortcuts || []).map((d) => buildShortcut(t, d));
+    t.toy = toySpot(t);
     return t;
   };
+
+  // Jouet caché : au fond du raccourci s'il y en a un, sinon à la corde intérieure du virage le plus serré
+  // (loin du départ et des tremplins). Il faut aller le chercher, il ne tombe pas sur la trajectoire normale.
+  function toySpot(t) {
+    if (t.shortcuts.length) { const p = t.shortcuts[0], k = Math.round(p.count * 0.82); return { x: p.px[k], z: p.pz[k], sc: true }; }
+    let best = -1, top = 0;
+    for (let i = 60; i < t.count - 30; i++) {
+      if (t.jumps.some((j) => Math.abs(j - i) < 14)) continue;
+      if (t.curv[i] > top) { top = t.curv[i]; best = i; }
+    }
+    if (best < 0) best = Math.round(t.count / 2);
+    const j = (best + 6) % t.count, bend = Math.atan2(t.tx[best] * t.tz[j] - t.tz[best] * t.tx[j], t.tx[best] * t.tx[j] + t.tz[best] * t.tz[j]);
+    const lat = Math.sign(bend || 1) * (t.width / 2 - 1.8);
+    return { x: t.px[best] - t.tz[best] * lat, z: t.pz[best] + t.tx[best] * lat, sc: false };
+  }
 
   // Fenêtre grille + premier élan, hors tremplins et raccourcis.
   function startShift(def, count, curv) {
