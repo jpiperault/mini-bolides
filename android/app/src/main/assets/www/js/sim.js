@@ -8,7 +8,7 @@
   const rng = (seed) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
-  const TOY_R = 2.6;   // rayon de ramassage du jouet caché : il faut passer dessus, pas à côté
+  const TOY_R = 2.2;   // rayon de ramassage d'un jouet caché : il faut passer dessus, pas à côté
   const STEER_BASE = 0.5, STEER_LOOK = 9, WALL_OFF = 0.2, ASSIST_BACK = 0.8, NEUTRAL_BACK = 0.22, DRIFT_ARM = 0.3, DRIFT_L1 = 0.35, DRIFT_L2 = 0.8, DUEL_GAP = 30;
   const CAR_R = 2.3, COIN_R = 3.4, RAMP_H = 1.6, RAMP_N = 5;
   // Contacts avec les objets au sol : la voiture est une gélule (axe ±CAR_AXIS, rayon CAR_SIDE) qui suit
@@ -43,7 +43,7 @@
       this.playerFinished = false;
       this.alpha = 0;
       this.solo = !!opts.solo;                                 // contre-la-montre : seul en piste, sans boîtes
-      this.toy = opts.toy && this.track.toy ? { x: this.track.toy.x, z: this.track.toy.z, taken: false } : null;   // jouet caché pas encore trouvé
+      this.toys = (opts.toys || []).map((y) => ({ id: y.id, dup: !!y.dup, x: y.x, z: y.z, taken: false }));   // jouets cachés (nouveaux ou doublons)
       this._grid(opts);
       this._pickups();
       this._save();
@@ -565,9 +565,10 @@
         const dx = p.x - k.x, dz = p.z - k.z;
         if (dx * dx + dz * dz < COIN_R * COIN_R) { k.taken = true; this.coinCount += p.piggy > 0 ? 2 : 1; this.events.push({ t: 'coin' }); }
       }
-      if (this.toy && !this.toy.taken && p.y < 1.5) {
-        const dx = p.x - this.toy.x, dz = p.z - this.toy.z;
-        if (dx * dx + dz * dz < TOY_R * TOY_R) { this.toy.taken = true; this.events.push({ t: 'toy' }); }
+      for (const y of this.toys) {
+        if (y.taken || p.y > 1.5) continue;
+        const dx = p.x - y.x, dz = p.z - y.z;
+        if (dx * dx + dz * dz < TOY_R * TOY_R) { y.taken = true; this.events.push({ t: 'toy', id: y.id, dup: y.dup }); }
       }
       for (let i = this.syrups.length - 1; i >= 0; i--) {
         const s = this.syrups[i];

@@ -201,20 +201,23 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   check(/^Fais 1 super turbo$/.test(MB.missionText({ def: MB.MISSIONS.find((m) => m.kind === 'l2'), n: 1 }, 'fr')), 'mission au singulier sans « s »');
 }
 {
-  // Jouets cachés : un par circuit, posé sur la route (corde d'un virage ou raccourci), aussi en sens inverse ; on le ramasse en passant dessus.
-  let bad = [];
+  // Jouets cachés : au moins 4 cachettes par circuit (aussi en sens inverse), toujours au bord de la route ou dans un raccourci,
+  // jamais au milieu ; on ramasse un jouet en passant dessus, une seule fois ; 33 jouets, sortis au rythme prévu.
+  let bad = [], few = [];
   for (const def of MB.TRACKS) for (const d of [def, MB.reverseDef(def)]) {
-    const t = MB.buildTrack(d), dist = MB.trackDistance(t, t.toy.x, t.toy.z);
-    if (t.toy.sc ? dist > 3 : dist < t.width / 2 - 3 || dist > t.width / 2 - 0.5) bad.push(`${def.id}:${dist.toFixed(1)}`);
+    const t = MB.buildTrack(d);
+    if (t.toySpots.length < 4) few.push(def.id);
+    for (const sp of t.toySpots) { const dist = MB.trackDistance(t, sp.x, sp.z); if (sp.kind === 'raccourci' ? dist > 3 : dist < t.width / 2 - 3 || dist > t.width / 2 - 0.5) bad.push(`${def.id}:${sp.kind}:${dist.toFixed(1)}`); }
   }
-  check(!bad.length && MB.TRACKS.every((d) => MB.TOYS.filter((y) => y.track === d.id).length === 1), `jouet caché sur chaque circuit, sur la route${bad.length ? ' : ' + bad.join(' ') : ''}`);
-  const w = new MB.Race({ trackId: 'bol', toy: true, carCount: 1, solo: true, seed: 2 }), t = w.track, p = w.player;
+  check(!bad.length && !few.length, `cachettes de jouets au bord de la route${bad.length ? ' : ' + bad.join(' ') : ''}${few.length ? ', trop peu : ' + few.join(' ') : ''}`);
+  const w = new MB.Race({ trackId: 'bol', carCount: 1, solo: true, seed: 2, toys: [{ id: 'canard', x: 0, z: 0 }, { id: 'de', x: 1e4, z: 0, dup: true }] }), t = w.track, p = w.player;
   while (w.state !== 'run') w._tick({ steer: 0 });
-  const i = (p.idx + 40) % t.count; w.toy.x = t.px[i] - t.tz[i] * p.lat; w.toy.z = t.pz[i] + t.tx[i] * p.lat;
+  const i = (p.idx + 40) % t.count; w.toys[0].x = t.px[i] - t.tz[i] * p.lat; w.toys[0].z = t.pz[i] + t.tx[i] * p.lat;
   let n = 0;
-  for (let k = 0; k < 300; k++) { w._tick({ steer: 0 }); n += w.events.filter((e) => e.t === 'toy').length; w.events.length = 0; }
-  const none = new MB.Race({ trackId: 'bol', carCount: 1, solo: true, seed: 2 });
-  check(w.toy.taken && n === 1 && none.toy === null, `jouet ramassé une seule fois en roulant dessus (${n}), absent s'il est déjà trouvé`);
+  for (let k = 0; k < 300; k++) { w._tick({ steer: 0 }); n += w.events.filter((e) => e.t === 'toy' && e.id === 'canard').length; w.events.length = 0; }
+  check(w.toys[0].taken && n === 1 && !w.toys[1].taken && new MB.Race({ trackId: 'bol', carCount: 1, solo: true }).toys.length === 0, `jouet ramassé une seule fois en roulant dessus (${n}), l'autre laissé en place`);
+  const r = (d) => MB.toysReleased('2026-11-01', d);
+  check(MB.TOYS.length === 33 && new Set(MB.TOYS.map((y) => y.id)).size === 33 && r('2026-11-01') === 3 && r('2026-11-02') === 3 && r('2026-11-03') === 4 && r('2027-06-01') === 33, `33 jouets, sortie : ${r('2026-11-01')} puis ${r('2026-11-03')} au 3e jour`);
 }
 {
   // Paliers des trophées : bronze au déblocage, argent puis or quand le total grandit.

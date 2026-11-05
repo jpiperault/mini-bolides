@@ -295,7 +295,150 @@
     sifflet() { const g = new T.Group(), m = R.lam(0xdfe4ea, { metalness: 1, roughness: 0.2 }); const c = mesh(new T.CylinderGeometry(0.3, 0.3, 0.3, 24), m, 0, 0.32); c.rotation.x = Math.PI / 2; g.add(c); g.add(mesh(new T.BoxGeometry(0.5, 0.18, 0.3), m, 0.3, 0.5)); const ring = mesh(new T.TorusGeometry(0.1, 0.025, 6, 16), m, -0.25, 0.6); g.add(ring); return g; },
     voiture() { const g = new T.Group(); g.add(mesh(R.roundBox(0.9, 0.25, 0.45, 0.08), paint(0x2f62d9, 0.2), 0, 0.28)); g.add(mesh(R.roundBox(0.45, 0.2, 0.4, 0.08), R.lam(0x8fd0ff, { roughness: 0.05 }), -0.05, 0.48)); for (const x of [-0.28, 0.28]) for (const z of [-0.22, 0.22]) { const w = mesh(new T.CylinderGeometry(0.12, 0.12, 0.08, 14), paint(0x1b1d24), x, 0.13, z); w.rotation.x = Math.PI / 2; g.add(w); } return g; },
     ours() { const g = new T.Group(), b = paint(0xc98a4e, 0.8); g.add(mesh(new T.SphereGeometry(0.33, 18, 14), b, 0, 0.35)); g.add(mesh(new T.SphereGeometry(0.25, 18, 14), b, 0, 0.82)); for (const s of [-1, 1]) { g.add(mesh(new T.SphereGeometry(0.09, 10, 8), b, s * 0.18, 1.02)); g.add(mesh(new T.SphereGeometry(0.1, 10, 8), b, s * 0.3, 0.45, 0.1)); } g.add(mesh(new T.SphereGeometry(0.09, 10, 8), paint(0xf2d3a0), 0, 0.78, 0.22)); return g; },
+    balle() {
+      const tex = R.canvas(128, 64, (c, W, H) => { ['#e5352b', '#ffd23f', '#2f8fd8', '#48b58a'].forEach((col, i) => { c.fillStyle = col; c.fillRect((i * W) / 4, 0, W / 4, H); }); c.fillStyle = '#fff'; c.fillRect(0, H / 2 - 4, W, 8); });
+      const g = new T.Group(); g.add(mesh(new T.SphereGeometry(0.45, 24, 16), R.lam(0xffffff, { map: tex, roughness: 0.15 }), 0, 0.45)); return g;
+    },
+    tambour() {
+      const g = new T.Group(); g.add(mesh(new T.CylinderGeometry(0.42, 0.42, 0.5, 24), paint(0xe5352b, 0.3), 0, 0.3));
+      for (const y of [0.05, 0.55]) { const r = mesh(new T.TorusGeometry(0.43, 0.04, 8, 28), paint(0xffd23f), 0, y); r.rotation.x = Math.PI / 2; g.add(r); }
+      g.add(mesh(new T.CylinderGeometry(0.4, 0.4, 0.02, 24), paint(0xfff6e8, 0.6), 0, 0.56));
+      for (const s of [-1, 1]) { const b = mesh(new T.CylinderGeometry(0.025, 0.025, 0.6, 8), paint(0x8a5c34), s * 0.2, 0.8, 0.1); b.rotation.z = s * 0.8; g.add(b); g.add(mesh(new T.SphereGeometry(0.06, 10, 8), paint(0xffffff), s * 0.42, 0.98, 0.1)); }
+      return g;
+    },
+    trompette() {
+      const g = new T.Group(), m = R.lam(0xf2c14e, { metalness: 1, roughness: 0.22 });
+      const tube = mesh(new T.CylinderGeometry(0.06, 0.06, 0.9, 12), m, 0, 0.4); tube.rotation.z = Math.PI / 2; g.add(tube);
+      const bell = R.lathe([[0.06, 0], [0.1, 0.15], [0.18, 0.28], [0.3, 0.36], [0.29, 0.37]], m); bell.rotation.z = -Math.PI / 2; bell.position.set(0.45, 0.4, 0); g.add(bell);
+      for (let i = 0; i < 3; i++) g.add(mesh(new T.CylinderGeometry(0.035, 0.035, 0.22, 8), m, -0.1 + i * 0.12, 0.55));
+      const loop = mesh(new T.TorusGeometry(0.14, 0.04, 8, 20), m, -0.05, 0.27); g.add(loop);
+      return g;
+    },
+    cerfvolant() {
+      const g = new T.Group(), sh = new T.Shape(); sh.moveTo(0, 0.55); sh.lineTo(0.35, 0); sh.lineTo(0, -0.45); sh.lineTo(-0.35, 0); sh.closePath();
+      const tex = R.canvas(64, 64, (c) => { c.fillStyle = '#e5352b'; c.fillRect(0, 0, 32, 32); c.fillRect(32, 32, 32, 32); c.fillStyle = '#ffd23f'; c.fillRect(32, 0, 32, 32); c.fillRect(0, 32, 32, 32); });
+      const geo = new T.ShapeGeometry(sh); geo.computeBoundingBox(); const uv = geo.attributes.uv, p = geo.attributes.position; for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + 0.35) / 0.7, (p.getY(i) + 0.45) / 1);
+      const k = mesh(geo, R.lam(0xffffff, { map: tex, side: T.DoubleSide, roughness: 0.6 }), 0, 0.75); k.rotation.z = 0.3; g.add(k);
+      for (let i = 0; i < 4; i++) g.add(mesh(new T.BoxGeometry(0.1, 0.05, 0.02), paint([0x2f8fd8, 0x48b58a][i % 2]), -0.15 - i * 0.05, 0.25 - i * 0.07));
+      return g;
+    },
+    matriochka() {
+      const g = new T.Group(); g.add(R.lathe([[0, 0], [0.32, 0], [0.38, 0.25], [0.3, 0.5], [0.22, 0.62], [0.26, 0.78], [0.18, 0.95], [0, 1.0]], paint(0xe5352b, 0.25)));
+      const face = mesh(new T.SphereGeometry(0.17, 16, 12), paint(0xffe3c8, 0.5), 0, 0.78, 0.12); face.scale.z = 0.6; g.add(face);
+      g.add(mesh(new T.SphereGeometry(0.14, 14, 10), paint(0xffd23f, 0.4), 0, 0.28, 0.3)); for (const s of [-1, 1]) g.add(mesh(new T.SphereGeometry(0.025, 8, 6), paint(0x1b1d24), s * 0.06, 0.8, 0.22));
+      return g;
+    },
+    culbuto() {
+      const g = new T.Group(); g.add(mesh(new T.SphereGeometry(0.42, 20, 16), paint(0x48b58a, 0.25), 0, 0.42)); g.add(mesh(new T.SphereGeometry(0.26, 18, 14), paint(0xffe3c8, 0.5), 0, 0.95));
+      const hat = mesh(new T.ConeGeometry(0.2, 0.35, 16), paint(0xe5352b, 0.3), 0, 1.3); g.add(hat); g.add(mesh(new T.SphereGeometry(0.05, 8, 6), paint(0xffffff), 0, 1.48));
+      for (const s of [-1, 1]) g.add(mesh(new T.SphereGeometry(0.035, 8, 6), paint(0x1b1d24), s * 0.09, 1.0, 0.23)); return g;
+    },
+    brique() {
+      const g = new T.Group(), c = paint(0xe5352b, 0.25); g.add(mesh(R.roundBox(0.9, 0.38, 0.45, 0.04), c, 0, 0.19));
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) g.add(mesh(new T.CylinderGeometry(0.075, 0.075, 0.1, 14), c, -0.33 + i * 0.22, 0.42, -0.11 + j * 0.22)); return g;
+    },
+    loco() {
+      const g = new T.Group(); g.add(mesh(R.roundBox(0.9, 0.3, 0.45, 0.05), paint(0x2f62d9, 0.3), 0, 0.3));
+      const boiler = mesh(new T.CylinderGeometry(0.2, 0.2, 0.55, 18), paint(0xe5352b, 0.3), 0.15, 0.6); boiler.rotation.z = Math.PI / 2; g.add(boiler);
+      g.add(mesh(R.roundBox(0.32, 0.45, 0.45, 0.05), paint(0x2f62d9, 0.3), -0.28, 0.7)); g.add(mesh(new T.CylinderGeometry(0.07, 0.1, 0.25, 12), paint(0x1b1d24), 0.32, 0.88));
+      for (const x of [-0.3, 0, 0.3]) for (const z of [-0.23, 0.23]) { const w = mesh(new T.CylinderGeometry(0.12, 0.12, 0.06, 16), paint(0xffd23f), x, 0.14, z); w.rotation.x = Math.PI / 2; g.add(w); }
+      return g;
+    },
+    camion() {
+      const g = new T.Group(); g.add(mesh(R.roundBox(0.32, 0.38, 0.45, 0.06), paint(0xffb23c, 0.3), 0.36, 0.38));
+      const bed = mesh(R.roundBox(0.6, 0.3, 0.48, 0.04), paint(0xe5352b, 0.3), -0.15, 0.48); bed.rotation.z = 0.25; g.add(bed);
+      g.add(mesh(new T.BoxGeometry(0.95, 0.08, 0.36), paint(0x3b3e47), 0, 0.22));
+      for (const x of [-0.3, 0.36]) for (const z of [-0.22, 0.22]) { const w = mesh(new T.CylinderGeometry(0.13, 0.13, 0.08, 14), paint(0x1b1d24, 0.8), x, 0.13, z); w.rotation.x = Math.PI / 2; g.add(w); }
+      return g;
+    },
+    helico() {
+      const g = new T.Group(); const b = mesh(new T.SphereGeometry(0.32, 20, 14), paint(0x48b58a, 0.25), 0, 0.55); b.scale.set(1.3, 1, 1); g.add(b);
+      g.add(mesh(new T.SphereGeometry(0.2, 14, 10), R.lam(0x8fd0ff, { roughness: 0.05 }), 0.22, 0.6, 0));
+      const tail = mesh(new T.CylinderGeometry(0.04, 0.08, 0.6, 10), paint(0x48b58a, 0.25), -0.6, 0.62); tail.rotation.z = Math.PI / 2; g.add(tail);
+      g.add(mesh(new T.BoxGeometry(1.3, 0.03, 0.1), paint(0x3b3e47), 0, 0.92)); g.add(mesh(new T.BoxGeometry(0.1, 0.03, 1.3), paint(0x3b3e47), 0, 0.92));
+      for (const z of [-0.2, 0.2]) g.add(mesh(new T.BoxGeometry(0.8, 0.04, 0.04), paint(0x3b3e47), 0, 0.15, z));
+      return g;
+    },
+    sousmarin() {
+      const g = new T.Group(), y = paint(0xffd23f, 0.25); const b = mesh(new T.SphereGeometry(0.3, 20, 14), y, 0, 0.4); b.scale.set(1.8, 1, 1); g.add(b);
+      g.add(mesh(R.roundBox(0.3, 0.3, 0.22, 0.06), y, 0.05, 0.75)); g.add(mesh(new T.CylinderGeometry(0.03, 0.03, 0.25, 8), paint(0x3b3e47), 0.1, 1.0));
+      for (const x of [-0.25, 0.05, 0.35]) { const w = mesh(new T.CircleGeometry(0.07, 14), R.lam(0x7fd0ff, { roughness: 0.05 }), x, 0.45, 0.29); g.add(w); }
+      const prop = mesh(new T.BoxGeometry(0.04, 0.3, 0.06), paint(0xe5352b), -0.6, 0.4); g.add(prop); return g;
+    },
+    ballon() {
+      const g = new T.Group(); const b = mesh(new T.SphereGeometry(0.38, 20, 16), paint(0xff6fa8, 0.12), 0, 0.95); b.scale.y = 1.2; g.add(b);
+      g.add(mesh(new T.ConeGeometry(0.06, 0.08, 10), paint(0xff6fa8, 0.12), 0, 0.47)); g.add(mesh(new T.CylinderGeometry(0.008, 0.008, 0.45, 4), paint(0xffffff), 0, 0.22)); return g;
+    },
+    xylo() {
+      const g = new T.Group(); const cols = [0xe5352b, 0xff8a1e, 0xffd23f, 0x48b58a, 0x2f8fd8, 0x9b6ad6];
+      for (const z of [-0.2, 0.2]) { const r = mesh(new T.BoxGeometry(0.95, 0.08, 0.06), paint(0x8a5c34), 0, 0.12, z); r.rotation.y = z > 0 ? 0.08 : -0.08; g.add(r); }
+      cols.forEach((c, i) => g.add(mesh(R.roundBox(0.13, 0.06, 0.55 - i * 0.05, 0.02), paint(c, 0.25), -0.38 + i * 0.15, 0.2)));
+      const st = mesh(new T.CylinderGeometry(0.02, 0.02, 0.5, 6), paint(0x8a5c34), 0.1, 0.38, 0.25); st.rotation.z = 1.2; g.add(st); g.add(mesh(new T.SphereGeometry(0.06, 10, 8), paint(0xe5352b), -0.12, 0.47, 0.25)); return g;
+    },
+    seau() {
+      const g = new T.Group(); g.add(R.lathe([[0, 0], [0.3, 0], [0.4, 0.6], [0.36, 0.6], [0.27, 0.05], [0, 0.05]], paint(0x2f8fd8, 0.3)));
+      const h = mesh(new T.TorusGeometry(0.38, 0.02, 6, 20, Math.PI), paint(0xffffff), 0, 0.6); g.add(h);
+      const sp = mesh(new T.BoxGeometry(0.12, 0.6, 0.03), paint(0xffd23f), 0.45, 0.35, 0.1); sp.rotation.z = -0.3; g.add(sp); return g;
+    },
+    etoilemer() {
+      const g = new T.Group(), sh = new T.Shape();
+      for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? 0.18 : 0.48; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+      const geo = new T.ExtrudeGeometry(sh, { depth: 0.1, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.06, bevelSegments: 3 }); geo.center();
+      const s = mesh(geo, paint(0xff8a5c, 0.6), 0, 0.5); s.rotation.x = -0.4; g.add(s); return g;
+    },
+    pingouin() {
+      const g = new T.Group(); const b = mesh(new T.SphereGeometry(0.32, 18, 14), paint(0x1b1d24, 0.5), 0, 0.42); b.scale.y = 1.3; g.add(b);
+      const belly = mesh(new T.SphereGeometry(0.25, 16, 12), paint(0xffffff, 0.5), 0, 0.38, 0.12); belly.scale.y = 1.25; g.add(belly);
+      g.add(mesh(new T.SphereGeometry(0.22, 16, 12), paint(0x1b1d24, 0.5), 0, 0.86)); const bk = mesh(new T.ConeGeometry(0.06, 0.14, 8), paint(0xffb23c), 0, 0.84, 0.24); bk.rotation.x = Math.PI / 2; g.add(bk);
+      for (const s of [-1, 1]) { g.add(mesh(new T.SphereGeometry(0.04, 8, 6), paint(0xffffff), s * 0.08, 0.92, 0.18)); g.add(mesh(new T.BoxGeometry(0.14, 0.04, 0.2), paint(0xffb23c), s * 0.12, 0.02, 0.08)); }
+      return g;
+    },
+    bonhomme() {
+      const g = new T.Group(), w = paint(0xffffff, 0.7); g.add(mesh(new T.SphereGeometry(0.36, 18, 14), w, 0, 0.34)); g.add(mesh(new T.SphereGeometry(0.25, 18, 14), w, 0, 0.85));
+      const n = mesh(new T.ConeGeometry(0.05, 0.22, 10), paint(0xff8a1e), 0, 0.85, 0.3); n.rotation.x = Math.PI / 2; g.add(n);
+      g.add(mesh(new T.CylinderGeometry(0.2, 0.2, 0.06, 18), paint(0x1b1d24), 0, 1.06)); g.add(mesh(new T.CylinderGeometry(0.14, 0.14, 0.24, 18), paint(0x1b1d24), 0, 1.2));
+      const sc = mesh(new T.TorusGeometry(0.2, 0.05, 8, 20), paint(0xe5352b), 0, 0.66); sc.rotation.x = Math.PI / 2; g.add(sc); return g;
+    },
+    grenouille() {
+      const g = new T.Group(), c = paint(0x48b58a, 0.3); const b = mesh(new T.SphereGeometry(0.36, 18, 14), c, 0, 0.3); b.scale.set(1.1, 0.7, 1); g.add(b);
+      for (const s of [-1, 1]) { g.add(mesh(new T.SphereGeometry(0.12, 14, 10), c, s * 0.16, 0.56, 0.12)); g.add(mesh(new T.SphereGeometry(0.06, 10, 8), paint(0x1b1d24), s * 0.16, 0.6, 0.22)); g.add(mesh(new T.SphereGeometry(0.1, 10, 8), c, s * 0.33, 0.1, 0.12)); }
+      return g;
+    },
+    coccinelle() {
+      const g = new T.Group(); const b = mesh(new T.SphereGeometry(0.4, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), paint(0xe5352b, 0.2), 0, 0.1); g.add(b);
+      g.add(mesh(new T.SphereGeometry(0.17, 14, 10), paint(0x1b1d24, 0.3), 0.4, 0.15)); g.add(mesh(new T.BoxGeometry(0.02, 0.32, 0.8), paint(0x1b1d24), 0, 0.3));
+      for (const [x, z] of [[-0.15, 0.2], [0.12, -0.22], [-0.05, -0.2], [0.15, 0.18], [-0.25, -0.05]]) g.add(mesh(new T.SphereGeometry(0.07, 10, 8), paint(0x1b1d24), x, 0.42 - Math.hypot(x, z) * 0.45, z));
+      return g;
+    },
+    moulin() {
+      const g = new T.Group(); g.add(mesh(new T.CylinderGeometry(0.03, 0.03, 1.0, 8), paint(0xffffff), 0, 0.5));
+      const w = new T.Group(); [0xe5352b, 0xffd23f, 0x2f8fd8, 0x48b58a].forEach((c, i) => { const v = new T.Mesh(new T.ConeGeometry(0.22, 0.4, 3), R.lam(c, { roughness: 0.4, side: T.DoubleSide })); v.position.set(0, 0.2, 0); v.scale.z = 0.15; const h = new T.Group(); h.add(v); h.rotation.z = (i * Math.PI) / 2; w.add(h); });
+      w.position.set(0, 1.0, 0.04); g.add(w); g.add(mesh(new T.SphereGeometry(0.05, 10, 8), paint(0xffd23f), 0, 1.0, 0.06)); return g;
+    },
+    fusee() {
+      const g = new T.Group(); g.add(R.lathe([[0, 0.1], [0.2, 0.12], [0.24, 0.4], [0.22, 0.8], [0.12, 1.05], [0, 1.15]], paint(0xffffff, 0.25)));
+      g.add(R.lathe([[0, 0.85], [0.19, 0.85], [0.12, 1.05], [0, 1.15]], paint(0x2f8fd8, 0.25))); g.add(mesh(new T.CircleGeometry(0.07, 14), R.lam(0x7fd0ff, { roughness: 0.05 }), 0, 0.62, 0.235));
+      for (let i = 0; i < 3; i++) { const f = mesh(new T.BoxGeometry(0.04, 0.28, 0.2), paint(0x2f8fd8), 0, 0.22, 0); f.geometry.translate(0, 0, 0.28); f.rotation.y = (i * Math.PI * 2) / 3; g.add(f); }
+      return g;
+    },
+    dino() {
+      const g = new T.Group(), c = paint(0x6fbf5a, 0.4); const b = mesh(new T.SphereGeometry(0.3, 18, 14), c, 0, 0.42); b.scale.set(1.5, 1, 0.9); g.add(b);
+      const neck = mesh(new T.CylinderGeometry(0.09, 0.14, 0.5, 12), c, 0.38, 0.75); neck.rotation.z = -0.5; g.add(neck); g.add(mesh(new T.SphereGeometry(0.15, 14, 10), c, 0.55, 1.0));
+      const tail = mesh(new T.ConeGeometry(0.14, 0.6, 12), c, -0.6, 0.38); tail.rotation.z = Math.PI / 2 + 0.3; g.add(tail);
+      for (const x of [-0.2, 0.2]) for (const z of [-0.14, 0.14]) g.add(mesh(new T.CylinderGeometry(0.07, 0.08, 0.25, 10), c, x, 0.12, z));
+      for (let i = 0; i < 4; i++) g.add(mesh(new T.ConeGeometry(0.06, 0.14, 4), paint(0xffb23c), -0.3 + i * 0.18, 0.72, 0));
+      g.add(mesh(new T.SphereGeometry(0.03, 8, 6), paint(0x1b1d24), 0.62, 1.04, 0.1)); return g;
+    },
   };
+
+  // Jouet pas encore sorti : petit paquet cadeau fermé.
+  function giftBox() {
+    const g = new T.Group();
+    g.add(mesh(R.roundBox(0.6, 0.5, 0.6, 0.05), paint(0x9b8fb0, 0.6), 0, 0.25));
+    g.add(mesh(new T.BoxGeometry(0.62, 0.52, 0.1), paint(0xd8cfe6, 0.5), 0, 0.25)); g.add(mesh(new T.BoxGeometry(0.1, 0.52, 0.62), paint(0xd8cfe6, 0.5), 0, 0.25));
+    for (const s of [-1, 1]) { const b = mesh(new T.TorusGeometry(0.1, 0.035, 6, 14), paint(0xd8cfe6, 0.5), s * 0.09, 0.55); b.rotation.y = Math.PI / 2; g.add(b); }
+    return g;
+  }
 
   // Trophée pas encore gagné : même forme, en silhouette mate et sombre.
   function silhouette(root) {
@@ -359,8 +502,9 @@
     // Étagère du bas : les jouets cachés, sous les trophées du milieu.
     s.add(mesh(new T.BoxGeometry(len, 0.28, 2.6), wood, (n - 1) * SPACING / 2, -2.3, 0.2));
     s.add(mesh(new T.BoxGeometry(len, 0.06, 0.06), gold(), (n - 1) * SPACING / 2, -2.16, 1.5));
+    const toySp = ((n - 1) * SPACING) / (MB.TOYS.length - 1);
     const toys = MB.TOYS.map((y, i) => {
-      const g = new T.Group(); g.position.set((i + (n - MB.TOYS.length) / 2) * SPACING, -2.16, 0.4); s.add(g);
+      const g = new T.Group(); g.position.set(i * toySp, -2.16, 0.4); s.add(g);
       return { id: y.id, g, model: null, got: null };
     });
     view._linear(s);
@@ -393,15 +537,16 @@
           this._linear(d); it.base.add(d); it.deco = d; it.tier = tier;
         }
       }
-      for (const y of r.toys) {
-        const has = st.toys.includes(y.id);
-        if (y.model && y.got === has) continue;
+      r.toys.forEach((y, i) => {
+        // Trouvé : en couleurs ; sorti mais pas trouvé : silhouette ; pas encore sorti : paquet cadeau fermé.
+        const has = st.toys.includes(y.id), state = has ? 'got' : i < st.released ? 'hunt' : 'soon';
+        if (y.model && y.got === state) return;
         if (y.model) y.g.remove(y.model);
-        const m = MB.TOY_MODELS[y.id](); m.scale.setScalar(1.25); m.rotation.y = 0.5;
-        if (!has) silhouette(m);
+        const m = state === 'soon' ? giftBox() : MB.TOY_MODELS[y.id](); m.scale.setScalar(state === 'soon' ? 1 : 1.15); m.rotation.y = 0.5;
+        if (state === 'hunt') silhouette(m);
         this._linear(m);
-        y.g.add(m); y.model = m; y.got = has;
-      }
+        y.g.add(m); y.model = m; y.got = state;
+      });
       R.lam.env = null;
       this.selectTrophy(sel, true);
     },
@@ -425,7 +570,7 @@
       const x = r.sel * SPACING;
       r.spot.position.set(x + 1.5, 9, 5); r.spot.target.position.set(x, 1.4, 0); r.spot.target.updateMatrixWorld();
       r.halo.position.x += (x - r.halo.position.x) * k;
-      for (const y of r.toys) if (y.got) y.model.rotation.y = 0.5 + Math.sin(r.t * 0.8 + y.g.position.x) * 0.4;
+      for (const y of r.toys) if (y.got === 'got') y.model.rotation.y = 0.5 + Math.sin(r.t * 0.8 + y.g.position.x) * 0.4;
       const fit = Math.max(1, 0.62 / this.cam.aspect);
       this.cam.fov = 40; this.cam.updateProjectionMatrix();
       this.cam.position.set(r.camX, 3.6 + Math.sin(r.t * 0.4) * 0.1, 14 * fit);

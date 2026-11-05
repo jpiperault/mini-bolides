@@ -62,23 +62,27 @@
     t.jumps = (def.jumps || []).map(t.at);
     t.wallGap = { '-1': new Uint8Array(count), 1: new Uint8Array(count) };
     t.shortcuts = (def.shortcuts || []).map((d) => buildShortcut(t, d));
-    t.toy = toySpot(t);
+    t.toySpots = toySpots(t);
     return t;
   };
 
-  // Jouet caché : au fond du raccourci s'il y en a un, sinon à la corde intérieure du virage le plus serré
-  // (loin du départ et des tremplins). Il faut aller le chercher, il ne tombe pas sur la trajectoire normale.
-  function toySpot(t) {
-    if (t.shortcuts.length) { const p = t.shortcuts[0], k = Math.round(p.count * 0.82); return { x: p.px[k], z: p.pz[k], sc: true }; }
-    let best = -1, top = 0;
-    for (let i = 60; i < t.count - 30; i++) {
-      if (t.jumps.some((j) => Math.abs(j - i) < 14)) continue;
-      if (t.curv[i] > top) { top = t.curv[i]; best = i; }
-    }
-    if (best < 0) best = Math.round(t.count / 2);
-    const j = (best + 6) % t.count, bend = Math.atan2(t.tx[best] * t.tz[j] - t.tz[best] * t.tx[j], t.tx[best] * t.tx[j] + t.tz[best] * t.tz[j]);
-    const lat = Math.sign(bend || 1) * (t.width / 2 - 1.8);
-    return { x: t.px[best] - t.tz[best] * lat, z: t.pz[best] + t.tx[best] * lat, sc: false };
+  // Cachettes des jouets : jamais au milieu de la route ni sur la grille de départ. Au fond des raccourcis, à la corde
+  // des virages serrés, au bord extérieur des courbes rapides, juste après la réception d'un tremplin.
+  function toySpots(t) {
+    const out = [], edge = t.width / 2 - 1.6, busy = (i) => i < 60 || i > t.count - 30 || t.jumps.some((j) => i > j - 14 && i < j + 6);
+    const side = (i) => { const j = (i + 6) % t.count; return Math.sign(Math.atan2(t.tx[i] * t.tz[j] - t.tz[i] * t.tx[j], t.tx[i] * t.tx[j] + t.tz[i] * t.tz[j])) || 1; };
+    const put = (i, lat, kind) => out.push({ x: t.px[i] - t.tz[i] * lat, z: t.pz[i] + t.tx[i] * lat, kind });
+    for (const p of t.shortcuts) for (const f of [0.5, 0.82]) { const k = Math.round(p.count * f); out.push({ x: p.px[k], z: p.pz[k], kind: 'raccourci' }); }
+    // Virages : les sommets de courbure, espacés d'au moins 40 points.
+    const peaks = [];
+    for (let i = 1; i < t.count - 1; i++) if (!busy(i) && t.curv[i] >= t.curv[i - 1] && t.curv[i] > t.curv[i + 1]) peaks.push(i);
+    peaks.sort((a, b) => t.curv[b] - t.curv[a]);
+    const kept = [];
+    for (const i of peaks) if (kept.every((k) => Math.min(Math.abs(k - i), t.count - Math.abs(k - i)) > 40)) kept.push(i);
+    kept.slice(0, 3).forEach((i) => put(i, side(i) * edge, 'corde'));
+    kept.slice(3, 6).forEach((i) => put(i, -side(i) * edge, 'exterieur'));
+    for (const j of t.jumps) { const i = (j + 12) % t.count; put(i, (j % 2 ? 1 : -1) * edge, 'tremplin'); }
+    return out;
   }
 
   // Fenêtre grille + premier élan, hors tremplins et raccourcis.

@@ -29,7 +29,7 @@
     double: ['Doubler les gains (pub)', 'Double rewards (ad)'], paint: ['Peinture', 'Paint'], racePlus: ['Prime de course', 'Race prize'], cupPlus: ['Prime de coupe', 'Cup prize'],
     sSpeed: ['Vitesse', 'Speed'], sAccel: ['Accélération', 'Acceleration'], sTurn: ['Maniabilité', 'Handling'], sDrift: ['Drift', 'Drift'],
     tabCar: ['Voiture', 'Car'], tabUp: ['Évolutions', 'Upgrades'], tabPaint: ['Peinture', 'Paint'], tabStyle: ['Style', 'Style'], lookNum: ['Numéro sur le toit', 'Roof number'], lookRim: ['Jantes', 'Rims'], lookTrail: ['Flamme du turbo', 'Turbo flame'],
-    lookHelp: ['Acheté une fois, il va sur toutes tes voitures.', 'Bought once, it fits all your cars.'], trophies: ['Trophées', 'Trophies'], toyHint: ['🔍 Un jouet est caché sur ce circuit', '🔍 A toy is hidden on this track'], toyFound: ['Jouet trouvé !', 'Toy found!'], toys: ['Jouets', 'Toys'], trophy: ['Trophée', 'Trophy'], sens: ['Sensibilité de la direction', 'Steering sensitivity'],
+    lookHelp: ['Acheté une fois, il va sur toutes tes voitures.', 'Bought once, it fits all your cars.'], trophies: ['Trophées', 'Trophies'], toyHint: ['🔍 Un jouet est caché sur ce circuit', '🔍 A toy is hidden on this track'], toyFound: ['Jouet trouvé !', 'Toy found!'], toyDup: ['Doublon :', 'Duplicate:'], toys: ['Jouets', 'Toys'], trophy: ['Trophée', 'Trophy'], sens: ['Sensibilité de la direction', 'Steering sensitivity'],
     buyFirst: ['Achète cette voiture pour la faire évoluer.', 'Buy this car to upgrade it.'], max: ['Max', 'Max'], need: ['Pièces insuffisantes', 'Not enough coins'],
     earned: ['Les évolutions se gagnent avec tes pièces de course.', 'Upgrades are paid with coins earned in races.'],
     credits: ['Modèles maison.', 'Home-made models.'],
@@ -40,7 +40,7 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
   if (save.tot.wins === undefined) save.tot.wins = save.troph.win ? 1 : 0;   // victoires comptées depuis les paliers de trophées
@@ -210,6 +210,32 @@
   const worldOpen = (w) => starTotal() >= w.stars || w.tracks.some((id) => save.tracksRaced[id] || save.stars[id]);
   const openWorlds = () => MB.WORLDS.filter(worldOpen);
   const openTracks = () => openWorlds().flatMap((w) => w.tracks);
+  // Jouets à chercher : ceux sortis à ce jour et pas encore trouvés, chacun caché sur un circuit ouvert choisi à sa sortie
+  // (le moins chargé), qu'il garde jusqu'à ce qu'on le trouve.
+  function toyHunt() {
+    if (!save.toyStart) { save.toyStart = today(); persist(); }
+    const n = MB.toysReleased(save.toyStart, today()), open = openTracks(), out = [];
+    for (const y of MB.TOYS.slice(0, n)) {
+      if (save.toys[y.id]) continue;
+      if (!save.toyAt[y.id] || !open.includes(save.toyAt[y.id])) {
+        const load = (id) => Object.values(save.toyAt).filter((v) => v === id).length;
+        save.toyAt[y.id] = open.slice().sort((a, b) => load(a) - load(b) || MB.hash(y.id + a) - MB.hash(y.id + b))[0];
+        persist();
+      }
+      out.push({ id: y.id, track: save.toyAt[y.id] });
+    }
+    return out;
+  }
+  // Jouets posés sur ce circuit pour cette course : les nouveaux à leur cachette fixe, plus un doublon du jour.
+  function toysFor(trackId, track) {
+    const spots = track.toySpots, out = [], used = new Set();
+    if (!spots.length) return out;
+    const at = (key) => { let k = MB.hash(key) % spots.length; while (used.has(k) && used.size < spots.length) k = (k + 1) % spots.length; used.add(k); return spots[k]; };
+    for (const h of toyHunt()) if (h.track === trackId) { const p = at(h.id); out.push({ id: h.id, x: p.x, z: p.z }); }
+    const found = Object.keys(save.toys), dk = `${today()}|${trackId}`;
+    if (found.length && !save.dupDone[dk]) { const id = found[MB.hash(dk) % found.length], p = at(dk); out.push({ id, x: p.x, z: p.z, dup: true }); }
+    return out;
+  }
   const starText = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
   const challenge = () => MB.dailyChallenge(today(), openTracks());
   const placeSuf = (p) => (lang === 'fr' ? (p === 1 ? 'er' : 'e') : ['st', 'nd', 'rd'][p - 1] || 'th');
@@ -298,7 +324,8 @@
     const fr = lang === 'fr', text = day > 1
       ? (fr ? `🎁 Jour ${day} de ta série : ${gift} pièces t'attendent. Et 3 nouvelles missions !` : `🎁 Day ${day} of your streak: ${gift} coins are waiting. Plus 3 new missions!`)
       : (fr ? `🎁 Ton cadeau du jour et 3 nouvelles missions t'attendent au garage.` : `🎁 Your daily gift and 3 new missions are waiting in the garage.`);
-    bridge.remind(at.getTime(), 'Mini Bolides', text);
+    const newToy = save.toyStart && MB.toysReleased(save.toyStart, key) > MB.toysReleased(save.toyStart, today());
+    bridge.remind(at.getTime(), 'Mini Bolides', newToy ? (fr ? `🧸 Un nouveau jouet est caché sur un circuit ! ${text}` : `🧸 A new toy is hidden on a track! ${text}`) : text);
   }
   function setNotif(on) {
     save.notif = on; persist();
@@ -373,8 +400,7 @@
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
     const solo = trackMode === 'chrono' && !cup && !chal;
-    const toyDef = MB.TOYS.find((y) => y.track === trackId);
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toy: !!toyDef && !save.toys[toyDef.id] && !auto });
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track) });
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -483,17 +509,26 @@
         case 'count': if (e.n >= 1 && e.n <= 3) { flash(String(e.n), 'big'); Sound.play('count', [440, 0.14, 'square', 0.14], 0); } break;
         case 'go': if (journal) { const a = Sound.diag(); window.mbJournal(`Son : ${a.actif ? 'activé' : 'coupé'}, ${a.etat}, ${a.sons} sons${a.erreurs.length ? ' · ' + a.erreurs[0] : ''}`); }
           flash('GO !', 'big'); Sound.play('go', [880, 0.4, 'square', 0.18], 0); $('hint').hidden = true; if (!save.seen) { save.seen = true; persist(); }
-          if (race.toy && (save.toyHint[currentTrack] || 0) < 2) {         // les deux premières fois : on prévient qu'un jouet attend quelque part
-            save.toyHint[currentTrack] = (save.toyHint[currentTrack] || 0) + 1; persist();
-            const r0 = race; setTimeout(() => { if (race === r0 && !r0.toy.taken) flash(t('toyHint')); }, 1600);
-          }
+          { const fresh = race.toys.find((y) => !y.dup);                 // deux courses de suite, on prévient qu'un nouveau jouet attend ici
+            if (fresh && (save.toyHint[fresh.id] || 0) < 2) {
+              save.toyHint[fresh.id] = (save.toyHint[fresh.id] || 0) + 1; persist();
+              const r0 = race; setTimeout(() => { if (race === r0 && !fresh.taken) flash(t('toyHint')); }, 1600);
+            } }
           break;
         case 'toy': {
-          const y = MB.TOYS.find((q) => q.track === currentTrack);
+          const y = MB.TOYS.find((q) => q.id === e.id);
           if (!y) break;
-          save.toys[y.id] = Date.now(); save.coins += MB.TOY_COINS; persist();
+          view.toyFx(e.id); buzz(60);
+          if (e.dup) {                                                    // doublon : quelques pièces, une fois par jour sur ce circuit
+            save.dupDone = { [`${today()}|${currentTrack}`]: 1, ...Object.fromEntries(Object.entries(save.dupDone).filter(([k]) => k.startsWith(today()))) };
+            save.coins += MB.TOY_DUP_COINS; persist();
+            Sound.play('coin', [1320, 0.09, 'triangle', 0.14, 1760]);
+            flash(`${y.icon} ${t('toyDup')} ${L(y.name)} · +${MB.TOY_DUP_COINS} 🪙`);
+            break;
+          }
+          save.toys[y.id] = Date.now(); delete save.toyAt[y.id]; save.coins += MB.TOY_COINS; persist();
+          Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0);
           const tn = trophiesAfter({});
-          view.toyFx(); buzz(60); Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0);
           flash(`${y.icon} ${t('toyFound')} ${L(y.name)} · ${Object.keys(save.toys).length}/${MB.TOYS.length} · +${MB.TOY_COINS} 🪙`);
           if (tn.length) setTimeout(() => flash(tn[0]), 2200);
           break;
@@ -662,7 +697,8 @@
     }
     const tiers = {};
     for (const x of MB.TROPHIES) tiers[x.id] = MB.trophyTier(x, save);
-    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys) }, tIdx);
+    toyHunt();
+    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys), released: MB.toysReleased(save.toyStart, today()) }, tIdx);
     show('trophies');
     trophyCard();
   }
@@ -830,6 +866,7 @@
         <small>${w.tracks.length} ${lang === 'fr' ? 'circuit' : 'track'}${w.tracks.length > 1 ? 's' : ''} · 4 modes</small>
         <em>${open ? `${got} / ${max} ★` : `🔒 ${total} / ${w.stars} ★`}</em><u><i style="width:${Math.round(100 * Math.min(1, open ? got / max : total / w.stars))}%"></i></u></div>`;
       if (!open) return `<div class="wpage">${hero}<div class="wlock"><b>${t('worldNeed')} ${w.stars - total} ★</b>${t('worldNeed2')}</div></div>`;
+      const hunt = toyHunt().map((h) => h.track);              // 🧸 : un nouveau jouet est caché sur ce circuit (on ne dit pas où)
       return `<div class="wpage">${hero}${w.tracks.map((id) => {
         const def = MB.TRACKS.find((d) => d.id === id), vo = varOpen(id), sel = id === selTrack;
         const badge = MODES.map(([v, ic]) => {
@@ -841,7 +878,7 @@
           return `<button data-pick="${id}" data-pvar="${v || ''}" class="${sel && v === selVar ? 'sel' : ''}" ${lock ? 'disabled' : ''}>${lock ? '🔒' : ic}<small>${lock ? '1★ ' + t('normal') : rec}</small></button>`;
         }).join('');
         return `<div class="wline ${sel ? 'open' : ''}"><button class="whead" data-pick="${id}"><span class="wthumb" style="background:${grad(w.col)}">${trackMap(id)}</span>
-          <span class="wnm">${L(def.name)}<span class="wbadges">${badge}</span></span></button>${sel ? `<div class="wmodes">${modes}</div>` : ''}</div>`;
+          <span class="wnm">${L(def.name)}${hunt.includes(id) ? ' <i class="wtoy">🧸</i>' : ''}<span class="wbadges">${badge}</span></span></button>${sel ? `<div class="wmodes">${modes}</div>` : ''}</div>`;
       }).join('')}</div>`;
     };
     $('trackList').innerHTML = `<div class="seg">${['race', 'chrono'].map((m) => `<button data-mode="${m}" class="${trackMode === m ? 'sel' : ''}">${t(m === 'race' ? 'modeRace' : 'modeChrono')}</button>`).join('')}</div>`

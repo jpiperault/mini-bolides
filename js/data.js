@@ -140,21 +140,51 @@
     { id: 'leader', icon: '👑', coins: 300, name: { fr: 'Roi de la course', en: 'Wire to wire' }, desc: { fr: 'En tête à chaque passage de ligne et à l\'arrivée', en: 'Lead at every lap and at the finish' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.ledAll && r.lap1Pos === 1 },
   ];
 
-  // Jouets cachés : un par circuit, ramassé une seule fois (toutes variantes confondues), exposé dans la salle des trophées.
+  // Jouets cachés : 33 à collectionner. Un nouveau sort tous les 2 jours (3 dès le début), caché sur un circuit ouvert
+  // jusqu'à ce qu'on le trouve. Les jouets déjà trouvés reviennent en doublons (une fois par jour et par circuit).
   MB.TOY_COINS = 100;
+  MB.TOY_DUP_COINS = 20;
+  MB.TOY_EVERY = 2;   // jours entre deux nouveaux jouets
   MB.TOYS = [
-    { id: 'canard', track: 'bol', icon: '🦆', name: { fr: 'Canard de bain', en: 'Rubber duck' } },
-    { id: 'yoyo', track: 'tartine', icon: '🪀', name: { fr: 'Yoyo', en: 'Yo-yo' } },
-    { id: 'robot', track: 'minuit', icon: '🤖', name: { fr: 'Robot', en: 'Robot' } },
-    { id: 'bateau', track: 'dune', icon: '⛵', name: { fr: 'Bateau en papier', en: 'Paper boat' } },
-    { id: 'toupie', track: 'sentier', icon: '🌀', name: { fr: 'Toupie', en: 'Spinning top' } },
-    { id: 'avion', track: 'chateau', icon: '✈️', name: { fr: 'Petit avion', en: 'Toy plane' } },
-    { id: 'ours', track: 'banquise', icon: '🧸', name: { fr: 'Ourson', en: 'Teddy' } },
-    { id: 'sifflet', track: 'glacier', icon: '📯', name: { fr: 'Sifflet', en: 'Whistle' } },
-    { id: 'voiture', track: 'ville', icon: '🚙', name: { fr: 'Petite voiture', en: 'Toy car' } },
-    { id: 'crayon', track: 'doudou', icon: '✏️', name: { fr: 'Crayon', en: 'Crayon' } },
-    { id: 'de', track: 'coffre', icon: '🎲', name: { fr: 'Dé', en: 'Die' } },
+    { id: 'canard', icon: '🦆', name: { fr: 'Canard de bain', en: 'Rubber duck' } },
+    { id: 'yoyo', icon: '🪀', name: { fr: 'Yoyo', en: 'Yo-yo' } },
+    { id: 'robot', icon: '🤖', name: { fr: 'Robot', en: 'Robot' } },
+    { id: 'bateau', icon: '⛵', name: { fr: 'Bateau en papier', en: 'Paper boat' } },
+    { id: 'toupie', icon: '🌀', name: { fr: 'Toupie', en: 'Spinning top' } },
+    { id: 'avion', icon: '✈️', name: { fr: 'Petit avion', en: 'Toy plane' } },
+    { id: 'ours', icon: '🧸', name: { fr: 'Ourson', en: 'Teddy' } },
+    { id: 'sifflet', icon: '📯', name: { fr: 'Sifflet', en: 'Whistle' } },
+    { id: 'voiture', icon: '🚙', name: { fr: 'Petite voiture', en: 'Toy car' } },
+    { id: 'crayon', icon: '✏️', name: { fr: 'Crayon', en: 'Crayon' } },
+    { id: 'de', icon: '🎲', name: { fr: 'Dé', en: 'Die' } },
+    { id: 'balle', icon: '⚽', name: { fr: 'Balle rebondissante', en: 'Bouncy ball' } },
+    { id: 'tambour', icon: '🥁', name: { fr: 'Tambour', en: 'Drum' } },
+    { id: 'trompette', icon: '🎺', name: { fr: 'Trompette', en: 'Trumpet' } },
+    { id: 'cerfvolant', icon: '🪁', name: { fr: 'Cerf-volant', en: 'Kite' } },
+    { id: 'matriochka', icon: '🪆', name: { fr: 'Poupée russe', en: 'Nesting doll' } },
+    { id: 'culbuto', icon: '🥚', name: { fr: 'Culbuto', en: 'Roly-poly' } },
+    { id: 'brique', icon: '🧱', name: { fr: 'Brique de construction', en: 'Building brick' } },
+    { id: 'loco', icon: '🚂', name: { fr: 'Locomotive', en: 'Toy engine' } },
+    { id: 'camion', icon: '🚚', name: { fr: 'Camion-benne', en: 'Dump truck' } },
+    { id: 'helico', icon: '🚁', name: { fr: 'Hélicoptère', en: 'Helicopter' } },
+    { id: 'sousmarin', icon: '🟡', name: { fr: 'Sous-marin', en: 'Submarine' } },
+    { id: 'ballon', icon: '🎈', name: { fr: 'Ballon', en: 'Balloon' } },
+    { id: 'xylo', icon: '🎹', name: { fr: 'Xylophone', en: 'Xylophone' } },
+    { id: 'seau', icon: '🪣', name: { fr: 'Seau de plage', en: 'Sand bucket' } },
+    { id: 'etoilemer', icon: '⭐', name: { fr: 'Étoile de mer', en: 'Starfish' } },
+    { id: 'pingouin', icon: '🐧', name: { fr: 'Pingouin', en: 'Penguin' } },
+    { id: 'bonhomme', icon: '⛄', name: { fr: 'Bonhomme de neige', en: 'Snowman' } },
+    { id: 'grenouille', icon: '🐸', name: { fr: 'Grenouille', en: 'Frog' } },
+    { id: 'coccinelle', icon: '🐞', name: { fr: 'Coccinelle', en: 'Ladybird' } },
+    { id: 'moulin', icon: '🎡', name: { fr: 'Moulin à vent', en: 'Pinwheel' } },
+    { id: 'fusee', icon: '🚀', name: { fr: 'Fusée', en: 'Rocket' } },
+    { id: 'dino', icon: '🦕', name: { fr: 'Dinosaure', en: 'Dinosaur' } },
   ];
+  MB.dayNum = (k) => { const p = k.split('-'); return Math.round(Date.UTC(+p[0], +p[1] - 1, +p[2]) / 864e5); };
+  // Petit hachage stable (FNV-1a) : mêmes cachettes pour un même jouet, mêmes doublons pour un même jour.
+  MB.hash = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  // Nombre de jouets sortis depuis le jour de départ du joueur.
+  MB.toysReleased = (startKey, todayKey) => Math.min(MB.TOYS.length, 3 + Math.floor(Math.max(0, MB.dayNum(todayKey) - MB.dayNum(startKey)) / MB.TOY_EVERY));
 
   MB.TIER_NAMES = [{ fr: 'Bronze', en: 'Bronze' }, { fr: 'Argent', en: 'Silver' }, { fr: 'Or', en: 'Gold' }];
   // Palier atteint d'un trophée (0 : pas gagné ; 1 à 3 pour bronze, argent, or ; 1 pour un trophée sans paliers).
