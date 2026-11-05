@@ -1013,9 +1013,10 @@
       s.add(line);
       // Portique de départ en pailles
       const nx = -track.tz[0], nz = track.tx[0], pole = new T.CylinderGeometry(0.5, 0.5, 15, 8), poleM = lam(0xffffff);
-      for (const k of [-1, 1]) {
+      this.poles = [-1, 1].map((k) => {
         const p = new T.Mesh(pole, poleM); p.position.set(track.px[0] + nx * k * (w + 2.5), 7.5, track.pz[0] + nz * k * (w + 2.5)); s.add(p);
-      }
+        return p;
+      });
       const banner = new T.Mesh(new T.PlaneGeometry(track.width + 5, 3), new T.MeshBasicMaterial({ side: T.DoubleSide, map: canvas(512, 64, (g, W, H) => {
         g.fillStyle = '#e5352b'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.font = '900 40px Arial Black, Arial'; g.textAlign = 'center'; g.fillText('MINI BOLIDES', W / 2, 47);
       }) }));
@@ -1351,6 +1352,7 @@
 
     frameRace(dt, alpha) {
       this.t += dt; this.inReplay = false;
+      if (this.poles && !this.poles[0].visible) for (const p of this.poles) p.visible = true;
       this._updateCars(dt, alpha);
       const p = this.race.player, P = MB.pose(p, alpha, this.pose), finished = p.finished;
       const ease = (k) => 1 - Math.exp(-dt * k);
@@ -1422,8 +1424,10 @@
       const cx = t.px[0] + t.tx[0] * along + nx * side, cz = t.pz[0] + t.tz[0] * along + nz * side;
       if (this.rpX === undefined || !this.inReplay) { this.rpX = px; this.rpZ = pz; this.inReplay = true; }
       const k = 1 - Math.exp(-dt * 6); this.rpX += (px - this.rpX) * k; this.rpZ += (pz - this.rpZ) * k;
-      this.cam.position.set(cx, close ? 2.2 : 3.6, cz);
-      this.cam.lookAt(close ? t.px[0] : this.rpX, 1.2, close ? t.pz[0] : this.rpZ);
+      // Le photo-finish regarde le long de la ligne : le poteau du portique, sur cet axe, aurait rempli l'écran.
+      for (const p of this.poles || []) p.visible = !close;
+      this.cam.position.set(cx, close ? 5 : 3.6, cz);   // assez haut pour voir par-dessus la bordure du premier plan
+      this.cam.lookAt(close ? t.px[0] : this.rpX, close ? 0.6 : 1.2, close ? t.pz[0] : this.rpZ);
       const fov = close ? 34 : 42; if (this.cam.fov !== fov) { this.cam.fov = fov; this.cam.updateProjectionMatrix(); }
       if (this.life) this.life.update(dt, (this.t += dt), { x: px, z: pz }, this.race.cars, this.lite);
       this.windM.visible = false;
