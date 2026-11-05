@@ -150,6 +150,136 @@
       w.position.y = 1.9; g.add(w);
       return g;
     },
+    toys() {                                              // coffre à jouets qui déborde
+      const g = new T.Group();
+      g.add(mesh(R.roundBox(1.7, 0.9, 1.1, 0.08), paint(0x2f8fd8, 0.4), 0, 0.45));
+      for (const [x, c] of [[-0.55, 0xffd23f], [0, 0xe5352b], [0.55, 0x48b58a]]) g.add(mesh(new T.BoxGeometry(0.4, 0.3, 0.04), paint(c, 0.4), x, 0.5, 0.56));
+      const lid = mesh(R.roundBox(1.74, 0.16, 1.14, 0.06), paint(0x2a70c9, 0.4), 0, 1.25, -0.55); lid.geometry.translate(0, 0, 0.57); lid.rotation.x = -1.1; g.add(lid);
+      const duck = MB.TOY_MODELS.canard(); duck.scale.setScalar(0.8); duck.position.set(-0.35, 0.65, 0.05); g.add(duck);
+      const ball = mesh(new T.SphereGeometry(0.28, 18, 14), paint(0xe5352b, 0.2), 0.45, 1.05, 0.1); g.add(ball);
+      const bear = MB.TOY_MODELS.ours(); bear.scale.setScalar(0.7); bear.position.set(0.1, 0.7, -0.2); g.add(bear);
+      return g;
+    },
+    night() {                                             // chouette sur un croissant de lune
+      const g = new T.Group(); g.add(plinth(R.lam(0x1c2350, { roughness: 0.4 })));
+      const moon = mesh(new T.TorusGeometry(0.7, 0.24, 14, 40, Math.PI * 1.15), R.lam(0xfff1b0, { emissive: 0xffe27a, emissiveIntensity: 0.35, roughness: 0.4 }), 0, 1.15); moon.rotation.z = Math.PI * 0.95; g.add(moon);
+      const owl = new T.Group(), brown = paint(0x8a5c34, 0.6);
+      owl.add(mesh(new T.SphereGeometry(0.34, 20, 16), brown, 0, 0, 0)); owl.children[0].scale.y = 1.15;
+      owl.add(mesh(new T.SphereGeometry(0.22, 16, 12), paint(0xd8b48a, 0.6), 0, -0.05, 0.18));
+      for (const s of [-1, 1]) {
+        owl.add(mesh(new T.SphereGeometry(0.11, 14, 10), paint(0xffffff, 0.3), s * 0.13, 0.15, 0.27));
+        owl.add(mesh(new T.SphereGeometry(0.05, 10, 8), paint(0x1b1d24, 0.2), s * 0.13, 0.15, 0.37));
+        const ear = mesh(new T.ConeGeometry(0.07, 0.18, 8), brown, s * 0.2, 0.42, 0); ear.rotation.z = -s * 0.3; owl.add(ear);
+      }
+      const beak = mesh(new T.ConeGeometry(0.04, 0.1, 8), paint(0xffb23c), 0, 0.04, 0.33); beak.rotation.x = Math.PI; owl.add(beak);
+      owl.position.set(0.15, 0.85, 0.1); g.add(owl);
+      return g;
+    },
+    rain() {                                              // parapluie et gouttes
+      const g = new T.Group(); g.add(plinth());
+      g.add(mesh(new T.CylinderGeometry(0.04, 0.04, 1.8, 8), silver(), 0, 1.15));
+      const hook = mesh(new T.TorusGeometry(0.15, 0.04, 8, 16, Math.PI), silver(), 0.15, 0.27); hook.rotation.z = Math.PI; g.add(hook);
+      const top = new T.Mesh(new T.ConeGeometry(1.05, 0.55, 8, 1, true), R.lam(0xe5352b, { roughness: 0.35, side: T.DoubleSide })); top.position.y = 2.15; g.add(top);
+      for (let i = 0; i < 8; i += 2) { const p = mesh(new T.ConeGeometry(1.06, 0.55, 8, 1, true, (i * Math.PI) / 4, Math.PI / 4), R.lam(0xffffff, { roughness: 0.35, side: T.DoubleSide }), 0, 2.15); g.add(p); }
+      const drop = R.lam(0x7fd0ff, { roughness: 0.05, transparent: true, opacity: 0.85 });
+      for (const [x, y] of [[-0.9, 1.4], [0.85, 1.1], [-0.6, 0.8]]) { const d = mesh(new T.SphereGeometry(0.09, 12, 10), drop, x, y); d.scale.y = 1.4; g.add(d); }
+      return g;
+    },
+    reverse() {                                           // panneau demi-tour
+      const g = new T.Group(); g.add(plinth());
+      g.add(mesh(new T.CylinderGeometry(0.05, 0.05, 1.2, 8), silver(), 0, 0.8));
+      const sign = mesh(new T.CylinderGeometry(0.75, 0.75, 0.1, 36), paint(0x2f62d9, 0.35), 0, 1.75); sign.rotation.x = Math.PI / 2; g.add(sign);
+      const arrow = mesh(new T.TorusGeometry(0.32, 0.08, 10, 30, Math.PI), paint(0xffffff, 0.3), 0, 1.8, 0.07); g.add(arrow);
+      g.add(mesh(new T.BoxGeometry(0.16, 0.36, 0.06), paint(0xffffff, 0.3), 0.32, 1.64, 0.07));
+      const tip = mesh(new T.ConeGeometry(0.17, 0.26, 3), paint(0xffffff, 0.3), -0.32, 1.66, 0.07); tip.rotation.z = Math.PI; g.add(tip);
+      return g;
+    },
+    photo() {                                             // appareil photo
+      const g = new T.Group(); g.add(plinth());
+      const body = new T.Group();
+      body.add(mesh(R.roundBox(1.4, 0.85, 0.5, 0.1), paint(0x2b2d35, 0.4)));
+      body.add(mesh(new T.BoxGeometry(1.42, 0.28, 0.52), paint(0xc8cdd6, 0.3), 0, 0.2));
+      const lens = mesh(new T.CylinderGeometry(0.32, 0.36, 0.35, 28), R.lam(0x1b1d24, { metalness: 0.6, roughness: 0.3 }), 0, -0.05, 0.4); lens.rotation.x = Math.PI / 2; body.add(lens);
+      body.add(mesh(new T.CircleGeometry(0.22, 24), R.lam(0x3f6fd8, { roughness: 0.05, metalness: 0.3 }), 0, -0.05, 0.58));
+      body.add(mesh(new T.BoxGeometry(0.28, 0.16, 0.06), R.lam(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.5 }), 0.45, 0.28, 0.27));
+      body.add(mesh(new T.CylinderGeometry(0.1, 0.1, 0.1, 14), paint(0xe5352b), -0.45, 0.48, 0));
+      body.position.y = 1.0; body.rotation.x = -0.1; g.add(body);
+      return g;
+    },
+    rocket() {                                            // feu de départ
+      const g = new T.Group(); g.add(plinth());
+      g.add(mesh(new T.CylinderGeometry(0.06, 0.06, 0.5, 8), silver(), 0, 0.5));
+      g.add(mesh(R.roundBox(0.62, 1.7, 0.45, 0.1), paint(0x2b2d35, 0.4), 0, 1.6));
+      [[0xe5352b, 0.25], [0xffb23c, 0.25], [0x3fd46a, 1]].forEach(([c, e], i) => {
+        g.add(mesh(new T.SphereGeometry(0.2, 18, 12), R.lam(c, { emissive: c, emissiveIntensity: e, roughness: 0.2 }), 0, 2.1 - i * 0.5, 0.2));
+        const visor = mesh(new T.CylinderGeometry(0.25, 0.25, 0.2, 18, 1, true, -Math.PI / 2, Math.PI), R.lam(0x1b1d24, { side: T.DoubleSide }), 0, 2.22 - i * 0.5, 0.28); visor.rotation.z = Math.PI / 2; visor.rotation.y = Math.PI / 2; g.add(visor);
+      });
+      return g;
+    },
+    drift() {                                             // pneu fumant
+      const g = new T.Group(); g.add(plinth());
+      const tyre = mesh(new T.TorusGeometry(0.6, 0.28, 16, 36), paint(0x1b1d24, 0.8), 0, 1.2); g.add(tyre);
+      const rim = mesh(new T.CylinderGeometry(0.38, 0.38, 0.3, 24), R.lam(0xdfe4ea, { metalness: 1, roughness: 0.2 }), 0, 1.2); rim.rotation.x = Math.PI / 2; g.add(rim);
+      for (let i = 0; i < 5; i++) { const sp = mesh(new T.BoxGeometry(0.08, 0.36, 0.32), gold(), 0, 1.2); sp.rotation.z = (i * Math.PI * 2) / 5; g.add(sp); }
+      const smoke = R.lam(0xf0f0f0, { transparent: true, opacity: 0.75, roughness: 1 });
+      for (const [x, y, r] of [[-0.75, 0.55, 0.3], [-1.0, 0.85, 0.24], [-0.95, 1.2, 0.18], [0.8, 0.5, 0.26]]) g.add(mesh(R.lump(r, 0.08, x * 3, 3), smoke, x, y, -0.1));
+      return g;
+    },
+    garage() {                                            // porte-clés et clé de voiture
+      const g = new T.Group(); g.add(plinth());
+      const ring = mesh(new T.TorusGeometry(0.42, 0.06, 10, 32), silver(), 0, 2.0); g.add(ring);
+      const key = new T.Group();
+      key.add(mesh(R.roundBox(0.55, 0.75, 0.2, 0.12), paint(0xe5352b, 0.3), 0, 0, 0));
+      key.add(mesh(new T.BoxGeometry(0.16, 0.8, 0.06), silver(), 0, -0.75, 0));
+      for (const y of [-0.85, -1.0]) key.add(mesh(new T.BoxGeometry(0.12, 0.06, 0.06), silver(), 0.12, y, 0));
+      key.add(mesh(new T.CircleGeometry(0.12, 18), R.lam(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.2 }), 0, 0.12, 0.11));
+      key.position.set(0, 1.55, 0); key.rotation.z = 0.15; g.add(key);
+      const tag = mesh(R.roundBox(0.4, 0.5, 0.06, 0.1), gold(), 0.45, 1.5, 0.05); tag.rotation.z = -0.3; g.add(tag);
+      return g;
+    },
+    tuned() {                                             // clé à molette
+      const g = new T.Group(); g.add(plinth());
+      const w = new T.Group(), m = R.lam(0xdfe4ea, { metalness: 1, roughness: 0.25 });
+      w.add(mesh(R.roundBox(0.28, 1.6, 0.14, 0.06), m, 0, 0, 0));
+      const head = mesh(new T.TorusGeometry(0.32, 0.13, 10, 24, Math.PI * 1.45), m, 0, 0.95, 0); head.rotation.z = -Math.PI * 0.22; w.add(head);
+      w.add(mesh(new T.BoxGeometry(0.2, 0.6, 0.16), paint(0xe5352b, 0.35), 0, -0.45, 0));
+      w.position.y = 1.35; w.rotation.z = 0.35; g.add(w);
+      return g;
+    },
+    streak() {                                            // calendrier, 7 jours cochés
+      const g = new T.Group(); g.add(plinth());
+      const c = new T.Group();
+      c.add(mesh(R.roundBox(1.3, 1.3, 0.12, 0.06), paint(0xfffaf0, 0.6)));
+      c.add(mesh(new T.BoxGeometry(1.3, 0.32, 0.14), paint(0xe5352b, 0.4), 0, 0.5, 0.01));
+      for (const s of [-1, 1]) { const r = mesh(new T.TorusGeometry(0.07, 0.025, 6, 14), silver(), s * 0.35, 0.68, 0); r.rotation.y = Math.PI / 2; c.add(r); }
+      for (let i = 0; i < 9; i++) { const x = -0.38 + (i % 3) * 0.38, y = 0.18 - Math.floor(i / 3) * 0.3; c.add(mesh(new T.BoxGeometry(0.28, 0.22, 0.02), paint(i < 7 ? 0x48b58a : 0xe8e0d0, 0.5), x, y, 0.07)); }
+      c.position.y = 1.25; c.rotation.x = -0.12; g.add(c);
+      return g;
+    },
+    chests() {                                            // coffre au trésor ouvert
+      const g = new T.Group();
+      const wood = paint(0x8a5530, 0.6), m = gold();
+      g.add(mesh(R.roundBox(1.5, 0.75, 1.0, 0.06), wood, 0, 0.38));
+      for (const x of [-0.55, 0.55]) g.add(mesh(new T.BoxGeometry(0.1, 0.78, 1.04), m, x, 0.38));
+      const lid = mesh(R.roundBox(1.5, 0.22, 1.0, 0.08), wood, 0, 0.78, -0.5); lid.geometry.translate(0, 0, 0.5); lid.rotation.x = -1.9; g.add(lid);   // couvercle rabattu en arrière
+      const band = mesh(new T.BoxGeometry(1.52, 0.06, 0.1), m, 0, 0.78, -0.5); band.geometry.translate(0, 0.12, 0.95); band.rotation.x = -1.9; g.add(band);
+      const coin = new T.CylinderGeometry(0.16, 0.16, 0.05, 18);
+      for (let i = 0; i < 14; i++) { const c = mesh(coin, m, -0.5 + (i % 5) * 0.25, 0.8 + Math.floor(i / 5) * 0.08, -0.25 + ((i * 7) % 5) * 0.12); c.rotation.set(i * 0.4, 0, i * 0.7); g.add(c); }
+      g.add(mesh(new T.OctahedronGeometry(0.16), R.lam(0x4fe3ff, { roughness: 0.05, metalness: 0.3 }), 0.25, 1.05, 0.05));
+      return g;
+    },
+    leader() {                                            // couronne
+      const g = new T.Group(); g.add(plinth(R.lam(0x6a2a8a, { roughness: 0.6 })));
+      const c = new T.Group(), m = gold();
+      c.add(mesh(new T.CylinderGeometry(0.7, 0.62, 0.45, 40, 1, true), Object.assign(m, { side: T.DoubleSide })));
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI) / 3, sp = mesh(new T.ConeGeometry(0.18, 0.5, 4), gold(), Math.cos(a) * 0.66, 0.45, Math.sin(a) * 0.66); c.add(sp);
+        c.add(mesh(new T.SphereGeometry(0.07, 10, 8), gold(), Math.cos(a) * 0.66, 0.72, Math.sin(a) * 0.66));
+        c.add(mesh(new T.SphereGeometry(0.08, 12, 10), R.lam([0xe5352b, 0x2f8fd8, 0x3fd46a][i % 3], { roughness: 0.05 }), Math.cos(a + 0.5) * 0.69, 0, Math.sin(a + 0.5) * 0.69));
+      }
+      c.position.y = 1.0; c.rotation.x = 0.15; g.add(c);
+      return g;
+    },
   };
 
   // Jouets cachés, un par circuit (hauteur ~1) : sur la piste et sur l'étagère du bas.

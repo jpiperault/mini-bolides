@@ -125,6 +125,19 @@
     { id: 'cup', icon: '🏆', coins: 300, name: { fr: 'Coupe en or', en: 'Golden cup' }, desc: { fr: 'Gagne une coupe', en: 'Win a cup' }, ok: (r) => r.cupWin },
     { id: 'stars', icon: '⭐', coins: 300, tiers: [20, 50, 100], count: (s) => Object.values(s.stars).reduce((a, b) => a + b, 0), unit: { fr: 'étoiles', en: 'stars' }, name: { fr: 'Collectionneur', en: 'Collector' }, desc: { fr: 'Réunis 20 étoiles', en: 'Collect 20 stars' }, ok: (r, s) => Object.values(s.stars).reduce((a, b) => a + b, 0) >= 20 },
     { id: 'expert', icon: '🛞', coins: 300, name: { fr: 'Pilote expert', en: 'Expert driver' }, desc: { fr: 'Gagne une course en Expert', en: 'Win a race in Expert' }, ok: (r) => !r.solo && r.pos === 1 && r.diff === 'expert' },
+    // Deuxième vague (v0.9.35) : modes, exploits de course, collection et fidélité.
+    { id: 'toys', icon: '🧸', coins: 400, name: { fr: 'Grand collectionneur', en: 'Toy hoarder' }, desc: { fr: 'Trouve tous les jouets cachés', en: 'Find every hidden toy' }, ok: (r, s) => Object.keys(s.toys || {}).length >= MB.TOYS.length },
+    { id: 'night', icon: '🦉', coins: 150, name: { fr: 'Oiseau de nuit', en: 'Night owl' }, desc: { fr: 'Gagne une course de nuit', en: 'Win a night race' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.variant === 'nuit' },
+    { id: 'rain', icon: '☂️', coins: 150, name: { fr: 'Sous la pluie', en: 'Singing in the rain' }, desc: { fr: 'Gagne une course sous la pluie', en: 'Win a race in the rain' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.variant === 'pluie' },
+    { id: 'reverse', icon: '🔄', coins: 150, name: { fr: 'À l\'envers', en: 'Wrong way round' }, desc: { fr: 'Gagne une course en sens inverse', en: 'Win a reverse race' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.variant === 'inverse' },
+    { id: 'photo', icon: '📸', coins: 200, name: { fr: 'Photo-finish', en: 'Photo finish' }, desc: { fr: 'Gagne avec moins de 0,3 s d\'avance', en: 'Win by less than 0.3 s' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.gap < 0.3 },
+    { id: 'rocket', icon: '🚦', coins: 150, name: { fr: 'Fusée au départ', en: 'Rocket start' }, desc: { fr: 'Sois premier dès la fin du 1er tour', en: 'Lead at the end of lap 1' }, ok: (r) => r.done && !r.solo && r.lap1Pos === 1 },
+    { id: 'drift', icon: '💨', coins: 200, name: { fr: 'Drift interminable', en: 'Endless drift' }, desc: { fr: 'Drifte 2,5 s sans lâcher', en: 'Drift for 2.5 s without letting go' }, ok: (r) => r.maxDrift >= 2.5 },
+    { id: 'garage', icon: '🔑', coins: 250, name: { fr: 'Collection de voitures', en: 'Car collector' }, desc: { fr: 'Possède 5 voitures', en: 'Own 5 cars' }, ok: (r, s) => s.cars.length >= 5 },
+    { id: 'tuned', icon: '🔧', coins: 250, name: { fr: 'Moteur gonflé', en: 'Fully tuned' }, desc: { fr: 'Améliore une voiture au maximum', en: 'Max out every upgrade on one car' }, ok: (r, s) => Object.values(s.ups).some((u) => Object.keys(MB.UPGRADES).every((k) => (u[k] || 0) >= MB.UP_MAX)) },
+    { id: 'streak', icon: '📅', coins: 200, name: { fr: 'Fidèle au volant', en: 'Regular racer' }, desc: { fr: 'Joue 7 jours de suite', en: 'Play 7 days in a row' }, ok: (r, s) => s.daily.streak >= 7 },
+    { id: 'chests', icon: '🎁', coins: 250, name: { fr: 'Chasseur de coffres', en: 'Chest hunter' }, desc: { fr: 'Ouvre 10 coffres de missions', en: 'Open 10 mission chests' }, ok: (r, s) => (s.tot.chests || 0) >= 10 },
+    { id: 'leader', icon: '👑', coins: 300, name: { fr: 'Roi de la course', en: 'Wire to wire' }, desc: { fr: 'En tête à chaque passage de ligne et à l\'arrivée', en: 'Lead at every lap and at the finish' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.ledAll && r.lap1Pos === 1 },
   ];
 
   // Jouets cachés : un par circuit, ramassé une seule fois (toutes variantes confondues), exposé dans la salle des trophées.

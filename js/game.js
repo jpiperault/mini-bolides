@@ -279,7 +279,8 @@
     const ms = missions();
     if (ms.chest || missDone() < 3) return;
     const gain = MB.chestCoins(today());
-    ms.chest = true; save.coins += gain; persist();
+    ms.chest = true; save.coins += gain; save.tot.chests = (save.tot.chests || 0) + 1; persist();
+    trophiesAfter({}).forEach((n) => toast(n));
     $('coinval').textContent = save.coins;
     renderMissions(); renderMissBtn();
     $('missChestMsg').textContent = `+${gain} ${t('coins')} !`;
@@ -387,7 +388,7 @@
     $('posPill').hidden = solo;
     pendingCoins = 0;
     rec = []; recT = -99; replay = null;
-    stat = { boosts: 0, walls: 0, l2: 0, sc: 0, marbles: 0, items: 0, lastLapPos: 0 }; slowT = 0; timeK = 1; finFx = false; lastPos = race.cars.length; tickT = 0;
+    stat = { boosts: 0, walls: 0, l2: 0, sc: 0, marbles: 0, items: 0, lastLapPos: 0, lap1Pos: 0, ledAll: true, maxDrift: 0, driftT: null }; slowT = 0; timeK = 1; finFx = false; lastPos = race.cars.length; tickT = 0;
     phase = 'race'; paused = false;
     show('hud');
     $('hint').textContent = chal ? `${t('chal')} : ${L(chal.text)}` : t('how');
@@ -438,6 +439,7 @@
     setText('coinsVal', race.coinCount);
     if (p.drifting || hudDrift) $('driftBar').style.transform = `scaleX(${Math.min(p.charge / MB.DRIFT.L2, 1)})`;
     hudDrift = p.drifting;
+    if (p.drifting) { if (stat.driftT === null) stat.driftT = race.clock; stat.maxDrift = Math.max(stat.maxDrift, race.clock - stat.driftT); } else stat.driftT = null;   // plus long drift sans lâcher
     const dc = p.drifting ? (p.charge >= MB.DRIFT.L2 ? 'on l2' : p.charge >= MB.DRIFT.L1 ? 'on l1' : 'on') : '';
     if ($('driftWrap').className !== dc) $('driftWrap').className = dc;
     const fast = p.v / p.spec.vmax, wind = p.boost > 0 || p.magnet > 0 ? Math.min(0.5 + p.boost * 0.3, 1) : fast > 0.86 ? 0.16 : 0;
@@ -490,12 +492,14 @@
           const y = MB.TOYS.find((q) => q.track === currentTrack);
           if (!y) break;
           save.toys[y.id] = Date.now(); save.coins += MB.TOY_COINS; persist();
+          const tn = trophiesAfter({});
           view.toyFx(); buzz(60); Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0);
           flash(`${y.icon} ${t('toyFound')} ${L(y.name)} · ${Object.keys(save.toys).length}/${MB.TOYS.length} · +${MB.TOY_COINS} 🪙`);
+          if (tn.length) setTimeout(() => flash(tn[0]), 2200);
           break;
         }
         case 'coin': Sound.play('coin', [1320, 0.09, 'triangle', 0.14, 1760]); view.coinFx(); break;
-        case 'lap': flash(`${t('lap')} ${e.n}/${race.laps}`); Sound.play('lap', [660, 0.22, 'triangle', 0.18, 990], 0); view.lapFx(); if (e.n === race.laps) { stat.lastLapPos = race.position(race.player); if (Sound.tunes) Sound.tunes.tempo(1.07); } break;   // dernier tour : la musique presse
+        case 'lap': flash(`${t('lap')} ${e.n}/${race.laps}`); Sound.play('lap', [660, 0.22, 'triangle', 0.18, 990], 0); view.lapFx(); { const lp = race.position(race.player); if (e.n === 2) stat.lap1Pos = lp; if (lp !== 1) stat.ledAll = false; } if (e.n === race.laps) { stat.lastLapPos = race.position(race.player); if (Sound.tunes) Sound.tunes.tempo(1.07); } break;   // dernier tour : la musique presse
         case 'charge': Sound.play(e.lvl === 2 ? 'charge2' : 'charge1', [e.lvl === 2 ? 990 : 660, 0.1, 'triangle', 0.12], 0); buzz(12); break;
         case 'jump': Sound.play('jump', [320, 0.3, 'triangle', 0.14, 760]); break;
         case 'land': Sound.play('land', [120, 0.14, 'square', 0.1]); buzz(16); break;
@@ -699,7 +703,7 @@
     pendingCoins = race.coinCount; save.coins += pendingCoins; save.races++; save.sinceAd++;
     const key = trackKey();
     if (race.bestLap && (!save.best[key] || race.bestLap < save.best[key])) save.best[key] = race.bestLap;
-    const tnotes = trophiesAfter({ done: true, solo: true, coins: race.coinCount, l2: stat.l2, ghostBeat: ghost.record && ghost.hadGhost }, pendingCoins);
+    const tnotes = trophiesAfter({ done: true, solo: true, coins: race.coinCount, l2: stat.l2, ghostBeat: ghost.record && ghost.hadGhost, maxDrift: stat.maxDrift }, pendingCoins);
     tnotes.push(...missionsAfter({ races: 1, boosts: stat.boosts, l2: stat.l2, coins: race.coinCount, sc: stat.sc, items: stat.items, clean: stat.walls <= 2 ? 1 : 0 }));
     persist();
     $('resTitle').textContent = `⏱ ${fmt(p.time)}`;
@@ -740,7 +744,8 @@
     }
     if (openCups().length > opened) notes.push(t('unlocked'));
     if (openWorlds().length > worldsBefore) notes.push(`${t('worldOpen')} ${openWorlds().slice(worldsBefore).map((w) => w.icon + ' ' + L(w.name)).join(', ')} !`);
-    notes.push(...trophiesAfter({ done: true, solo: false, pos, walls: stat.walls, l2: stat.l2, coins: race.coinCount, lastLapPos: stat.lastLapPos, diff: save.diff }, pendingCoins));
+    const second = race.ranked[1], gap = pos === 1 && second && second.time ? second.time - p.time : 99;
+    notes.push(...trophiesAfter({ done: true, solo: false, pos, walls: stat.walls, l2: stat.l2, coins: race.coinCount, lastLapPos: stat.lastLapPos, diff: save.diff, variant: currentVariant, gap, lap1Pos: stat.lap1Pos, ledAll: stat.ledAll, maxDrift: stat.maxDrift }, pendingCoins));
     notes.push(...missionsAfter({ races: 1, boosts: stat.boosts, l2: stat.l2, coins: race.coinCount, podium: pos <= 3 ? 1 : 0, win: pos === 1 ? 1 : 0, sc: stat.sc, items: stat.items, clean: stat.walls <= 2 ? 1 : 0 }));
     persist();
 
@@ -987,13 +992,13 @@
     if (d.tsel !== undefined) return trophyGo(+d.tsel);
     if (d.gbuy) {
       const c = MB.CARS[gIdx];
-      if (save.coins >= c.price) { save.coins -= c.price; save.cars.push(c.id); save.car = c.id; save.carPaint[c.id] = carPaint(c.id); Sound.play('buy', [880, 0.3, 'triangle', 0.16, 1320], 0); persist(); }
+      if (save.coins >= c.price) { save.coins -= c.price; save.cars.push(c.id); save.car = c.id; save.carPaint[c.id] = carPaint(c.id); Sound.play('buy', [880, 0.3, 'triangle', 0.16, 1320], 0); persist(); trophiesAfter({}).forEach((n) => toast(n)); }
       return renderGarage();
     }
     if (d.gpick) { save.car = MB.CARS[gIdx].id; persist(); return renderGarage(); }
     if (d.up) {
       const c = MB.CARS[gIdx], ups = save.ups[c.id] || (save.ups[c.id] = {}), lvl = ups[d.up] || 0;
-      if (lvl < MB.UP_MAX && save.coins >= MB.UP_COST[lvl]) { save.coins -= MB.UP_COST[lvl]; ups[d.up] = lvl + 1; Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0); buzz(25); persist(); }
+      if (lvl < MB.UP_MAX && save.coins >= MB.UP_COST[lvl]) { save.coins -= MB.UP_COST[lvl]; ups[d.up] = lvl + 1; Sound.play('upgrade', [660, 0.2, 'triangle', 0.16, 1180], 0); buzz(25); persist(); trophiesAfter({}).forEach((n) => toast(n)); }
       return renderGarage();
     }
     if (d.paint) {
