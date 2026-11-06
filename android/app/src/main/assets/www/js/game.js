@@ -471,7 +471,7 @@
     if (p.drifting) { if (stat.driftT === null) stat.driftT = race.clock; stat.maxDrift = Math.max(stat.maxDrift, race.clock - stat.driftT); } else stat.driftT = null;   // plus long drift sans lâcher
     const dc = p.drifting ? (p.charge >= MB.DRIFT.L2 ? 'on l2' : p.charge >= MB.DRIFT.L1 ? 'on l1' : 'on') : '';
     if ($('driftWrap').className !== dc) $('driftWrap').className = dc;
-    const fast = p.v / p.spec.vmax, wind = p.boost > 0 || p.magnet > 0 ? Math.min(0.5 + p.boost * 0.3, 1) : fast > 0.86 ? 0.16 : 0;
+    const fast = p.v / p.spec.vmax, wind = p.boost > 0 || p.magnet > 0 ? Math.min(0.5 + p.boost * 0.3, 1) : p.draft > 0 ? 0.25 + p.draft * 0.25 : fast > 0.86 ? 0.16 : 0;
     const sp = view.calm ? 0 : Math.round(wind * 12) / 12;
     if (sp !== hudSpeed) { hudSpeed = sp; $('speed').style.opacity = sp; }
     // Un rival qui te double le fait savoir, sans bavarder toute la course.
@@ -543,6 +543,8 @@
         case 'charge': Sound.play(e.lvl === 2 ? 'charge2' : 'charge1', [e.lvl === 2 ? 990 : 660, 0.1, 'triangle', 0.12], 0); buzz(12); break;
         case 'jump': Sound.play('jump', [320, 0.3, 'triangle', 0.14, 760]); break;
         case 'land': Sound.play('land', [120, 0.14, 'square', 0.1]); buzz(16); break;
+        case 'draftFull': Sound.play('charge1', [660, 0.1, 'triangle', 0.12], 0); buzz(10); coach('draft'); break;
+        case 'draftKick': stat.drafts = (stat.drafts || 0) + 1; flash(lang === 'fr' ? 'ASPIRATION !' : 'SLIPSTREAM!', 'boost'); Sound.play('boost', [180, 0.5, 'sawtooth', 0.14, 700]); buzz(25); break;
         case 'pad': flash('TURBO !', 'boost'); Sound.play('boost', [180, 0.5, 'sawtooth', 0.14, 700]); buzz(30); break;
         case 'shortcut': stat.sc++; save.scTracks[currentTrack] = 1; flash(t('shortcut'), 'boost'); Sound.play('shortcut', [520, 0.25, 'triangle', 0.15, 1040], 0); break;
         case 'boost': if (e.car === race.player.id) { stat.boosts++; if (e.big) stat.l2++; flash(e.big ? 'SUPER TURBO !' : 'TURBO !', 'boost'); Sound.play('boost', [180, 0.5, 'sawtooth', 0.14, 700]); buzz(30); } break;
@@ -576,6 +578,7 @@
     drift: ['↪️ Virage ! Braque fort et garde : tu drifts', '↪️ Corner! Steer hard and hold to drift'],
     release: ['🔥 Relâche maintenant : TURBO !', '🔥 Release now: TURBO!'],
     item: ['🎁 Touche le bouton en bas pour utiliser ton bonus', '🎁 Tap the button below to use your bonus'],
+    draft: ['💨 Dans l\'aspiration ! Déboîte pour doubler avec un coup de fouet', '💨 In the slipstream! Pull out to overtake with a kick'],
     shortcut: ['»» Longe le bord aux chevrons : raccourci ! Gare aux plots.', '»» Hug the edge at the yellow arrows: shortcut! Mind the posts.'],
   };
   let coachT = null;

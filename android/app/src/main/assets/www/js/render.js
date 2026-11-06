@@ -1526,7 +1526,7 @@
       const want = p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 55 + ratio * ratio * 16;   // l'objectif s'ouvre nettement avec la vitesse : c'est lui qui la fait sentir
       this.fov += (want - this.fov) * ease(3);
       if (Math.abs(this.cam.fov - this.fov) > 0.01) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
-      this._windFx(P, finished ? 0 : ratio, p.boost > 0);
+      this._windFx(P, finished ? 0 : ratio + (p.draft || 0) * 0.3, p.boost > 0);   // aspiration : le vent se voit davantage
       for (const tx of this.pads || []) tx.offset.y -= dt * 1.6;      // les flèches de la dalle turbo avancent
       if (this.life) this.life.update(dt, this.t, P, this.race.cars, this.lite);
       this._adapt(dt);

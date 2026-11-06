@@ -10,6 +10,9 @@
   const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
   const TOY_R = 2.2;   // rayon de ramassage d'un jouet caché : il faut passer dessus, pas à côté
   const STEER_BASE = 0.5, STEER_LOOK = 9, WALL_OFF = 0.2, ASSIST_BACK = 0.8, NEUTRAL_BACK = 0.22, DRIFT_ARM = 0.3, DRIFT_L1 = 0.35, DRIFT_L2 = 0.8, DUEL_GAP = 30;
+  // Aspiration : dans la file d'une voiture (4 à 22 m derrière, à moins de 2,6 m de son axe), la vitesse de pointe
+  // monte jusqu'à +DRAFT_MAX ; après DRAFT_FULL s, déboîter donne un coup de fouet (DRAFT_KICK s).
+  const DRAFT_NEAR = 4, DRAFT_FAR = 22, DRAFT_LAT = 2.6, DRAFT_MAX = 0.06, DRAFT_FULL = 1, DRAFT_KICK = 0.6;
   const CAR_R = 2.3, COIN_R = 3.4, RAMP_H = 1.6, RAMP_N = 5;
   // Contacts avec les objets au sol : la voiture est une gélule (axe ±CAR_AXIS, rayon CAR_SIDE) qui suit
   // sa carrosserie (~4,9 m sur 2,3 m), et non plus un point au centre : le nez ou le flanc comptent aussi.
@@ -236,6 +239,7 @@
       // Pneus collants : on braque sans lever le pied.
       if (isP && !c.sc && !(c.sticky > 0)) target *= 1 - (0.3 - 0.22 * c.dk) * c.steer * c.steer;
       else if (!(c.sticky > 0)) target *= 1 - 0.07 * Math.abs(c.steer);
+      target *= 1 + this._draft(c, isP) * (isP ? DRAFT_MAX : DRAFT_MAX * 0.6);
       if (c.boost > 0) { c.boost -= DT; target = Math.max(target, s.vmax) * c.boostPow; }
       if (c.magnet > 0) {
         c.magnet -= DT;
@@ -295,6 +299,29 @@
       this._air(c);
       const slipTarget = c.drifting ? c.driftDir * 0.26 : c.steer * 0.1;
       c.slip += (slipTarget - c.slip) * Math.min(1, 8 * DT);
+    }
+
+    // Aspiration : renvoie la part de vitesse gagnée (0 à 1) et gère la charge et le coup de fouet en déboîtant.
+    _draft(c, isP) {
+      let behind = null;
+      if (!c.sc && c.y <= 0 && c.v > c.spec.vmax * 0.6 && this.state === 'run') for (const o of this.cars) {
+        if (o === c || o.sc || o.y > 0) continue;
+        const gap = o.prog - c.prog;
+        if (gap > DRAFT_NEAR && gap < DRAFT_FAR && Math.abs(o.lat - c.lat) < DRAFT_LAT) { behind = o; break; }
+      }
+      const was = c.draftT || 0;
+      if (behind) {
+        c.draftT = was + DT;
+        if (isP && was < DRAFT_FULL && c.draftT >= DRAFT_FULL) this.events.push({ t: 'draftFull' });
+      } else {
+        if (was >= DRAFT_FULL) {                                // on sort de l'aspiration bien chargé : coup de fouet, une fois
+          if (c.boost < DRAFT_KICK) { c.boost = DRAFT_KICK; c.boostPow = 1.1; }
+          if (isP) this.events.push({ t: 'draftKick' });
+          c.draftT = 0;
+        } else c.draftT = Math.max(0, was - DT * 3);
+      }
+      c.draft = behind ? Math.min(1, c.draftT / 0.4) : 0;
+      return c.draft;
     }
 
     // Direction de la route devant la voiture, sur le circuit ou sur le raccourci emprunté.
