@@ -89,6 +89,13 @@
     return { set(v) { on = v; vol.gain.setTargetAtTime(v ? 0.12 : 0, ctx.currentTime, 0.4); clearTimeout(timer); if (v) drop(); } };
   }
 
+  // Souffle d'aspiration : bruit filtré dont le filtre et le volume montent avec la charge (0 à 1).
+  function draft(ctx, out) {
+    const vol = gain(ctx, 0), n = noise(ctx), bp = filter(ctx, 'bandpass', 500, 1.4);
+    n.connect(bp); bp.connect(vol); vol.connect(out); n.start();
+    return { set(k) { const t = ctx.currentTime; vol.gain.setTargetAtTime(k * 0.16, t, 0.12); bp.frequency.setTargetAtTime(500 + k * 1600, t, 0.15); } };
+  }
+
   // Klaxon de jouet : deux notes carrées à la tierce, « pouet-pouet ».
   function horn(ctx, out, vol, high) {
     const t0 = ctx.currentTime + 0.01, base = high ? 523 : 392;
@@ -248,5 +255,5 @@
     };
   }
 
-  MB.Synth = { engine, skid, fanfare, horn, rain, rpm, music, STYLES };
+  MB.Synth = { engine, skid, draft, fanfare, horn, rain, rpm, music, STYLES };
 })(typeof window !== 'undefined' ? (window.MB = window.MB || {}) : module.exports);

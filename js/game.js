@@ -21,7 +21,7 @@
     next: ['Course suivante', 'Next race'], again: ['Rejouer', 'Race again'], home: ['Menu', 'Menu'], lap: ['Tour', 'Lap'],
     pos: ['Arrivée', 'Result'], coins: ['pièces', 'coins'], best: ['Meilleur tour', 'Best lap'], cup: ['Classement', 'Standings'],
     you: ['Toi', 'You'], choose: ['Choisis un circuit', 'Pick a track'], buy: ['Acheter', 'Buy'], use: ['Choisir', 'Select'], used: ['En piste', 'Selected'],
-    diff: ['Cylindrée', 'Engine class'], ccOpen: ['débloqué !', 'unlocked!'], ccHelp: ['Plus de cylindrée : tout le monde va plus vite (100 cc +15 %, 150 cc +32 %) et les rivaux sont plus forts. Gagne 3 courses pour ouvrir la suivante. Le contre-la-montre se court toujours en 50 cc.', 'Bigger engines: everyone is faster (100cc +15%, 150cc +32%) and rivals are tougher. Win 3 races to unlock the next class. Time trial is always 50cc.'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'],
+    diff: ['Cylindrée', 'Engine class'], ccOpen: ['débloqué ! Choisis-le au-dessus du bouton COURSE', 'unlocked! Pick it above the RACE button'], newTag: ['NOUVEAU', 'NEW'], ccHelp: ['Plus de cylindrée : tout le monde va plus vite (100 cc +15 %, 150 cc +32 %) et les rivaux sont plus forts. Gagne 3 courses pour ouvrir la suivante. Le contre-la-montre se court toujours en 50 cc.', 'Bigger engines: everyone is faster (100cc +15%, 150cc +32%) and rivals are tougher. Win 3 races to unlock the next class. Time trial is always 50cc.'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'],
     record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : modes ouverts dès une étoile en Normal. Chaque mode rapporte ses étoiles.', '🌙 🌧️ 🔄: modes open with one star in Normal. Each mode earns its own stars.'], tagline: ['COURSE DE PETITES VOITURES', 'TOY CAR RACING'], worldOpen: ['Nouveau monde :', 'New world:'], worldNeed: ['Encore', 'Still'], worldNeed2: ['étoiles pour ouvrir ce monde. Chaque mode de chaque circuit en rapporte.', 'stars to open this world. Every mode of every track earns them.'], pickTrack: ['Choisis un circuit', 'Pick a track'], run: ['COURIR', 'RACE'], normal: ['Normal', 'Normal'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], assist: ['Volant magique', 'Magic wheel'],
     assistHelp: ['Sans doigt posé, la voiture se recale seule.', 'With no finger down, the car straightens itself.'],
     back: ['Retour', 'Back'], how: ['Pose le pouce où tu veux et glisse à gauche ou à droite pour tourner. Braque fort pour drifter, relâche pour le turbo !', 'Put your thumb anywhere and slide left or right to steer. Steer hard to drift, release for turbo!'],
@@ -174,6 +174,11 @@
       if (!live) { this.tires.set(0, 0); if (this.rivalBus) this.rivalBus.gain.setTargetAtTime(0, this.ctx.currentTime, 0.1); }
     },
     // Pneus : crissement en drift, et un peu quand la voiture glisse fort sans drifter.
+    draft(k) {
+      if (!this.ctx || (!this.wind && !k)) return;
+      if (!this.wind) this.wind = MB.Synth.draft(this.ctx, this.master);
+      if (this.due('d', k > 0)) this.wind.set(save.sound ? k : 0);
+    },
     skid(amount, ratio) { if (this.tires && save.sound && this.due('s', amount > 0)) this.tires.set(amount, ratio); },
     // Moteur du rival le plus proche : plus fort quand il est près, plus aigu quand il se rapproche (Doppler exagéré, c'est un jouet).
     rain(on) {
@@ -262,7 +267,7 @@
     if (race) view.track = null;                              // la scène de course contient encore les voitures
     closeJournal({ fin: 'abandon' });
     phase = 'menu'; race = null; cup = null;
-    Sound.engine(false, 0); Sound.song('menu'); Sound.rain(false);
+    Sound.engine(false, 0); Sound.draft(0); Sound.song('menu'); Sound.rain(false);
     view.showcase(getTrack(MB.TRACKS[0].id), carSpec().shape, paintHex(), save.look);
     chal = null;
     const c = challenge(), won = save.chal === today();
@@ -587,6 +592,10 @@
     release: ['🔥 Relâche maintenant : TURBO !', '🔥 Release now: TURBO!'],
     item: ['🎁 Touche le bouton en bas pour utiliser ton bonus', '🎁 Tap the button below to use your bonus'],
     draft: ['💨 Dans l\'aspiration ! Déboîte pour doubler avec un coup de fouet', '💨 In the slipstream! Pull out to overtake with a kick'],
+    draftNear: ['💨 Reste dans sa file : l\'aspiration se charge', '💨 Stay in its line: the slipstream is charging'],
+    champ: ['👑 La voiture couronnée est le champion du circuit. Finis 3 fois devant elle pour gagner sa figurine !', '👑 The crowned car is this track\'s champion. Beat it 3 times to win its figurine!'],
+    cc_normal: ['🚀 100 cc : tout le monde va plus vite. Lâche le doigt un peu avant les virages serrés.', '🚀 100cc: everyone is faster. Lift your thumb a bit before tight corners.'],
+    cc_expert: ['🔥 150 cc : ça va très vite ! Le drift devient ton meilleur ami.', '🔥 150cc: it\'s very fast! Drifting is your best friend.'],
     shortcut: ['»» Longe le bord aux chevrons : raccourci ! Gare aux plots.', '»» Hug the edge at the yellow arrows: shortcut! Mind the posts.'],
   };
   let coachT = null;
@@ -594,11 +603,16 @@
     if (!race || race.solo || save.tuto[key]) return;
     save.tuto[key] = 1; persist();
     const el = $('coach'); el.textContent = COACH[key][lang === 'fr' ? 0 : 1]; el.className = 'on';
-    clearTimeout(coachT); coachT = setTimeout(() => { el.className = ''; }, 3400);
+    clearTimeout(coachT); coachT = setTimeout(() => { el.className = ''; }, COACH[key][0].length > 60 ? 5200 : 3400);
   }
   function coachWatch() {
     const p = race.player, t = race.track;
-    if (race.state !== 'run' || save.tuto.done) return;
+    if (race.state !== 'run') return;
+    // Nouveautés : chacune expliquée une fois, la première fois qu'on la rencontre (même après le tutoriel).
+    if (!race.solo && race.clock > 2.5 && race.clock < 3 && race.cc > 1) coach(race.cc > 1.25 ? 'cc_expert' : 'cc_normal');
+    if (race.clock > 9 && race.clock < 9.5 && race.cars.some((c) => c.champ)) coach('champ');
+    if (p.draft > 0.5 && p.draftT < 0.6) coach('draftNear');
+    if (save.tuto.done) return;
     if (race.clock > 0.3) coach('steer');
     if (race.clock > 4 && !save.tuto.drift) { let m = 0; for (let k = 8; k < 26; k++) m = Math.max(m, t.curv[(p.idx + k) % t.count]); if (m > 0.045) coach('drift'); }
     if (p.drifting && p.charge >= MB.DRIFT.L1) coach('release');
@@ -625,7 +639,7 @@
     const close = !race.solo && race.cars.some((c) => !c.isPlayer && c.finished && Math.abs(c.time - tc) < 0.3 && c.time < tc + 0.3);
     replay = { t: Math.max(rec[0][0], tc - 1.5), end: Math.min(rec[rec.length - 1][0], tc + 0.5), cross: tc, close, froze: 0 };
     phase = 'replay';
-    Sound.engine(false, 0); Sound.skid(0, 0);
+    Sound.engine(false, 0); Sound.draft(0); Sound.skid(0, 0);
     $('replayLabel').textContent = close ? '📸 PHOTO-FINISH' : (lang === 'fr' ? '🎬 RALENTI' : '🎬 REPLAY');
     show('replay');
   }
@@ -685,7 +699,7 @@
     if (pos !== 1) return [];
     const k = save.diff, n = (save.ccWins[k] = (save.ccWins[k] || 0) + 1), nx = ccNext(k);
     if (!nx || save.ccOk[nx] || n < MB.DIFFS[nx].unlock) return [];
-    save.ccOk[nx] = 1;
+    save.ccOk[nx] = 1; save.ccNew = nx;
     return [`🔓 ${L(MB.DIFFS[nx].label)} ${t('ccOpen')}`];
   }
   const cupMedal = (id, k) => (save.cupCc[id] || {})[k] || 0;
@@ -693,7 +707,8 @@
   function ccButtons() {
     return CC.map((k, i) => {
       const open = !!save.ccOk[k], prev = CC[i - 1], need = MB.DIFFS[k].unlock, got = prev ? Math.min(need, save.ccWins[prev] || 0) : 0;
-      return `<button data-diff="${k}" class="${save.diff === k ? 'sel' : ''}" ${open ? '' : 'disabled'}>${open ? '' : '🔒 '}${L(MB.DIFFS[k].label)}${open ? '' : `<small>${got}/${need} 🏆</small>`}</button>`;
+      const nw = save.ccNew === k ? `<em class="new">${t('newTag')}</em>` : '';
+      return `<button data-diff="${k}" class="${save.diff === k ? 'sel' : ''}" ${open ? '' : 'disabled'}>${nw}${open ? '' : '🔒 '}${L(MB.DIFFS[k].label)}${open ? '' : `<small>${got}/${need} 🏆</small>`}</button>`;
     }).join('');
   }
 
@@ -783,7 +798,7 @@
     const p = race.player, id = currentTrack;
     closeJournal({ fin: 'arrivée', mode: 'contre-la-montre', temps: p.time, meilleur_tour: race.bestLap, pieces: race.coinCount, murs: stat.walls });
     phase = 'result';
-    Sound.engine(false, 0);
+    Sound.engine(false, 0); Sound.draft(0);
     pendingCoins = race.coinCount; save.coins += pendingCoins; save.races++; save.sinceAd++;
     const key = trackKey();
     if (race.bestLap && (!save.best[key] || race.bestLap < save.best[key])) save.best[key] = race.bestLap;
@@ -808,7 +823,7 @@
     const p = race.player, pos = race.position(p), id = currentTrack;
     closeJournal({ fin: 'arrivée', rang: pos, temps: p.time, meilleur_tour: race.bestLap, pieces: race.coinCount, murs: stat.walls, turbos: stat.boosts });
     phase = 'result';
-    Sound.engine(false, 0);
+    Sound.engine(false, 0); Sound.draft(0);
     const opened = openCups().length, gain = MB.DIFFS[save.diff].gain;
     const prize = Math.round(MB.RACE_COINS[pos - 1] * gain);
     pendingCoins = prize + race.coinCount;
@@ -875,7 +890,7 @@
     releaseFingers();
     $('pause').hidden = !v;
     $('reportBtn').hidden = !journal;
-    if (v) Sound.engine(false, 0);
+    if (v) Sound.engine(false, 0); Sound.draft(0);
   }
 
   // ---------- Écrans ----------
@@ -1110,7 +1125,7 @@
       persist(); return renderGarage();
     }
     if (d.sens) { save.sens = d.sens; persist(); return renderSettings(); }
-    if (d.diff) { if (!save.ccOk[d.diff]) return; save.diff = d.diff; persist(); return b.closest('#trackList') ? renderTracks() : b.closest('#cupList') ? renderCups() : renderSettings(); }
+    if (d.diff) { if (!save.ccOk[d.diff]) return; save.diff = d.diff; if (save.ccNew === d.diff) save.ccNew = null; persist(); return b.closest('#trackList') ? renderTracks() : b.closest('#cupList') ? renderCups() : renderSettings(); }
     if (d.toggle) { save[d.toggle] = !save[d.toggle]; persist(); if (d.toggle === 'sound' || d.toggle === 'music') { Sound.init(); Sound.song(Sound.style); } return renderSettings(); }
   }
 
@@ -1196,6 +1211,7 @@
           for (const c of race.cars) if (!c.isPlayer) { const d = Math.hypot(c.x - p.x, c.z - p.z); if (d < nd) { nd = d; near = c; } }
           if (near) { const dx = (near.x - p.x) / nd, dz = (near.z - p.z) / nd; cl = -(dx * (Math.cos(near.h) * near.v - Math.cos(p.h) * p.v) + dz * (Math.sin(near.h) * near.v - Math.sin(p.h) * p.v)); }
           Sound.rival(race.state === 'run' && !paused ? near : null, nd, cl);
+          Sound.draft(race.state === 'run' && !paused ? Math.min(1, (p.draftT || 0) / 1) * (p.draft > 0 ? 1 : 0) : 0);
           Sound.skid(race.state === 'run' && !paused && !(p.y > 0.05) ? (p.drifting ? 0.75 + Math.min(p.charge / MB.DRIFT.L2, 1) * 0.25 : Math.max(0, Math.abs(p.slip) - 0.14) * 3) : 0, p.v / p.spec.vmax);
         }
       }

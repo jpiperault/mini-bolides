@@ -193,9 +193,7 @@
       const tx = t.px[j] - t.tz[j] * c.aiLane, tz = t.pz[j] + t.tx[j] * c.aiLane;
       const want = Math.atan2(tz - c.z, tx - c.x);
       const steer = clamp(angleDiff(want, c.h) * 3.2, -1, 1);
-      let maxCurv = 0;
-      for (let k = 0; k < 16; k++) { const m = t.curv[(c.idx + k) % t.count]; if (m > maxCurv) maxCurv = m; }
-      const cornerV = Math.max((c.spec.turn * 1.25) / Math.max(maxCurv, 1e-3), c.spec.vmax * 0.74);
+      const cornerV = this._cornerV(c, 1.25);
       const gap = (p.prog - c.prog) / 120;                    // >0 : le joueur est devant
       const band = gap > 0 ? Math.min(gap, 1) * this.diff.catchUp : Math.max(gap, -1) * this.diff.slowDown;
       // Le premier des rivaux ne lâche pas un joueur en tête : il revient au contact sans jamais le dépasser par magie.
@@ -208,6 +206,15 @@
       const late = c.prog > t.length * (this.laps - 1) ? st.late : 0;   // certains gardent des forces pour le dernier tour
       const give = c.yieldT > 0 ? 0.95 : 1;
       return { steer, limit: give * Math.min(cornerV * (1 + duel), c.spec.vmax * (this.diff.skill * st.pace + band + late + duel)), ai: true };
+    }
+
+    // Vitesse de passage du virage qui arrive. En grosse cylindrée on regarde plus loin (on arrive plus vite)
+    // et le plancher baisse : à 150 cc, les rivaux touchaient le mur trois fois plus souvent qu'en 50 cc.
+    _cornerV(c, grip) {
+      const t = this.track, n = Math.round(16 * this.cc * this.cc);
+      let maxCurv = 0;
+      for (let k = 0; k < n; k++) { const m = t.curv[(c.idx + k) % t.count]; if (m > maxCurv) maxCurv = m; }
+      return Math.max((c.spec.turn * grip) / Math.max(maxCurv, 1e-3), c.spec.vmax * 0.74 / this.cc);
     }
 
     _drive(c, ctl) {
@@ -243,6 +250,8 @@
       if (isP && !c.sc && !(c.sticky > 0)) target *= 1 - (0.3 - 0.22 * c.dk) * c.steer * c.steer;
       else if (!(c.sticky > 0)) target *= 1 - 0.07 * Math.abs(c.steer);
       target *= 1 + this._draft(c, isP) * (isP ? DRAFT_MAX : DRAFT_MAX * 0.6);
+      // Volant magique en 100/150 cc : un léger frein avant les virages serrés, pour ne pas finir au mur.
+      if (isP && this.assist && this.cc > 1 && !MB.noBrake && !c.sc && !c.drifting) target = Math.min(target, this._cornerV(c, 1.2 * this.grip * this.sens) * 1.18);
       if (c.boost > 0) { c.boost -= DT; target = Math.max(target, s.vmax) * c.boostPow; }
       if (c.magnet > 0) {
         c.magnet -= DT;
