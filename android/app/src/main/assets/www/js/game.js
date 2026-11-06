@@ -21,7 +21,7 @@
     next: ['Course suivante', 'Next race'], again: ['Rejouer', 'Race again'], home: ['Menu', 'Menu'], lap: ['Tour', 'Lap'],
     pos: ['Arrivée', 'Result'], coins: ['pièces', 'coins'], best: ['Meilleur tour', 'Best lap'], cup: ['Classement', 'Standings'],
     you: ['Toi', 'You'], choose: ['Choisis un circuit', 'Pick a track'], buy: ['Acheter', 'Buy'], use: ['Choisir', 'Select'], used: ['En piste', 'Selected'],
-    diff: ['Difficulté', 'Difficulty'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'],
+    diff: ['Cylindrée', 'Engine class'], ccOpen: ['débloqué !', 'unlocked!'], ccHelp: ['Plus de cylindrée : tout le monde va plus vite et les rivaux sont plus forts. Gagne 3 courses pour ouvrir la suivante. Le contre-la-montre se court toujours en 100 cc.', 'Bigger engines: everyone is faster and rivals are tougher. Win 3 races to unlock the next class. Time trial is always 100cc.'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'],
     record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : modes ouverts dès une étoile en Normal. Chaque mode rapporte ses étoiles.', '🌙 🌧️ 🔄: modes open with one star in Normal. Each mode earns its own stars.'], tagline: ['COURSE DE PETITES VOITURES', 'TOY CAR RACING'], worldOpen: ['Nouveau monde :', 'New world:'], worldNeed: ['Encore', 'Still'], worldNeed2: ['étoiles pour ouvrir ce monde. Chaque mode de chaque circuit en rapporte.', 'stars to open this world. Every mode of every track earns them.'], pickTrack: ['Choisis un circuit', 'Pick a track'], run: ['COURIR', 'RACE'], normal: ['Normal', 'Normal'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], assist: ['Volant magique', 'Magic wheel'],
     assistHelp: ['Sans doigt posé, la voiture se recale seule.', 'With no finger down, the car straightens itself.'],
     back: ['Retour', 'Back'], how: ['Pose le pouce où tu veux et glisse à gauche ou à droite pour tourner. Braque fort pour drifter, relâche pour le turbo !', 'Put your thumb anywhere and slide left or right to steer. Steer hard to drift, release for turbo!'],
@@ -41,11 +41,15 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, ccOk: null, ccWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
   if (!save.looks.includes('deco:')) save.looks.push('deco:');
   if (save.look.deco === undefined) save.look.deco = '';
+  if (!save.ccOk) {                                           // cylindrées : on garde ouvert ce que le joueur utilisait déjà
+    const keys = Object.keys(MB.DIFFS), cur = keys.indexOf(save.diff);
+    save.ccOk = {}; keys.forEach((k, i) => { if (i <= Math.max(0, cur) || (i === 1 && (save.tot.wins || 0) >= 3)) save.ccOk[k] = 1; });
+  }
   if (save.tot.wins === undefined) save.tot.wins = save.troph.win ? 1 : 0;   // victoires comptées depuis les paliers de trophées
   if (!save.v4) {                                             // anciennes médailles : 1er = 2 étoiles, podium = 1 étoile
     for (const id of Object.keys(save.medals)) if (id !== 'cup') save.stars[id] = save.medals[id] === 3 ? 2 : 1;
@@ -403,7 +407,7 @@
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
     const solo = trackMode === 'chrono' && !cup && !chal;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId) });
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined });   // contre-la-montre toujours en 100 cc : records comparables
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -669,6 +673,24 @@
     view.ghostAt(q[a] + (q[c] - q[a]) * u, q[a + 1] + (q[c + 1] - q[a + 1]) * u, q[a + 2] + MB.angleDiff(q[c + 2], q[a + 2]) * u, true);
   }
 
+  // ---------- Cylindrées ----------
+  // Chaque victoire compte pour la cylindrée courante ; assez de victoires ouvrent la suivante.
+  const CC = Object.keys(MB.DIFFS);
+  const ccNext = (k) => CC[CC.indexOf(k) + 1];
+  function ccAfter(pos) {
+    if (pos !== 1) return [];
+    const k = save.diff, n = (save.ccWins[k] = (save.ccWins[k] || 0) + 1), nx = ccNext(k);
+    if (!nx || save.ccOk[nx] || n < MB.DIFFS[nx].unlock) return [];
+    save.ccOk[nx] = 1;
+    return [`🔓 ${L(MB.DIFFS[nx].label)} ${t('ccOpen')}`];
+  }
+  function ccButtons() {
+    return CC.map((k, i) => {
+      const open = !!save.ccOk[k], prev = CC[i - 1], need = MB.DIFFS[k].unlock, got = prev ? Math.min(need, save.ccWins[prev] || 0) : 0;
+      return `<button data-diff="${k}" class="${save.diff === k ? 'sel' : ''}" ${open ? '' : 'disabled'}>${open ? '' : '🔒 '}${L(MB.DIFFS[k].label)}${open ? '' : `<small>${got}/${need} 🏆</small>`}</button>`;
+    }).join('');
+  }
+
   // ---------- Rivaux champions et figurines ----------
   // Battre le champion du circuit (finir devant lui) le rapproche de sa figurine.
   function champAfter(pos) {
@@ -801,6 +823,7 @@
     if (openCups().length > opened) notes.push(t('unlocked'));
     if (openWorlds().length > worldsBefore) notes.push(`${t('worldOpen')} ${openWorlds().slice(worldsBefore).map((w) => w.icon + ' ' + L(w.name)).join(', ')} !`);
     notes.push(...champAfter(pos));
+    notes.push(...ccAfter(pos));
     const second = race.ranked[1], gap = pos === 1 && second && second.time ? second.time - p.time : 99;
     notes.push(...trophiesAfter({ done: true, solo: false, pos, walls: stat.walls, l2: stat.l2, coins: race.coinCount, lastLapPos: stat.lastLapPos, diff: save.diff, variant: currentVariant, gap, lap1Pos: stat.lap1Pos, ledAll: stat.ledAll, maxDrift: stat.maxDrift }, pendingCoins));
     notes.push(...missionsAfter({ races: 1, boosts: stat.boosts, l2: stat.l2, coins: race.coinCount, podium: pos <= 3 ? 1 : 0, win: pos === 1 ? 1 : 0, sc: stat.sc, items: stat.items, clean: stat.walls <= 2 ? 1 : 0 }));
@@ -913,7 +936,8 @@
       + `<div class="wchips">${worlds.map((w, i) => `<button data-world="${i}" class="${i === worldIdx ? 'sel' : ''} ${worldOpen(w) ? '' : 'lock'}" style="background:${grad(w.col)}" aria-label="${L(w.name)}">${w.icon}</button>`).join('')}</div>`
       + `<div class="wrail" id="wrail">${worlds.map(page).join('')}</div>`
       + `<div class="wdots">${worlds.map((w, i) => `<i class="${i === worldIdx ? 'sel' : ''}"></i>`).join('')}</div>`
-      + `<button class="btn primary wgo" data-track="${selTrack}" data-variant="${selVar || ''}">${t('run')}<small>${L(MB.TRACKS.find((d) => d.id === selTrack).name)} · ${MODES.find(([v]) => v === selVar)[1]} ${modeName(selVar)}</small></button>`
+      + (chrono ? '' : `<div class="seg ccseg">${ccButtons()}</div>`)
+      + `<button class="btn primary wgo" data-track="${selTrack}" data-variant="${selVar || ''}">${t('run')}<small>${L(MB.TRACKS.find((d) => d.id === selTrack).name)} · ${MODES.find(([v]) => v === selVar)[1]} ${modeName(selVar)}${chrono ? '' : ' · ' + L(MB.DIFFS[save.diff].label)}</small></button>`
       + `<p class="small">${chrono ? t('ghostHelp') : t('goal')} ${t('varHelp')}</p>`;
     show('tracks');
     const rail = $('wrail');
@@ -986,7 +1010,8 @@
 
   function renderSettings() {
     $('setList').innerHTML = `
-      <div class="seg" role="group" aria-label="${t('diff')}"><span>${t('diff')}</span>${Object.keys(MB.DIFFS).map((k) => `<button data-diff="${k}" class="${save.diff === k ? 'sel' : ''}">${L(MB.DIFFS[k].label)}</button>`).join('')}</div>
+      <div class="seg" role="group" aria-label="${t('diff')}"><span>${t('diff')}</span>${ccButtons()}</div>
+      <p class="small">${t('ccHelp')}</p>
       <div class="seg" role="group" aria-label="${t('sens')}"><span>${t('sens')}</span>${Object.keys(MB.SENS).map((k) => `<button data-sens="${k}" class="${save.sens === k ? 'sel' : ''}">${L(MB.SENS[k].label)}</button>`).join('')}</div>
       <button class="row" data-toggle="assist"><span>${t('assist')}<br><small>${t('assistHelp')}</small></span><i>${save.assist ? 'ON' : 'OFF'}</i></button>
       <button class="row" data-toggle="sound"><span>${t('sound')}</span><i>${save.sound ? 'ON' : 'OFF'}</i></button>
@@ -1074,7 +1099,7 @@
       persist(); return renderGarage();
     }
     if (d.sens) { save.sens = d.sens; persist(); return renderSettings(); }
-    if (d.diff) { save.diff = d.diff; persist(); return renderSettings(); }
+    if (d.diff) { if (!save.ccOk[d.diff]) return; save.diff = d.diff; persist(); return b.closest('#trackList') ? renderTracks() : renderSettings(); }
     if (d.toggle) { save[d.toggle] = !save[d.toggle]; persist(); if (d.toggle === 'sound' || d.toggle === 'music') { Sound.init(); Sound.song(Sound.style); } return renderSettings(); }
   }
 

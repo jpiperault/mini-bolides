@@ -30,6 +30,7 @@
       const d = MB.DIFFS[opts.diff || 'facile'];
       this.diff = Object.assign({}, d, { skill: d.skill * (1 + 0.035 * (opts.power || 0)) });  // les rivaux progressent un peu avec toi
       this.laps = opts.laps || MB.CONFIG.laps;
+      this.cc = opts.cc || d.cc || 1;                          // cylindrée : vitesse de toutes les voitures (50 cc ×0,9, 150 cc ×1,12)
       this.assist = opts.assist !== false;
       this.sens = opts.sens || 1;
       this.grip = this.track.def.grip || 1;
@@ -58,7 +59,9 @@
       const rivals = MB.RIVAL_CARS.map((id) => MB.CARS.find((c) => c.id === id));
       for (let g = 0; g < n; g++) {
         const isPlayer = g === n - 1;                         // le joueur part dernier : doubler, c'est le plaisir du jeu
-        const spec = isPlayer ? playerCar : rivals[g % rivals.length];
+        const base = isPlayer ? playerCar : rivals[g % rivals.length], k = this.cc;
+        // Plus vite, on braque aussi un peu plus vite : en 150 cc le virage reste jouable, simplement plus exigeant.
+        const spec = k === 1 ? base : Object.assign({}, base, { vmax: base.vmax * k, accel: base.accel * (1 + (k - 1) * 0.8), turn: base.turn * (1 + (k - 1) * 0.6) });
         const back = 8 + g * 6;
         const i = (t.count - Math.round(back / t.ds)) % t.count;
         const lat = (g % 2 ? 1 : -1) * 3.4;

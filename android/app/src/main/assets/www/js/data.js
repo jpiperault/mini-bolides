@@ -129,7 +129,7 @@
     { id: 'tour', icon: '🗺️', coins: 250, name: { fr: 'Tour de la maison', en: 'House tour' }, desc: { fr: 'Roule sur tous les circuits', en: 'Race on every track' }, ok: (r, s) => Object.keys(s.tracksRaced).length >= MB.TRACKS.length },
     { id: 'cup', icon: '🏆', coins: 300, name: { fr: 'Coupe en or', en: 'Golden cup' }, desc: { fr: 'Gagne une coupe', en: 'Win a cup' }, ok: (r) => r.cupWin },
     { id: 'stars', icon: '⭐', coins: 300, tiers: [20, 50, 100], count: (s) => Object.values(s.stars).reduce((a, b) => a + b, 0), unit: { fr: 'étoiles', en: 'stars' }, name: { fr: 'Collectionneur', en: 'Collector' }, desc: { fr: 'Réunis 20 étoiles', en: 'Collect 20 stars' }, ok: (r, s) => Object.values(s.stars).reduce((a, b) => a + b, 0) >= 20 },
-    { id: 'expert', icon: '🛞', coins: 300, name: { fr: 'Pilote expert', en: 'Expert driver' }, desc: { fr: 'Gagne une course en Expert', en: 'Win a race in Expert' }, ok: (r) => !r.solo && r.pos === 1 && r.diff === 'expert' },
+    { id: 'expert', icon: '🛞', coins: 300, name: { fr: 'Pilote expert', en: 'Expert driver' }, desc: { fr: 'Gagne une course en 150 cc', en: 'Win a race in 150cc' }, ok: (r) => !r.solo && r.pos === 1 && r.diff === 'expert' },
     // Deuxième vague (v0.9.35) : modes, exploits de course, collection et fidélité.
     { id: 'toys', icon: '🧸', coins: 400, name: { fr: 'Grand collectionneur', en: 'Toy hoarder' }, desc: { fr: 'Trouve tous les jouets cachés', en: 'Find every hidden toy' }, ok: (r, s) => Object.keys(s.toys || {}).length >= MB.TOYS.length },
     { id: 'night', icon: '🦉', coins: 150, name: { fr: 'Oiseau de nuit', en: 'Night owl' }, desc: { fr: 'Gagne une course de nuit', en: 'Win a night race' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.variant === 'nuit' },
@@ -347,11 +347,13 @@
   MB.POINTS = [10, 7, 5, 3, 2, 1];
   MB.RACE_COINS = [100, 70, 50, 30, 20, 10];
 
+  // Cylindrées (clés historiques facile/normal/expert gardées pour les sauvegardes) : cc = vitesse de toutes les voitures,
+  // unlock = victoires à remporter dans la cylindrée précédente pour ouvrir celle-ci.
   // skill = fraction de la vitesse max des rivaux ; le rattrapage reste doux pour que gagner ait du sens.
   MB.DIFFS = {
-    facile: { label: { fr: 'Facile', en: 'Easy' }, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },
-    normal: { label: { fr: 'Normal', en: 'Normal' }, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35, plot: 0.2 },
-    expert: { label: { fr: 'Expert', en: 'Expert' }, skill: 1.08, catchUp: 0.12, slowDown: 0.02, duel: 0.32, gain: 1.6, sc: 0.5, plot: 0.08 },
+    facile: { label: { fr: '50 cc', en: '50cc' }, cc: 0.9, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },
+    normal: { label: { fr: '100 cc', en: '100cc' }, cc: 1, unlock: 3, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35, plot: 0.2 },
+    expert: { label: { fr: '150 cc', en: '150cc' }, cc: 1.12, unlock: 3, skill: 1.08, catchUp: 0.12, slowDown: 0.02, duel: 0.32, gain: 1.6, sc: 0.5, plot: 0.08 },
   };
 
   MB.ITEMS = {
