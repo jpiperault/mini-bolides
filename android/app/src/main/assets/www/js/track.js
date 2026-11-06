@@ -57,13 +57,33 @@
     // Le départ se place sur la portion la plus droite : la grille et les premiers mètres ne tombent jamais dans un virage.
     const shift = startShift(def, count, curv);
     if (shift) for (const a of [px, pz, tx, tz, curv]) { const c = a.slice(); for (let i = 0; i < count; i++) a[i] = c[(i + shift) % count]; }
-    const t = { def, count, ds, length: count * ds, width: trackWidth, px, pz, tx, tz, curv };
+    const t = { def, count, ds, length: count * ds, width: trackWidth, px, pz, tx, tz, curv, scale, shift };
     t.at = (s) => (Math.round(s * count) - shift + count * 2) % count;   // position relative du tracé dessiné -> indice depuis le départ
     t.jumps = (def.jumps || []).map(t.at);
     t.wallGap = { '-1': new Uint8Array(count), 1: new Uint8Array(count) };
     t.shortcuts = (def.shortcuts || []).map((d) => buildShortcut(t, d));
     t.toySpots = toySpots(t);
     return t;
+  };
+
+  // Circuit dessiné par le joueur : deux bouts de route ne doivent pas se toucher (écart entre axes) et aucun virage
+  // ne doit être plus serré que ceux des circuits du jeu (Minuit : écart 29 m, rayon 10,7 m).
+  MB.EDIT_GAP = 27; MB.EDIT_R = 10.4;
+  MB.checkTrack = function (t) {
+    const n = t.count, bad = new Uint8Array(n);
+    let gap = 1e9, radius = 1e9, nGap = 0, nR = 0;
+    for (let i = 0; i < n; i += 2) {
+      const r = 1 / Math.max(t.curv[i], 1e-4);
+      if (r < radius) radius = r;
+      if (r < MB.EDIT_R) { bad[i] = 2; nR++; }
+      for (let j = i + 46; j < n; j += 2) {
+        if (n - (j - i) < 46) break;
+        const d = Math.hypot(t.px[i] - t.px[j], t.pz[i] - t.pz[j]);
+        if (d < gap) gap = d;
+        if (d < MB.EDIT_GAP) { bad[i] = bad[j] = 1; nGap++; }
+      }
+    }
+    return { ok: !nGap && !nR, gap, radius, bad, cross: nGap > 0, tight: nR > 0 };
   };
 
   // Cachettes des jouets : jamais au milieu de la route ni sur la grille de départ. Au fond des raccourcis, à la corde

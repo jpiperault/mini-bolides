@@ -235,6 +235,11 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   check(ch.length === 1 && ch[0].id === 2 && ch[0].name === MB.RIVALS[2] && ch[0].style.pace > MB.RIVAL_STYLES[2].pace && MB.RIVAL_STYLES[2].pace === 0.975, `champion : ${ch.map((c) => c.name).join()} allure ${ch[0] && ch[0].style.pace.toFixed(3)}`);
   check(MB.LOOKS.deco.length === 7 && MB.RIVAL_DECO.every((d) => MB.LOOKS.deco.some((o) => o.id === d)), 'autocollants : 6 motifs, ceux des rivaux existent');
 }
+{ // atelier : les circuits du jeu passent le contrôle, deux routes collées ou un virage en épingle non
+  const all = MB.TRACKS.every((d) => MB.checkTrack(MB.buildTrack(d)).ok) && MB.checkTrack(MB.buildTrack({ id: 'perso0', pts: [[20, 25], [50, 15], [80, 25], [88, 50], [80, 75], [50, 85], [20, 75], [12, 50]] })).ok;
+  const cross = MB.checkTrack(MB.buildTrack({ id: 'x', pts: [[10, 10], [90, 10], [90, 90], [52, 90], [52, 20], [48, 20], [48, 90], [10, 90]] }));
+  check(all && !cross.ok, `atelier : 13 circuits valides, tracé collé refusé (écart ${cross.gap.toFixed(1)} m)`);
+}
 { // défi de la semaine : stable sur la semaine, change le lundi, cylindrée toujours ouverte
   const ids = MB.TRACKS.map((t) => t.id), open = { facile: 1 };
   const a = MB.weeklyChallenge('2026-11-02', ids, open), b = MB.weeklyChallenge('2026-11-08', ids, open), c = MB.weeklyChallenge('2026-11-09', ids, open);
