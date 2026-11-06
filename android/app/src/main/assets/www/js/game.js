@@ -5,7 +5,7 @@
   const L = (o) => (typeof o === 'string' ? o : o[lang]);
   const S = {
     play: ['Championnat', 'Championship'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
-    stars: ['étoiles', 'stars'], locked: ['étoiles requises', 'stars needed'], unlocked: ['Nouvelle coupe débloquée !', 'New cup unlocked!'], goal: ['3e étoile : gagne avec 20 pièces', '3rd star: win with 20 coins'],
+    stars: ['étoiles', 'stars'], locked: ['étoiles requises', 'stars needed'], unlocked: ['Nouvelle coupe débloquée !', 'New cup unlocked!'], cupCcHelp: ['Chaque cylindrée a ses médailles. Choisis-la puis touche une coupe.', 'Each class has its own medals. Pick one, then tap a cup.'], goal: ['3e étoile : gagne avec 20 pièces', '3rd star: win with 20 coins'],
     chal: ['Défi du jour', 'Daily challenge'], chalDone: ['réussi, reviens demain !', 'done, back tomorrow!'], chalWin: ['Défi réussi', 'Challenge done'], chalFail: ['Défi manqué', 'Challenge failed'],
     close: ['Fermer', 'Close'], miss: ['Missions du jour', 'Daily missions'], missChest: ['Ouvrir le coffre', 'Open the chest'], missLock: ['Finis les 3 missions pour ouvrir le coffre', 'Finish all 3 missions to open the chest'],
     missOpened: ['Coffre ouvert ! Nouvelles missions demain', 'Chest opened! New missions tomorrow'], missReady: ['Coffre des missions prêt !', 'Mission chest ready!'], missChestT: ['coffre à la clé', 'chest to win'],
@@ -41,7 +41,7 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, ccOk: null, ccWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, cupCc: null, ccOk: null, ccWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
   if (!save.looks.includes('deco:')) save.looks.push('deco:');
@@ -49,6 +49,10 @@
   if (!save.ccOk) {                                           // cylindrées : on garde ouvert ce que le joueur utilisait déjà
     const keys = Object.keys(MB.DIFFS), cur = keys.indexOf(save.diff);
     save.ccOk = {}; keys.forEach((k, i) => { if (i <= Math.max(0, cur) || (i === 1 && (save.tot.wins || 0) >= 3)) save.ccOk[k] = 1; });
+  }
+  if (!save.cupCc) {                                          // médailles de coupe par cylindrée : les anciennes vont à la cylindrée en cours
+    save.cupCc = {};
+    for (const id of Object.keys(save.cups || {})) if (save.cups[id]) save.cupCc[id] = { [save.diff || 'facile']: save.cups[id] };
   }
   if (save.tot.wins === undefined) save.tot.wins = save.troph.win ? 1 : 0;   // victoires comptées depuis les paliers de trophées
   if (!save.v4) {                                             // anciennes médailles : 1er = 2 étoiles, podium = 1 étoile
@@ -407,7 +411,7 @@
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
     const solo = trackMode === 'chrono' && !cup && !chal;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined });   // contre-la-montre toujours en 100 cc : records comparables
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: cup ? cup.diff : save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined });   // contre-la-montre toujours en 50 cc : records comparables
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -684,6 +688,8 @@
     save.ccOk[nx] = 1;
     return [`🔓 ${L(MB.DIFFS[nx].label)} ${t('ccOpen')}`];
   }
+  const cupMedal = (id, k) => (save.cupCc[id] || {})[k] || 0;
+  const cupWins = () => MB.CUPS.reduce((a, c) => a + CC.filter((k) => cupMedal(c.id, k) === 3).length, 0);
   function ccButtons() {
     return CC.map((k, i) => {
       const open = !!save.ccOk[k], prev = CC[i - 1], need = MB.DIFFS[k].unlock, got = prev ? Math.min(need, save.ccWins[prev] || 0) : 0;
@@ -848,11 +854,12 @@
     const names = MB.RIVALS.slice(0, 5).concat(t('you'));
     const table = names.map((n, i) => ({ n, pts: cup.pts[i], me: i === 5 })).sort((a, b) => b.pts - a.pts);
     const rank = table.findIndex((r) => r.me), def = cup.def;
-    let prize = Math.round((def.prizes[rank] || 0) * MB.DIFFS[save.diff].gain);
-    if (rank === 0 && save.cups[def.id] !== 3) prize += def.first;  // grosse prime la première fois seulement
+    const k = cup.diff, had = cupMedal(def.id, k);
+    let prize = Math.round((def.prizes[rank] || 0) * MB.DIFFS[k].gain);
+    if (rank === 0 && had !== 3) prize += def.first;  // grosse prime : la première victoire dans chaque cylindrée
     if (rank === 0) trophiesAfter({ cupWin: true }, 0).forEach((n) => toast(n));
     save.coins += prize;
-    if (rank < 3 && 3 - rank > (save.cups[def.id] || 0)) save.cups[def.id] = 3 - rank;
+    if (rank < 3 && 3 - rank > had) (save.cupCc[def.id] = save.cupCc[def.id] || {})[k] = 3 - rank;
     persist();
     $('cupTitle').textContent = rank === 0 ? t('won') : rank < 3 ? t('podium') : t('tryagain');
     $('cupTrophy').textContent = ['🏆', '🥈', '🥉'][rank] || '🍪';
@@ -953,12 +960,16 @@
   }
 
   function renderCups() {
-    const total = starTotal();
-    $('cupTotal').textContent = `${total} / ${MB.TRACKS.length * 3} ★`;
+    const total = starTotal(), icons = ['', '🥉', '🥈', '🏆'];
+    $('cupTotal').textContent = `${total} / ${MB.TRACKS.length * 3} ★  ·  🏆 ${cupWins()} / ${MB.CUPS.length * CC.length}`;
     $('cupList').innerHTML = MB.CUPS.map((c) => {
-      const open = MB.cupUnlocked(c, total), got = c.tracks.reduce((a, id) => a + (save.stars[id] || 0), 0), medal = ['', '🥉', '🥈', '🏆'][save.cups[c.id] || 0];
-      return `<button class="cup" data-cup="${c.id}" ${open ? '' : 'disabled'}><b class="ic">${open ? c.icon : '🔒'}</b><span>${L(c.name)}<small>${open ? `${got} / ${c.tracks.length * 3} ★` : `${c.stars} ${t('locked')}`}</small></span><i>${medal}</i></button>`;
-    }).join('') + `<p class="small">${t('goal')}</p>`;
+      const open = MB.cupUnlocked(c, total), got = c.tracks.reduce((a, id) => a + (save.stars[id] || 0), 0);
+      const slots = CC.map((k) => {
+        const m = cupMedal(c.id, k), lock = !save.ccOk[k];
+        return `<i class="${k === save.diff ? 'cur' : ''}${m ? ' got' : ''}"><b>${lock ? '🔒' : icons[m] || '·'}</b><small>${L(MB.DIFFS[k].label).replace(/\s?cc/, '')}</small></i>`;
+      }).join('');
+      return `<button class="cup" data-cup="${c.id}" ${open ? '' : 'disabled'}><b class="ic">${open ? c.icon : '🔒'}</b><span>${L(c.name)}<small>${open ? `${got} / ${c.tracks.length * 3} ★` : `${c.stars} ${t('locked')}`}</small></span><em class="slots">${slots}</em></button>`;
+    }).join('') + `<p class="small">${t('cupCcHelp')}</p><div class="seg ccseg">${ccButtons()}</div><p class="small">${t('goal')}</p>`;
     show('cups');
   }
 
@@ -1035,7 +1046,7 @@
     const d = b.dataset;
     if (d.go === 'home') return leave(menu);
     if (d.go === 'cups') return renderCups();
-    if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; return startRace(cup.def.tracks[0]); }
+    if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; return startRace(cup.def.tracks[0]); }
     if (d.go === 'missions') return renderMissions();
     if (d.go === 'missClose') { $('missions').hidden = true; return; }
     if (d.go === 'chest') return openChest();
@@ -1099,7 +1110,7 @@
       persist(); return renderGarage();
     }
     if (d.sens) { save.sens = d.sens; persist(); return renderSettings(); }
-    if (d.diff) { if (!save.ccOk[d.diff]) return; save.diff = d.diff; persist(); return b.closest('#trackList') ? renderTracks() : renderSettings(); }
+    if (d.diff) { if (!save.ccOk[d.diff]) return; save.diff = d.diff; persist(); return b.closest('#trackList') ? renderTracks() : b.closest('#cupList') ? renderCups() : renderSettings(); }
     if (d.toggle) { save[d.toggle] = !save[d.toggle]; persist(); if (d.toggle === 'sound' || d.toggle === 'music') { Sound.init(); Sound.song(Sound.style); } return renderSettings(); }
   }
 
