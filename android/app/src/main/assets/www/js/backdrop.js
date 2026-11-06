@@ -52,6 +52,16 @@
         k.circ(W * 0.3, 110, 46, 'rgba(255,250,220,.95)'); k.circ(W * 0.3 + 18, 98, 40, 'rgba(20,26,70,1)');   // croissant de lune
         return;
       }
+      if (kind === 'grenier') {                                   // charpente : chevrons sombres et lucarne de lumière
+        g.fillStyle = k.vgrad(0, H, ['#5c4330', '#7a5a3e', '#9a7752']); g.fillRect(0, 0, W, H);
+        for (let x = 0; x < W; x += 128) { g.fillStyle = '#4a3424'; g.fillRect(x, 0, 30, H); g.fillStyle = 'rgba(255,220,160,.12)'; g.fillRect(x + 4, 0, 6, H); }
+        g.fillStyle = '#3c2a1c'; g.fillRect(0, 300, W, 26);
+        for (let x = 300; x < W; x += 1024) { k.rr(x, 120, 150, 110, 8, '#3c2a1c'); g.fillStyle = k.vgrad(126, 224, ['#bfe3ff', '#fff2cf']); g.fillRect(x + 10, 130, 130, 90); g.fillStyle = '#3c2a1c'; g.fillRect(x + 72, 130, 6, 90); }
+        g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1.5;
+        for (const cx of [140, 900, 1500]) { for (let a = 0; a < 7; a++) { g.beginPath(); g.moveTo(cx, 330); g.lineTo(cx + Math.cos(a * 0.45) * 90, 330 + Math.sin(a * 0.45) * 90); g.stroke(); } for (let r = 20; r < 90; r += 18) { g.beginPath(); g.arc(cx, 330, r, 0, 2.7); g.stroke(); } }   // toiles d'araignée
+        if (night) nightOver(g);
+        return;
+      }
       // Nuages ronds, en ligne de base plate, plus petits et plus pâles en montant (plus loin).
       for (let i = 0; i < 26; i++) {
         const x = k.rnd() * W, y = 150 + k.rnd() * 220, s = 0.5 + (y / 370) * 0.9, a = 0.55 + (y / 370) * 0.4;
@@ -163,6 +173,38 @@
         g.fillStyle = '#3a3f7a'; g.beginPath(); g.moveTo(fx - 70, base); g.lineTo(fx, fy); g.lineTo(fx + 70, base); g.fill();
         return;
       }
+      if (kind === 'bain') {
+        // Mur carrelé bleu et blanc, miroir, lavabo, baignoire géante avec rideau de douche à poissons.
+        g.fillStyle = '#eef8fb'; g.fillRect(0, 140, W, base - 140);
+        for (let y = 140; y < base; y += 40) for (let x = 0; x < W; x += 40) { g.fillStyle = (x / 40 + y / 40) % 7 === 0 ? '#7fc4dd' : '#f8fdff'; g.fillRect(x + 2, y + 2, 36, 36); }
+        g.fillStyle = '#5aa9c9'; g.fillRect(0, 300, W, 14);
+        for (let x = 30; x < W; x += 680) {
+          k.rr(x, 160, 170, 120, 14, '#cfd8de'); g.fillStyle = k.vgrad(168, 272, ['#d8f1fb', '#a9d6ea']); k.rr(x + 8, 168, 154, 104, 10); g.fill();
+          g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(x + 30, 260); g.lineTo(x + 70, 178); g.lineTo(x + 90, 178); g.lineTo(x + 50, 260); g.fill();   // reflet du miroir
+          k.rr(x + 20, 330, 130, 34, 16, '#ffffff'); g.fillStyle = '#c9d2d8'; g.fillRect(x + 76, 364, 18, base - 364);   // lavabo
+          g.fillStyle = '#b8c2c9'; g.fillRect(x + 80, 312, 10, 20); k.circ(x + 85, 312, 8, '#dfe5ea');
+          k.rr(x + 260, 300, 380, base - 300, 40, '#ffffff'); g.fillStyle = 'rgba(120,170,200,.25)'; g.fillRect(x + 280, 320, 340, 10);   // baignoire
+          g.fillStyle = '#d8dee3'; g.fillRect(x + 300, 120, 300, 8);
+          for (let i = 0; i < 12; i++) { const cx = x + 300 + i * 25; k.rr(cx, 128, 24, 172, 6, i % 2 ? '#ffd23f' : '#ffe680'); }
+          for (let i = 0; i < 6; i++) { const fx = x + 316 + i * 48, fy = 170 + (i % 3) * 40; g.fillStyle = ['#ff7a5c', '#3f8fe0', '#48b58a'][i % 3]; g.beginPath(); g.ellipse(fx, fy, 14, 8, 0, 0, 7); g.fill(); g.beginPath(); g.moveTo(fx + 12, fy); g.lineTo(fx + 22, fy - 7); g.lineTo(fx + 22, fy + 7); g.fill(); }
+        }
+        if (night) nightOver(g);
+        return;
+      }
+      if (kind === 'grenier') {
+        // Vieux meubles empilés dans la pénombre : armoire, cheval à bascule, piles de cartons, draps sur les chaises.
+        g.fillStyle = k.vgrad(150, base, ['#8a6a4a', '#6a4f36']); g.fillRect(0, 150, W, base - 150);
+        for (let x = 0; x < W; x += 64) { g.fillStyle = 'rgba(0,0,0,.1)'; g.fillRect(x, 150, 3, base - 150); }
+        for (let x = 20; x < W; x += 512) {
+          k.rr(x, 200, 140, base - 200, 8, '#5a3c24'); k.rr(x + 10, 214, 56, 200, 4, '#6b4a2e'); k.rr(x + 74, 214, 56, 200, 4, '#6b4a2e'); k.circ(x + 62, 320, 5, '#d4a537'); k.circ(x + 78, 320, 5, '#d4a537');   // armoire
+          let y = base; for (let i = 0; i < 4; i++) { const w = 110 - i * 12; k.rr(x + 170 + i * 6, y - 60, w, 60, 3, ['#c9a06a', '#b88c58', '#d8b47e'][i % 3]); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(x + 170 + i * 6 + w / 2 - 6, y - 60, 12, 60); y -= 60; }   // cartons
+          g.fillStyle = '#f1ece2'; g.beginPath(); g.moveTo(x + 320, base); g.quadraticCurveTo(x + 330, 300, x + 380, 290); g.quadraticCurveTo(x + 440, 300, x + 450, base); g.fill();   // drap sur une chaise
+          g.strokeStyle = '#8a3b2a'; g.lineWidth = 8; g.beginPath(); g.arc(x + 440, base - 10, 70, Math.PI * 1.1, Math.PI * 1.9); g.stroke();   // cheval à bascule
+          k.rr(x + 400, 360, 90, 50, 22, '#d9c4a0'); k.circ(x + 492, 352, 22, '#d9c4a0'); g.fillStyle = '#5a3c24'; g.fillRect(x + 486, 330, 26, 10);
+        }
+        if (night) nightOver(g);
+        return;
+      }
       // chambre : papier peint à rayures, fenêtre au ciel étoilé ou bleu, affiches, étagère de livres
       g.fillStyle = '#f3dbe8'; g.fillRect(0, 120, W, base - 120);
       g.fillStyle = 'rgba(255,255,255,.55)'; for (let x = 0; x < W; x += 48) g.fillRect(x, 120, 20, base - 120);
@@ -240,6 +282,28 @@
           if (k.rnd() < 0.25) { g.fillStyle = '#5a5f8a'; g.fillRect(x + w / 2 - 18, y - 40, 36, 30); g.fillRect(x + w / 2 - 14, y - 10, 4, 10); g.fillRect(x + w / 2 + 10, y - 10, 4, 10); }   // château d'eau
           x += w + 10 + k.rnd() * 30;
         }
+        return;
+      }
+      if (kind === 'bain') {                                       // flacons, gobelets à brosses à dents, canards, éponges
+        for (let x = 10; x < W; ) {
+          const t = Math.floor(k.rnd() * 4), c = ['#ff8fb5', '#7fd0ff', '#8be0b0', '#ffd23f', '#b48ef0'][Math.floor(k.rnd() * 5)];
+          if (t === 0) { k.rr(x, base - 150, 60, 150, 18, c); k.rr(x + 18, base - 176, 24, 30, 6, '#ffffff'); k.rr(x + 8, base - 110, 44, 46, 6, 'rgba(255,255,255,.75)'); shade(x, base - 150, 60, 150); x += 100; }
+          else if (t === 1) { k.rr(x, base - 90, 56, 90, 10, 'rgba(200,235,250,.9)'); for (let i = 0; i < 2; i++) { g.fillStyle = ['#3f8fe0', '#e14b3a'][i]; g.fillRect(x + 16 + i * 18, base - 160, 8, 90); g.fillStyle = '#ffffff'; g.fillRect(x + 12 + i * 18, base - 172, 16, 18); } x += 96; }
+          else if (t === 2) { g.fillStyle = '#ffd23f'; g.beginPath(); g.ellipse(x + 50, base - 34, 50, 34, 0, 0, 7); g.fill(); k.circ(x + 84, base - 76, 26, '#ffd23f'); g.fillStyle = '#ff8a1e'; g.beginPath(); g.moveTo(x + 106, base - 80); g.lineTo(x + 128, base - 72); g.lineTo(x + 106, base - 66); g.fill(); k.circ(x + 90, base - 82, 4, '#1b1d24'); x += 150; }
+          else { k.rr(x, base - 46, 110, 46, 8, '#ffd23f'); k.rr(x, base - 60, 110, 18, 6, '#48b58a'); for (let i = 0; i < 6; i++) k.circ(x + 14 + i * 16, base - 22 - (i % 2) * 10, 4, 'rgba(160,110,0,.4)'); x += 140; }
+        }
+        if (night) nightOver(g);
+        return;
+      }
+      if (kind === 'grenier') {                                    // malles, valises, lampe, globe, pile de livres
+        for (let x = 10; x < W; ) {
+          const t = Math.floor(k.rnd() * 4);
+          if (t === 0) { k.rr(x, base - 90, 150, 90, 8, '#7a4a2a'); g.fillStyle = '#5a3420'; g.beginPath(); g.ellipse(x + 75, base - 90, 75, 24, 0, Math.PI, 0); g.fill(); g.fillStyle = '#c9a06a'; g.fillRect(x + 20, base - 112, 10, 112); g.fillRect(x + 120, base - 112, 10, 112); k.rr(x + 64, base - 70, 22, 18, 3, '#d4a537'); x += 190; }
+          else if (t === 1) { const c = ['#2f62a8', '#a83a2f', '#3c7a4a'][Math.floor(k.rnd() * 3)]; let y = base; for (let i = 0; i < 3; i++) { k.rr(x + i * 6, y - 40, 120 - i * 12, 40, 6, c); g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + i * 6 + 20, y - 30, 20, 20); y -= 42; } x += 150; }
+          else if (t === 2) { g.fillStyle = '#5a3c24'; g.fillRect(x + 40, base - 150, 8, 150); k.rr(x + 20, base - 12, 48, 12, 4, '#5a3c24'); g.fillStyle = '#e8c87a'; g.beginPath(); g.moveTo(x + 10, base - 150); g.lineTo(x + 30, base - 200); g.lineTo(x + 58, base - 200); g.lineTo(x + 78, base - 150); g.fill(); g.fillStyle = 'rgba(255,230,150,.35)'; g.beginPath(); g.moveTo(x + 14, base - 150); g.lineTo(x - 20, base); g.lineTo(x + 108, base); g.lineTo(x + 74, base - 150); g.fill(); x += 120; }
+          else { k.circ(x + 50, base - 90, 46, '#3f8fe0'); g.fillStyle = '#48b58a'; g.beginPath(); g.ellipse(x + 40, base - 100, 20, 28, 0.4, 0, 7); g.fill(); g.beginPath(); g.ellipse(x + 70, base - 74, 14, 18, -0.3, 0, 7); g.fill(); g.strokeStyle = '#d4a537'; g.lineWidth = 5; g.beginPath(); g.arc(x + 50, base - 90, 54, 1.2, 5.0); g.stroke(); g.fillStyle = '#5a3c24'; g.fillRect(x + 44, base - 36, 12, 36); x += 130; }
+        }
+        if (night) nightOver(g);
         return;
       }
       // chambre : château fort, fusée, tour de cubes, piles de livres, petit train

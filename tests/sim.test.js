@@ -225,4 +225,14 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   const a = MB.trophyTier(tr, s); s.tot.wins = 12; const b = MB.trophyTier(tr, s); s.tot.wins = 60; const c = MB.trophyTier(tr, s);
   check(a === 1 && b === 2 && c === 3 && MB.trophyTier(tr, { troph: {}, tot: { wins: 99 } }) === 0, `paliers : ${a} ${b} ${c}`);
 }
+{
+  // Rivaux champions : chaque circuit a son champion parmi les 5 rivaux en course, chacun a sa figurine,
+  // le champion part avec la couronne et un peu plus d'allure ; pas de champion en contre-la-montre.
+  const ids = MB.TRACKS.map((d) => d.id), noChamp = ids.filter((id) => MB.champOf(id) === null);
+  const used = new Set(Object.values(MB.CHAMPS)), figs = new Set(MB.FIGS.map((f) => f.rival));
+  check(!noChamp.length && [...used].every((r) => r < MB.CONFIG.carCount - 1 && figs.has(r)) && figs.size === MB.FIGS.length, `un champion par circuit, chacun avec sa figurine${noChamp.length ? ' — sans champion : ' + noChamp.join(' ') : ''}`);
+  const w = new MB.Race({ trackId: 'bol', seed: 3, champ: 2 }), ch = w.cars.filter((c) => c.champ);
+  check(ch.length === 1 && ch[0].id === 2 && ch[0].name === MB.RIVALS[2] && ch[0].style.pace > MB.RIVAL_STYLES[2].pace && MB.RIVAL_STYLES[2].pace === 0.975, `champion : ${ch.map((c) => c.name).join()} allure ${ch[0] && ch[0].style.pace.toFixed(3)}`);
+  check(MB.LOOKS.deco.length === 7 && MB.RIVAL_DECO.every((d) => MB.LOOKS.deco.some((o) => o.id === d)), 'autocollants : 6 motifs, ceux des rivaux existent');
+}
 process.exit(failed ? 1 : 0);

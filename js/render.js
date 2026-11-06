@@ -18,6 +18,10 @@
       back: ['#0d1030', '#2a2358', '#4b2f6e'], glow: ['rgba(255,120,190,.5)', 'rgba(70,200,230,.4)'], props: ['immeuble', 'feu', 'immeuble', 'lampadaire', 'bus', 'immeuble', 'plot', 'feu', 'lampadaire', 'immeuble', 'bus', 'plot'] },
     chambre: { sky: 0xf6e7f2, fog: [240, 700], hemi: [0xfff6fb, 0xb8a3c9, 0.8], sun: [0xfff2e6, 0.42], ground: 'tapis', road: '#5d6a8c', kerb: ['#ffb23c', '#ffffff'], track: '#9aa6c8', life: 'chambre', verge: '60,50,90', hills: ['chambre', '#e7cfe0', '#c9a7d6'],
       back: ['#f9e6f1', '#fff4f9', '#efd7ea'], glow: ['rgba(255,255,255,.95)', 'rgba(255,200,120,.45)'], props: ['peluche', 'crayons', 'tour', 'livres', 'toupie', 'cubes', 'ballon', 'peluche', 'crayons', 'toupie', 'tour', 'livres'] },
+    bain: { sky: 0xe2f4f8, fog: [240, 700], hemi: [0xf6fdff, 0x9fc6d0, 0.84], sun: [0xffffff, 0.42], ground: 'carrelage', road: '#4f7f99', kerb: ['#2f8fd8', '#ffffff'], track: '#9cc7d8', life: 'bain', verge: '60,120,150', hills: ['bain', '#cfe8ef', '#8fc3d3'],
+      back: ['#d6f0f6', '#f4fbfd', '#cfe7ee'], glow: ['rgba(255,255,255,.95)', 'rgba(120,200,230,.45)'], props: ['savon', 'flacon', 'canard', 'eponge', 'brosse', 'serviette', 'flacon', 'savon', 'bulles', 'canard', 'eponge', 'brosse'] },
+    grenier: { sky: 0xd9c09a, fog: [190, 600], hemi: [0xfff0d8, 0x7a5a3c, 0.76], sun: [0xffe2b0, 0.5], ground: 'plancher', road: '#5e5045', kerb: ['#c9a06a', '#fff4dc'], track: '#8c7a66', life: 'chambre', verge: '60,40,24', hills: ['grenier', '#b89a72', '#7a5a3e'],
+      back: ['#b8946a', '#ead6b4', '#c9a87c'], glow: ['rgba(255,236,190,.9)', 'rgba(140,100,60,.45)'], props: ['malle', 'carton', 'lampe', 'globe', 'valise', 'livres', 'toupie', 'carton', 'malle', 'tour', 'valise', 'carton'] },
   };
 
   function canvas(w, h, draw) {
@@ -52,6 +56,17 @@
         for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${fleck},${Math.random() * 0.22})`; g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 3, 1 + Math.random() * 3); }
         g.strokeStyle = `rgba(${fleck},.2)`; g.lineWidth = 4;
         for (let y = 20; y < h; y += 58) { g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 32) g.lineTo(x, y + Math.sin((x / w) * 6.283) * 12); g.stroke(); }
+        return;
+      }
+      if (kind === 'carrelage') {                                   // grands carreaux blancs, joints bleutés, quelques carreaux bleus
+        g.fillStyle = '#b9d3dc'; g.fillRect(0, 0, w, h);
+        for (let i = 0; i < 4; i++) for (let k = 0; k < 4; k++) { g.fillStyle = (i * 3 + k) % 5 === 0 ? '#8cc8e0' : '#f6fbfd'; g.fillRect(i * 128 + 4, k * 128 + 4, 120, 120); g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(i * 128 + 12, k * 128 + 12, 40, 6); }
+        return;
+      }
+      if (kind === 'plancher') {                                    // vieux plancher poussiéreux du grenier
+        const tones = ['#8a6e52', '#7d6248', '#94785a', '#836748'];
+        for (let i = 0; i < 4; i++) { g.fillStyle = tones[i]; g.fillRect(i * 128, 0, 128, h); for (let k = 0; k < 50; k++) { const x = i * 128 + Math.random() * 128; g.strokeStyle = `rgba(50,30,15,${0.05 + Math.random() * 0.12})`; g.lineWidth = 0.6 + Math.random() * 1.4; g.beginPath(); g.moveTo(x, 0); g.bezierCurveTo(x + 8, 170, x - 8, 340, x, h); g.stroke(); } g.fillStyle = 'rgba(30,18,8,.75)'; g.fillRect(i * 128, 0, 3, h); g.fillStyle = '#3a2a1c'; g.beginPath(); g.arc(i * 128 + 20, 60 + i * 90, 3, 0, 7); g.arc(i * 128 + 108, 60 + i * 90, 3, 0, 7); g.fill(); }
+        for (let i = 0; i < 4000; i++) { g.fillStyle = `rgba(230,220,200,${Math.random() * 0.12})`; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }   // poussière
         return;
       }
       if (kind === 'ville') {
@@ -402,6 +417,91 @@
       const m = new T.Mesh(new T.ExtrudeGeometry(s, { depth: 0.6, bevelEnabled: true, bevelThickness: 0.4, bevelSize: 0.35, bevelSegments: 3 }), shiny(0xc4cad4));
       m.rotation.x = -Math.PI / 2; m.position.y = 0.6; g.add(m);
       g.rotation.y = c.rot; g.r = 56; g.flat = true; return g;
+    },
+
+    // ---------- Salle de bain ----------
+    savon(c) {
+      const g = new T.Group(), col = [0xff9cc8, 0x9be0c0, 0xbfa8f0][Math.floor(c.rot) % 3], b = new T.Mesh(roundBox(40, 13, 26, 6), shiny(col));
+      b.position.y = 6.5; g.add(b);
+      const mousse = lam(0xffffff, { roughness: 0.9 });
+      for (let i = 0; i < 7; i++) { const s = new T.Mesh(new T.SphereGeometry(2.5 + (i % 3), 14, 10), mousse); s.position.set(-12 + i * 4, 13 + (i % 2) * 1.5, -4 + (i % 3) * 3); g.add(s); }
+      g.rotation.y = c.rot; g.r = 24; return g;
+    },
+    flacon(c) {
+      const g = new T.Group(), col = [0x3f8fe0, 0xe86aa0, 0x48b58a, 0xf2b632][Math.floor(c.rot * 3) % 4];
+      g.add(lathe([[0, 0], [13, 0], [15, 4], [15, 40], [12, 48], [6, 52], [0, 52]], shiny(col)));
+      const cap = new T.Mesh(new T.CylinderGeometry(6, 6, 8, 24), lam(0xffffff)); cap.position.y = 56; g.add(cap);
+      const bec = new T.Mesh(roundBox(3, 3, 9, 1), lam(0xffffff)); bec.position.set(0, 60, 4); g.add(bec);
+      const band = new T.Mesh(new T.CylinderGeometry(15.3, 15.3, 16, 32, 1, true), lam(0xffffff)); band.position.y = 22; g.add(band);
+      g.rotation.y = c.rot; g.r = 17; return g;
+    },
+    eponge(c) {
+      const g = new T.Group(), y = new T.Mesh(roundBox(40, 14, 26, 4), lam(0xffd23f, { roughness: 0.95 })); y.position.y = 7; g.add(y);
+      const v = new T.Mesh(roundBox(40, 5, 26, 2), lam(0x3c9a5a, { roughness: 0.95 })); v.position.y = 16.5; g.add(v);
+      const trou = lam(0xc99a10);
+      for (let i = 0; i < 9; i++) { const h = new T.Mesh(new T.SphereGeometry(1.4, 8, 6), trou); h.position.set(-15 + (i % 5) * 7.5, 4 + (i % 2) * 5, 13.2); h.scale.z = 0.4; g.add(h); }
+      g.rotation.y = c.rot; g.r = 24; return g;
+    },
+    brosse(c) {
+      const g = new T.Group();
+      g.add(lathe([[0, 0], [11, 0], [12, 30], [11, 30], [10, 2], [0, 2]], new T.MeshStandardMaterial({ color: 0xbfe6f5, roughness: 0.1, transparent: true, opacity: 0.75 })));
+      for (const [k, col] of [[-1, 0x3f8fe0], [1, 0xe5352b]]) {
+        const m = new T.Mesh(roundBox(3, 52, 3.4, 1.4), shiny(col)); m.position.set(k * 4, 28, 0); m.rotation.z = k * 0.18; g.add(m);
+        const poils = new T.Mesh(roundBox(4, 9, 6, 1), lam(0xffffff)); poils.position.set(k * 8.5, 52, 2.5); poils.rotation.z = k * 0.18; g.add(poils);
+      }
+      g.rotation.y = c.rot; g.r = 14; return g;
+    },
+    serviette(c) {
+      const g = new T.Group(), col = [0xff8fb5, 0x7fd0ff, 0xffd23f][Math.floor(c.rot) % 3];
+      for (let i = 0; i < 2; i++) {
+        const r = new T.Mesh(new T.CylinderGeometry(9, 9, 40, 28), lam(i ? 0xffffff : col, { roughness: 1 })); r.rotation.z = Math.PI / 2; r.position.set(0, 9 + i * 17, i * 2); g.add(r);
+        const bout = new T.Mesh(new T.CircleGeometry(8.6, 24), lam(i ? 0xf0f0f0 : col)); bout.position.set(20.1, 9 + i * 17, i * 2); bout.rotation.y = Math.PI / 2; g.add(bout);
+      }
+      g.rotation.y = c.rot; g.r = 24; return g;
+    },
+    bulles(c) {
+      const g = new T.Group(), m = new T.MeshStandardMaterial({ color: 0xe8f8ff, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.35, envMap: lam.env || null });
+      for (const [x, y, z, r] of [[0, 10, 0, 10], [14, 6, 6, 6], [-10, 5, 9, 5], [6, 24, -4, 5]]) { const b = new T.Mesh(new T.SphereGeometry(r, 24, 16), m); b.position.set(x, y, z); g.add(b); }
+      g.r = 18; return g;
+    },
+
+    // ---------- Grenier ----------
+    malle(c) {
+      const g = new T.Group(), bois = lam(0x7a4a2a, { roughness: 0.7 }), fer = shiny(0xc9a06a);
+      const b = new T.Mesh(roundBox(56, 28, 32, 2), bois); b.position.y = 14; g.add(b);
+      const cv = new T.Mesh(new T.CylinderGeometry(16, 16, 56, 24, 1, false, 0, Math.PI), bois); cv.rotation.z = Math.PI / 2; cv.rotation.y = Math.PI / 2; cv.position.y = 28; cv.scale.set(1, 1, 0.6); g.add(cv);
+      for (const x of [-20, 20]) { const s = new T.Mesh(roundBox(4, 29, 33, 0.8), fer); s.position.set(x, 14.5, 0); g.add(s); }
+      const ser = new T.Mesh(roundBox(6, 7, 2, 1), shiny(0xd4a537)); ser.position.set(0, 24, 16.4); g.add(ser);
+      g.rotation.y = c.rot; g.r = 33; return g;
+    },
+    carton(c) {
+      const g = new T.Group(), k = lam(0xc9a06a, { roughness: 0.95 }), w = 34 + (c.rot % 1) * 10, h = 26 + (c.rot % 1) * 12;
+      const b = new T.Mesh(roundBox(w, h, 32, 1), k); b.position.y = h / 2; g.add(b);
+      const tape = new T.Mesh(roundBox(6, 0.6, 33, 0.2), lam(0xe8d8a8)); tape.position.y = h + 0.1; g.add(tape);
+      if (c.rot > 3) { const b2 = new T.Mesh(roundBox(w * 0.75, h * 0.7, 26, 1), lam(0xb88c58, { roughness: 0.95 })); b2.position.y = h + h * 0.35; b2.rotation.y = 0.3; g.add(b2); }
+      g.rotation.y = c.rot; g.r = 26; return g;
+    },
+    lampe(c) {
+      const g = new T.Group(), laiton = shiny(0xc9a06a);
+      g.add(lathe([[0, 0], [12, 0], [12, 3], [3, 6], [2.4, 46], [0, 46]], laiton));
+      const abat = lathe([[8, 44], [20, 30], [21, 30], [9, 45]], lam(0xe8c87a, { side: T.DoubleSide, emissive: 0x6a4a10, emissiveIntensity: 0.4 })); g.add(abat);
+      const ampoule = new T.Mesh(new T.SphereGeometry(4, 14, 10), new T.MeshBasicMaterial({ color: 0xfff2c4 })); ampoule.position.y = 38; g.add(ampoule);
+      g.r = 22; return g;
+    },
+    globe(c) {
+      const tex = canvas(256, 128, (x, w, h) => { x.fillStyle = '#3f8fe0'; x.fillRect(0, 0, w, h); x.fillStyle = '#7fbf6a'; for (const [cx, cy, rx, ry] of [[40, 40, 26, 30], [60, 90, 14, 22], [130, 45, 30, 22], [150, 85, 20, 20], [210, 60, 22, 16]]) { x.beginPath(); x.ellipse(cx, cy, rx, ry, 0.3, 0, 7); x.fill(); } });
+      const g = new T.Group(), laiton = shiny(0xc9a06a);
+      g.add(lathe([[0, 0], [10, 0], [10, 3], [2, 5], [2, 14], [0, 14]], lam(0x5a3c24)));
+      const s = new T.Mesh(new T.SphereGeometry(15, 36, 24), new T.MeshStandardMaterial({ map: tex, roughness: 0.4 })); s.position.y = 30; s.rotation.z = 0.4; g.add(s); g.ball = s;
+      const arc = new T.Mesh(new T.TorusGeometry(17, 1, 8, 40, Math.PI * 1.3), laiton); arc.position.y = 30; arc.rotation.z = -0.6; g.add(arc);
+      g.r = 18; return g;
+    },
+    valise(c) {
+      const g = new T.Group(), col = [0x8a3b2a, 0x2f62a8, 0x3c7a4a][Math.floor(c.rot) % 3];
+      const b = new T.Mesh(roundBox(46, 34, 16, 4), lam(col, { roughness: 0.6 })); b.position.y = 17; g.add(b);
+      const anse = new T.Mesh(new T.TorusGeometry(5, 1.2, 8, 20, Math.PI), lam(0x2a1d16)); anse.position.y = 34; g.add(anse);
+      for (const [x, y, cl] of [[-12, 22, 0xffd23f], [10, 12, 0xffffff], [14, 26, 0xe5352b]]) { const st = new T.Mesh(new T.CircleGeometry(4.5, 18), lam(cl)); st.position.set(x, y, 8.1); g.add(st); }
+      g.rotation.y = c.rot; g.r = 26; return g;
     },
 
     // ---------- Chambre d'enfant ----------
@@ -1132,7 +1232,14 @@
       for (const c of race.cars) {
         const hex = c.isPlayer ? paints.player : paints.rivals[c.id % paints.rivals.length];
         const m = MB.buildCarHD(c.spec.shape, hex, lam.env);
-        if (c.isPlayer) MB.styleCar(m, paints.look);
+        if (c.isPlayer) MB.styleCar(m, paints.look); else if (m.repaint) m.repaint(MB.RIVAL_DECO[c.id % MB.RIVAL_DECO.length]);
+        if (c.champ) {                                          // champion du circuit : couronne dorée au-dessus du toit
+          const gold = new T.MeshStandardMaterial({ color: 0xf2c14e, metalness: 1, roughness: 0.25, envMap: lam.env, emissive: 0x7a5200, emissiveIntensity: 0.35 });
+          const cr = new T.Group(), ring = new T.Mesh(new T.CylinderGeometry(0.62, 0.55, 0.36, 18, 1, true), gold); ring.material.side = T.DoubleSide; cr.add(ring);
+          for (let k = 0; k < 5; k++) { const a = (k / 5) * Math.PI * 2, sp = new T.Mesh(new T.ConeGeometry(0.15, 0.42, 8), gold); sp.position.set(Math.cos(a) * 0.58, 0.36, Math.sin(a) * 0.58); cr.add(sp);
+            const gem = new T.Mesh(new T.SphereGeometry(0.08, 8, 6), new T.MeshStandardMaterial({ color: [0xe5352b, 0x2f8fd8, 0x48b58a][k % 3], roughness: 0.15 })); gem.position.set(Math.cos(a) * 0.6, 0, Math.sin(a) * 0.6); cr.add(gem); }
+          cr.scale.setScalar(1.3); cr.position.set(m.roofX, m.top + 0.8, 0); m.add(cr); m.crown = cr;
+        }
         const sh = new T.Mesh(new T.PlaneGeometry(7.4, 4.4), new T.MeshBasicMaterial({ map: this.blob, transparent: true, depthWrite: false }));
         sh.rotation.x = -Math.PI / 2; sh.position.y = 0.24;
         this.scene.add(m, sh);
@@ -1249,6 +1356,7 @@
       const sdt = Math.min(dt, 0.033);
       for (const e of this.carMeshes) {
         const c = e.c, m = e.m;
+        if (m.crown) m.crown.rotation.y += dt * 1.6;
         MB.pose(c, alpha, P);
         m.position.set(P.x, 0.2 + P.lift, P.z);
         const left = c.spin > 0 ? Math.min(c.spin, 1) : 0;     // tête-à-queue : deux tours qui ralentissent, sans saut d'angle

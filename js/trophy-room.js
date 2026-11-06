@@ -268,6 +268,11 @@
       g.add(mesh(new T.OctahedronGeometry(0.16), R.lam(0x4fe3ff, { roughness: 0.05, metalness: 0.3 }), 0.25, 1.05, 0.05));
       return g;
     },
+    figs() {                                              // trois figurines de champions sur un socle doré
+      const g = new T.Group(); g.add(plinth());
+      [[0, -0.55], [2, 0], [4, 0.55]].forEach(([r, x], i) => { const f = MB.FIG_MODELS[r](); f.scale.setScalar(i === 1 ? 1.1 : 0.9); f.position.set(x, 0.28, i === 1 ? 0.12 : -0.12); g.add(f); });
+      return g;
+    },
     leader() {                                            // couronne
       const g = new T.Group(); g.add(plinth(R.lam(0x6a2a8a, { roughness: 0.6 })));
       const c = new T.Group(), m = gold();
@@ -431,6 +436,71 @@
     },
   };
 
+  // Figurines des rivaux champions (hauteur ~1,7), sur un petit socle doré.
+  const eyes = (g, y, z, dx = 0.1, r = 0.05) => { for (const s of [-1, 1]) g.add(mesh(new T.SphereGeometry(r, 10, 8), paint(0x1b1d24, 0.2), s * dx, y, z)); };
+  const figBase = (g) => { g.add(mesh(new T.CylinderGeometry(0.55, 0.6, 0.16, 28), R.lam(0x22232a, { roughness: 0.35 }), 0, 0.08)); const rim = mesh(new T.TorusGeometry(0.56, 0.03, 6, 28), gold(), 0, 0.16); rim.rotation.x = Math.PI / 2; g.add(rim); return g; };
+  MB.FIG_MODELS = [
+    function loulou() {                                    // loup gris, écharpe rouge
+      const g = figBase(new T.Group()), fur = paint(0x8b8f9c, 0.8), pale = paint(0xe9e4dc, 0.8);
+      const b = mesh(R.lump(0.36, 0.03, 4, 3), fur, 0, 0.62); b.scale.set(1, 1.25, 0.9); g.add(b);
+      const belly = mesh(new T.SphereGeometry(0.22, 16, 12), pale, 0, 0.6, 0.2); belly.scale.set(1, 1.3, 0.5); g.add(belly);
+      g.add(mesh(new T.SphereGeometry(0.3, 18, 14), fur, 0, 1.2));
+      const sn = mesh(new T.ConeGeometry(0.13, 0.32, 12), pale, 0, 1.14, 0.34); sn.rotation.x = Math.PI / 2; g.add(sn);
+      g.add(mesh(new T.SphereGeometry(0.05, 8, 6), paint(0x1b1d24), 0, 1.15, 0.5));
+      for (const s of [-1, 1]) { const e = mesh(new T.ConeGeometry(0.09, 0.26, 4), fur, s * 0.16, 1.5, 0); e.rotation.z = -s * 0.25; g.add(e); }
+      eyes(g, 1.27, 0.25, 0.1);
+      const sc = mesh(new T.TorusGeometry(0.22, 0.06, 8, 20), paint(0xe5352b, 0.5), 0, 0.95); sc.rotation.x = Math.PI / 2; g.add(sc);
+      const tail = mesh(new T.ConeGeometry(0.12, 0.5, 10), fur, 0, 0.5, -0.4); tail.rotation.x = -1.1; g.add(tail);
+      return g;
+    },
+    function zebulon() {                                   // diable à ressort, bonnet de bouffon
+      const g = figBase(new T.Group());
+      for (let i = 0; i < 6; i++) { const t = mesh(new T.TorusGeometry(0.22, 0.045, 8, 20), R.lam(0xcfd3da, { metalness: 0.9, roughness: 0.25 }), 0, 0.26 + i * 0.12); t.rotation.x = Math.PI / 2 + (i % 2 ? 0.12 : -0.12); g.add(t); }
+      g.add(mesh(new T.SphereGeometry(0.34, 20, 16), paint(0xffe0c2, 0.6), 0, 1.15));
+      const smile = mesh(new T.TorusGeometry(0.14, 0.025, 6, 16, Math.PI), paint(0xe5352b), 0, 1.06, 0.31); smile.rotation.z = Math.PI; g.add(smile);
+      g.add(mesh(new T.SphereGeometry(0.07, 10, 8), paint(0xe5352b), 0, 1.15, 0.34));
+      eyes(g, 1.24, 0.3, 0.12);
+      for (const s of [-1, 1]) { const h = mesh(new T.ConeGeometry(0.16, 0.5, 12), paint(s < 0 ? 0xe5352b : 0xffd23f, 0.4), s * 0.2, 1.55, 0); h.rotation.z = -s * 0.8; g.add(h); g.add(mesh(new T.SphereGeometry(0.07, 10, 8), gold(), s * 0.42, 1.68, 0)); }
+      return g;
+    },
+    function mamie() {                                     // grand-mère pilote : robe violette, chignon, lunettes
+      const g = figBase(new T.Group());
+      g.add(R.lathe([[0, 0.16], [0.4, 0.16], [0.34, 0.5], [0.24, 0.85], [0.18, 0.95], [0, 0.95]], paint(0x8a4fd0, 0.6)));
+      for (const s of [-1, 1]) g.add(mesh(new T.SphereGeometry(0.07, 8, 6), paint(0xffe0c2), s * 0.3, 0.62, 0.12));
+      g.add(mesh(new T.SphereGeometry(0.27, 18, 14), paint(0xffe0c2, 0.6), 0, 1.18));
+      const hair = mesh(new T.SphereGeometry(0.29, 18, 14, 0, Math.PI * 2, 0, Math.PI * 0.55), paint(0xeeeeee, 0.9), 0, 1.2, -0.03); g.add(hair);
+      g.add(mesh(new T.SphereGeometry(0.15, 14, 10), paint(0xeeeeee, 0.9), 0, 1.47, -0.12));
+      for (const s of [-1, 1]) { const l = mesh(new T.TorusGeometry(0.075, 0.016, 6, 16), R.lam(0xd4a537, { metalness: 1, roughness: 0.3 }), s * 0.1, 1.2, 0.25); g.add(l); }
+      eyes(g, 1.2, 0.25, 0.1, 0.03);
+      const col = mesh(new T.TorusGeometry(0.2, 0.05, 8, 20), paint(0xff8fb5, 0.5), 0, 0.95); col.rotation.x = Math.PI / 2; g.add(col);
+      return g;
+    },
+    function biscotte() {                                  // biscotte dorée, croûte, petits bras
+      const g = figBase(new T.Group()), crust = paint(0xb8742f, 0.8);
+      const b = mesh(R.roundBox(0.8, 1.0, 0.22, 0.1), paint(0xf0c27a, 0.85), 0, 0.85); g.add(b);
+      const edge = mesh(R.roundBox(0.88, 1.08, 0.18, 0.1), crust, 0, 0.85, -0.03); g.add(edge);
+      for (let i = 0; i < 8; i++) g.add(mesh(new T.SphereGeometry(0.03, 6, 4), crust, -0.25 + (i % 4) * 0.17, 0.5 + Math.floor(i / 4) * 0.62, 0.12));
+      eyes(g, 1.0, 0.12, 0.14, 0.055);
+      const smile = mesh(new T.TorusGeometry(0.12, 0.022, 6, 16, Math.PI), paint(0x6a3410), 0, 0.86, 0.12); smile.rotation.z = Math.PI; g.add(smile);
+      for (const s of [-1, 1]) { const a = mesh(new T.CylinderGeometry(0.035, 0.035, 0.36, 6), crust, s * 0.52, 0.82, 0); a.rotation.z = s * 0.9; g.add(a); g.add(mesh(new T.CylinderGeometry(0.04, 0.04, 0.22, 6), crust, s * 0.2, 0.26, 0)); }
+      return g;
+    },
+    function max() {                                       // raton masqué, queue rayée, casquette
+      const g = figBase(new T.Group()), fur = paint(0x8a7f74, 0.8), dark = paint(0x2a2730, 0.6);
+      const b = mesh(R.lump(0.34, 0.03, 6, 3), fur, 0, 0.6); b.scale.set(1, 1.2, 0.9); g.add(b);
+      g.add(mesh(new T.SphereGeometry(0.31, 18, 14), fur, 0, 1.16));
+      const mask = mesh(new T.CylinderGeometry(0.315, 0.315, 0.13, 20, 1, true), dark, 0, 1.2); mask.material.side = T.DoubleSide; g.add(mask);
+      for (const s of [-1, 1]) g.add(mesh(new T.SphereGeometry(0.06, 10, 8), paint(0xffffff, 0.3), s * 0.11, 1.2, 0.29));
+      g.add(mesh(new T.SphereGeometry(0.1, 12, 10), paint(0xe9e4dc, 0.8), 0, 1.08, 0.27));
+      g.add(mesh(new T.SphereGeometry(0.04, 8, 6), dark, 0, 1.11, 0.36));
+      for (const s of [-1, 1]) g.add(mesh(new T.SphereGeometry(0.09, 10, 8), fur, s * 0.2, 1.43, 0));
+      g.add(mesh(new T.SphereGeometry(0.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), paint(0x2f62d9, 0.5), 0, 1.3, -0.02));
+      const peak = mesh(new T.CylinderGeometry(0.2, 0.2, 0.03, 16, 1, false, -Math.PI / 2, Math.PI), paint(0x2f62d9, 0.5), 0, 1.31, 0.2); g.add(peak);
+      for (let i = 0; i < 5; i++) { const t = mesh(new T.CylinderGeometry(0.1 - i * 0.008, 0.11 - i * 0.008, 0.12, 10), i % 2 ? dark : fur, 0, 0.35 + i * 0.1, -0.38 - i * 0.04); t.rotation.x = -0.5; g.add(t); }
+      return g;
+    },
+  ];
+
   // Jouet pas encore sorti : petit paquet cadeau fermé.
   function giftBox() {
     const g = new T.Group();
@@ -507,9 +577,14 @@
       const g = new T.Group(); g.position.set(i * toySp, -2.16, 0.4); s.add(g);
       return { id: y.id, g, model: null, got: null };
     });
+    // Vitrine des champions : une planche au-dessus des trophées, qui suit le regard, avec les 5 figurines.
+    const figShelf = new T.Group(); figShelf.position.set(0, 3.95, -1.5); s.add(figShelf);
+    figShelf.add(mesh(new T.BoxGeometry(6.6, 0.16, 1.1), wood, 0, -0.08, 0));
+    figShelf.add(mesh(new T.BoxGeometry(6.6, 0.05, 0.05), gold(), 0, 0.0, 0.55));
+    const figs = MB.FIGS.map((f, i) => { const g = new T.Group(); g.position.set((i - 2) * 1.3, 0, 0.1); figShelf.add(g); return { rival: f.rival, g, model: null, got: null }; });
     view._linear(s);
     R.lam.env = null;
-    return { s, env, spot, halo, items, toys, sel: 0, camX: 0, t: 0, spin: 0, drag: 0 };
+    return { s, env, spot, halo, items, toys, figShelf, figs, sel: 0, camX: 0, t: 0, spin: 0, drag: 0 };
   }
 
   Object.assign(MB.View.prototype, {
@@ -547,6 +622,14 @@
         this._linear(m);
         y.g.add(m); y.model = m; y.got = state;
       });
+      for (const f of r.figs) {                             // figurine gagnée en couleurs, sinon silhouette
+        const has = (st.figs || []).includes(f.rival);
+        if (f.model && f.got === has) continue;
+        if (f.model) f.g.remove(f.model);
+        const m = MB.FIG_MODELS[f.rival](); m.scale.setScalar(0.66);
+        if (!has) silhouette(m);
+        this._linear(m); f.g.add(m); f.model = m; f.got = has;
+      }
       R.lam.env = null;
       this.selectTrophy(sel, true);
     },
@@ -570,6 +653,8 @@
       const x = r.sel * SPACING;
       r.spot.position.set(x + 1.5, 9, 5); r.spot.target.position.set(x, 1.4, 0); r.spot.target.updateMatrixWorld();
       r.halo.position.x += (x - r.halo.position.x) * k;
+      r.figShelf.position.x = r.camX;
+      for (const f of r.figs) if (f.got) f.model.rotation.y = Math.sin(r.t * 0.7 + f.rival) * 0.35;
       for (const y of r.toys) if (y.got === 'got') y.model.rotation.y = 0.5 + Math.sin(r.t * 0.8 + y.g.position.x) * 0.4;
       const fit = Math.max(1, 0.62 / this.cam.aspect);
       this.cam.fov = 40; this.cam.updateProjectionMatrix();

@@ -89,6 +89,7 @@
   ];
 
   MB.RIVAL_CARS = ['bolide', 'savon', 'puce', 'tata', 'eclair', 'pepere'];   // voitures des rivaux : leur niveau ne bouge pas quand le garage s'agrandit
+  MB.RIVAL_DECO = ['bandes', 'eclair', 'pois', 'damier', 'flammes', 'etoiles'];   // chaque rival a ses autocollants : on le reconnaît de loin
   MB.RIVALS = ['Loulou', 'Zébulon', 'Mamie Turbo', 'Biscotte', 'Max la Menace', 'Praline'];
   // Caractères : pace = allure, lane = délai entre changements de file, block = ferme la porte, late = finit fort, item = délai avant d'utiliser un objet.
   MB.RIVAL_STYLES = [
@@ -103,6 +104,10 @@
   MB.LOOKS = {
     num: [{ id: '', label: '—', price: 0 }, { id: '7', price: 120 }, { id: '13', price: 120 }, { id: '21', price: 120 }, { id: '42', price: 150 }, { id: '77', price: 150 }, { id: '99', price: 180 }],
     rim: [{ id: 'chrome', hex: 0xcfd3da, price: 0 }, { id: 'noir', hex: 0x2a2b30, price: 150 }, { id: 'rouge', hex: 0xe5352b, price: 150 }, { id: 'bleu', hex: 0x2f8fd8, price: 150 }, { id: 'or', hex: 0xf2c14e, price: 250 }],
+    // Autocollants peints sur la carrosserie (js/car-hd.js drawDeco).
+    deco: [{ id: '', icon: '—', price: 0 }, { id: 'bandes', icon: '🏁', price: 200, name: { fr: 'Bandes', en: 'Stripes' } }, { id: 'damier', icon: '🏴', price: 250, name: { fr: 'Damier', en: 'Checkers' } },
+      { id: 'flammes', icon: '🔥', price: 350, name: { fr: 'Flammes', en: 'Flames' } }, { id: 'eclair', icon: '⚡', price: 300, name: { fr: 'Éclair', en: 'Lightning' } },
+      { id: 'pois', icon: '🔴', price: 200, name: { fr: 'Pois', en: 'Polka dots' } }, { id: 'etoiles', icon: '⭐', price: 300, name: { fr: 'Étoiles', en: 'Stars' } }],
     trail: [{ id: 'feu', hex: 0xff5a00, price: 0 }, { id: 'bleu', hex: 0x2f9bff, price: 220 }, { id: 'rose', hex: 0xff4fa3, price: 220 }, { id: 'vert', hex: 0x36e07a, price: 220 }, { id: 'or', hex: 0xffd23f, price: 300 }],
   };
 
@@ -137,6 +142,7 @@
     { id: 'tuned', icon: '🔧', coins: 250, name: { fr: 'Moteur gonflé', en: 'Fully tuned' }, desc: { fr: 'Améliore une voiture au maximum', en: 'Max out every upgrade on one car' }, ok: (r, s) => Object.values(s.ups).some((u) => Object.keys(MB.UPGRADES).every((k) => (u[k] || 0) >= MB.UP_MAX)) },
     { id: 'streak', icon: '📅', coins: 200, name: { fr: 'Fidèle au volant', en: 'Regular racer' }, desc: { fr: 'Joue 7 jours de suite', en: 'Play 7 days in a row' }, ok: (r, s) => s.daily.streak >= 7 },
     { id: 'chests', icon: '🎁', coins: 250, name: { fr: 'Chasseur de coffres', en: 'Chest hunter' }, desc: { fr: 'Ouvre 10 coffres de missions', en: 'Open 10 mission chests' }, ok: (r, s) => (s.tot.chests || 0) >= 10 },
+    { id: 'figs', icon: '🗿', coins: 400, name: { fr: 'Tous les champions', en: 'Champion slayer' }, desc: { fr: 'Gagne les 5 figurines de rivaux', en: 'Win all 5 rival figurines' }, ok: (r, s) => Object.keys(s.figs || {}).length >= MB.FIGS.length },
     { id: 'leader', icon: '👑', coins: 300, name: { fr: 'Roi de la course', en: 'Wire to wire' }, desc: { fr: 'En tête à chaque passage de ligne et à l\'arrivée', en: 'Lead at every lap and at the finish' }, ok: (r) => r.done && !r.solo && r.pos === 1 && r.ledAll && r.lap1Pos === 1 },
   ];
 
@@ -195,6 +201,21 @@
     return Math.max(1, tr.tiers.filter((x) => n >= x).length);
   };
 
+  // Rivaux champions : sur chaque circuit, un des rivaux défend son terrain (couronne, un peu plus rapide, il ferme la porte).
+  // Le battre FIG_WINS fois sur ses circuits fait gagner sa figurine, posée dans la salle des trophées.
+  MB.FIG_WINS = 3;
+  MB.FIG_COINS = 300;
+  MB.CHAMP_PACE = 1.035;
+  MB.CHAMPS = { bol: 0, sentier: 0, bain: 0, tartine: 1, banquise: 1, ville: 1, dune: 2, chateau: 2, coffre: 2, doudou: 3, glacier: 3, grenier: 3, minuit: 4 };
+  MB.FIGS = [
+    { rival: 0, icon: '🐺', title: { fr: 'le loup des circuits', en: 'the track wolf' } },
+    { rival: 1, icon: '🤡', title: { fr: 'le diable à ressort', en: 'the jack-in-the-box' } },
+    { rival: 2, icon: '👵', title: { fr: 'la grand-mère pilote', en: 'the racing granny' } },
+    { rival: 3, icon: '🍞', title: { fr: 'la biscotte qui file', en: 'the speedy rusk' } },
+    { rival: 4, icon: '🦝', title: { fr: 'le bandit masqué', en: 'the masked bandit' } },
+  ];
+  MB.champOf = (trackId) => (MB.CHAMPS[trackId] === undefined ? null : MB.CHAMPS[trackId]);
+
   // Ce que dit un rival qu'on vient de dépasser.
   MB.RIVAL_SULK = [
     { fr: 'Hé !', en: 'Hey!' }, { fr: 'Grrr…', en: 'Grrr…' }, { fr: 'Pas juste !', en: 'Not fair!' },
@@ -237,6 +258,13 @@
     { id: 'coffre', name: { fr: 'Le Coffre à Jouets', en: 'Toy Box Twister' }, mood: 'chambre', seed: 113,
       jumps: [0.3],
       pts: [[15, 20], [50, 12], [85, 18], [92, 40], [70, 50], [88, 70], [75, 90], [45, 85], [40, 60], [20, 70], [8, 45]] },
+    // v0.9.39 : la salle de bain (raccourci au-dessus de la bonde) et le grenier (deux tremplins sur les cartons).
+    { id: 'bain', name: { fr: 'Le Grand Bain', en: 'Bathtub Bay' }, mood: 'bain', seed: 127,
+      jumps: [0.36], shortcuts: [[0.56, 0.77, -1, 6, 8]],
+      pts: [[15, 30], [40, 15], [70, 14], [88, 28], [90, 55], [78, 78], [55, 88], [47, 58], [30, 84], [12, 70], [8, 48]] },
+    { id: 'grenier', name: { fr: 'Le Grenier de Papi', en: 'Grandpa\'s Attic' }, mood: 'grenier', seed: 131,
+      jumps: [0.3, 0.68],
+      pts: [[10, 15], [40, 10], [52, 28], [70, 12], [92, 20], [90, 45], [70, 50], [88, 70], [80, 92], [50, 88], [38, 70], [22, 90], [8, 70], [20, 45]] },
   ];
 
   // Championnat : les étoiles gagnées sur les circuits ouvrent les coupes suivantes.
@@ -246,6 +274,7 @@
     { id: 'givre', icon: '❄️', name: { fr: 'Coupe du Givre', en: 'Frost Cup' }, stars: 13, tracks: ['banquise', 'glacier', 'ville'], prizes: [800, 500, 240], first: 1200 },
     { id: 'chambre', icon: '🧸', name: { fr: 'Coupe de la Chambre', en: 'Bedroom Cup' }, stars: 16, tracks: ['doudou', 'coffre', 'ville'], prizes: [700, 450, 210], first: 1000 },
     { id: 'champions', icon: '👑', name: { fr: 'Coupe des Champions', en: 'Champions Cup' }, stars: 20, tracks: ['minuit', 'chateau', 'glacier', 'ville'], prizes: [1200, 750, 360], first: 2000 },
+    { id: 'combles', icon: '🛁', name: { fr: 'Coupe de la Maison', en: 'House Cup' }, stars: 24, tracks: ['bain', 'grenier', 'coffre'], prizes: [1000, 620, 300], first: 1600 },
   ];
   MB.cupUnlocked = (cup, stars) => stars >= cup.stars;
 
@@ -257,6 +286,8 @@
     { id: 'neige', icon: '❄️', name: { fr: 'Neige', en: 'Snow' }, stars: 15, tracks: ['banquise', 'glacier'], col: ['#8cc6f0', '#4c84c9'] },
     { id: 'ville', icon: '🏙️', name: { fr: 'Ville', en: 'City' }, stars: 21, tracks: ['ville'], col: ['#5b4bb0', '#241f55'] },
     { id: 'chambre', icon: '🧸', name: { fr: 'Chambre', en: 'Bedroom' }, stars: 27, tracks: ['doudou', 'coffre'], col: ['#f29cc9', '#b45d9a'] },
+    { id: 'bain', icon: '🛁', name: { fr: 'Salle de bain', en: 'Bathroom' }, stars: 30, tracks: ['bain'], col: ['#7fd6e8', '#2f8fb8'] },
+    { id: 'grenier', icon: '📦', name: { fr: 'Grenier', en: 'Attic' }, stars: 34, tracks: ['grenier'], col: ['#c9a06a', '#6b4a2e'] },
   ];
 
   // ★ podium, ★★ victoire, ★★★ victoire avec au moins 20 pièces ramassées.

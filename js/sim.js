@@ -67,6 +67,8 @@
           aiLane: lat * 0.6, aiLaneT: 0, onWall: false, y: 0, vy: 0, ry: 0, sc: null, sci: 0, dk: 0, fix: 0, ff: 0,
           style: isPlayer ? null : MB.RIVAL_STYLES[g % MB.RIVAL_STYLES.length],
         };
+        // Champion du circuit : un peu plus vif, et il ferme la porte.
+        if (!isPlayer && opts.champ === g) { c.champ = true; c.style = Object.assign({}, c.style, { pace: c.style.pace * MB.CHAMP_PACE, block: true }); }
         this.cars.push(c);
         if (isPlayer) this.player = c;
       }

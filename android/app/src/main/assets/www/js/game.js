@@ -28,7 +28,8 @@
     won: ['Coupe gagnée !', 'Cup won!'], podium: ['Sur le podium !', 'On the podium!'], tryagain: ['Presque ! Encore une ?', 'So close! One more?'],
     double: ['Doubler les gains (pub)', 'Double rewards (ad)'], paint: ['Peinture', 'Paint'], racePlus: ['Prime de course', 'Race prize'], cupPlus: ['Prime de coupe', 'Cup prize'],
     sSpeed: ['Vitesse', 'Speed'], sAccel: ['Accélération', 'Acceleration'], sTurn: ['Maniabilité', 'Handling'], sDrift: ['Drift', 'Drift'],
-    tabCar: ['Voiture', 'Car'], tabUp: ['Évolutions', 'Upgrades'], tabPaint: ['Peinture', 'Paint'], tabStyle: ['Style', 'Style'], lookNum: ['Numéro sur le toit', 'Roof number'], lookRim: ['Jantes', 'Rims'], lookTrail: ['Flamme du turbo', 'Turbo flame'],
+    tabCar: ['Voiture', 'Car'], tabUp: ['Évolutions', 'Upgrades'], tabPaint: ['Peinture', 'Paint'], tabStyle: ['Style', 'Style'], lookNum: ['Numéro sur le toit', 'Roof number'], lookRim: ['Jantes', 'Rims'], lookTrail: ['Flamme du turbo', 'Turbo flame'], lookDeco: ['Autocollants', 'Decals'], champTick: ['défend ce circuit · finis 3 fois devant pour sa figurine', 'defends this track · finish ahead 3 times for their figurine'],
+    champWon: ['garde son circuit… revanche !', 'keeps the track… rematch!'], champBeat: ['derrière toi ! Figurine', 'behind you! Figurine'], figGot: ['Figurine gagnée :', 'Figurine won:'],
     lookHelp: ['Acheté une fois, il va sur toutes tes voitures.', 'Bought once, it fits all your cars.'], trophies: ['Trophées', 'Trophies'], toyHint: ['🔍 Un jouet est caché sur ce circuit', '🔍 A toy is hidden on this track'], toyFound: ['Jouet trouvé !', 'Toy found!'], toyDup: ['Doublon :', 'Duplicate:'], toys: ['Jouets', 'Toys'], trophy: ['Trophée', 'Trophy'], sens: ['Sensibilité de la direction', 'Steering sensitivity'],
     buyFirst: ['Achète cette voiture pour la faire évoluer.', 'Buy this car to upgrade it.'], max: ['Max', 'Max'], need: ['Pièces insuffisantes', 'Not enough coins'],
     earned: ['Les évolutions se gagnent avec tes pièces de course.', 'Upgrades are paid with coins earned in races.'],
@@ -40,9 +41,11 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu'], look: { num: '', rim: 'chrome', trail: 'feu' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
+  if (!save.looks.includes('deco:')) save.looks.push('deco:');
+  if (save.look.deco === undefined) save.look.deco = '';
   if (save.tot.wins === undefined) save.tot.wins = save.troph.win ? 1 : 0;   // victoires comptées depuis les paliers de trophées
   if (!save.v4) {                                             // anciennes médailles : 1er = 2 étoiles, podium = 1 étoile
     for (const id of Object.keys(save.medals)) if (id !== 'cup') save.stars[id] = save.medals[id] === 3 ? 2 : 1;
@@ -380,7 +383,7 @@
     try { bridge.sendJournal(JSON.stringify(journal.end({ fin: why, rang: race && race.position(race.player) }))); } catch (e) { /* jamais gênant pour la partie */ }
   }
   const snapJournal = (label) => { if (journal && !view.onSnap) { const j = journal; view.onSnap = (url) => j.snap(url, label); } };
-  const MOOD_MUSIC = { matin: 'cuisine', midi: 'cuisine', minuit: 'cuisine', sable: 'plage', foret: 'foret', neige: 'neige', ville: 'ville', chambre: 'chambre' };
+  const MOOD_MUSIC = { matin: 'cuisine', midi: 'cuisine', minuit: 'cuisine', sable: 'plage', foret: 'foret', neige: 'neige', ville: 'ville', chambre: 'chambre', bain: 'plage', grenier: 'chambre' };
   // Départ demandé par le joueur : écran « Préparation du circuit » affiché d'abord (deux images), puis construction
   // et image de chauffe ; le compte à rebours part ensuite sans à-coup.
   function startRace(trackId, variant) {
@@ -400,7 +403,7 @@
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
     const solo = trackMode === 'chrono' && !cup && !chal;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track) });
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId) });
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -509,6 +512,8 @@
         case 'count': if (e.n >= 1 && e.n <= 3) { flash(String(e.n), 'big'); Sound.play('count', [440, 0.14, 'square', 0.14], 0); } break;
         case 'go': if (journal) { const a = Sound.diag(); window.mbJournal(`Son : ${a.actif ? 'activé' : 'coupé'}, ${a.etat}, ${a.sons} sons${a.erreurs.length ? ' · ' + a.erreurs[0] : ''}`); }
           flash('GO !', 'big'); Sound.play('go', [880, 0.4, 'square', 0.18], 0); $('hint').hidden = true; if (!save.seen) { save.seen = true; persist(); }
+          { const ch = race.cars.find((c) => c.champ), r0 = race;    // le champion du circuit se présente
+            if (ch && !save.figs[ch.id]) setTimeout(() => { if (race === r0) { $('ticker').textContent = `👑 ${ch.name} ${t('champTick')} · ${save.figWins[ch.id] || 0}/${MB.FIG_WINS}`; $('ticker').className = 'on'; tickT = race.clock + 6; setTimeout(() => { $('ticker').className = ''; }, 3200); } }, 500); }
           { const fresh = race.toys.find((y) => !y.dup);                 // deux courses de suite, on prévient qu'un nouveau jouet attend ici
             if (fresh && (save.toyHint[fresh.id] || 0) < 2) {
               save.toyHint[fresh.id] = (save.toyHint[fresh.id] || 0) + 1; persist();
@@ -661,6 +666,18 @@
     view.ghostAt(q[a] + (q[c] - q[a]) * u, q[a + 1] + (q[c + 1] - q[a + 1]) * u, q[a + 2] + MB.angleDiff(q[c + 2], q[a + 2]) * u, true);
   }
 
+  // ---------- Rivaux champions et figurines ----------
+  // Battre le champion du circuit (finir devant lui) le rapproche de sa figurine.
+  function champAfter(pos) {
+    const ch = race.cars.find((c) => c.champ);
+    if (!ch || save.figs[ch.id]) return [];
+    if (race.position(ch) < pos) return [`👑 ${ch.name} ${t('champWon')}`];
+    const n = (save.figWins[ch.id] = (save.figWins[ch.id] || 0) + 1), fig = MB.FIGS.find((f) => f.rival === ch.id);
+    if (n < MB.FIG_WINS) return [`👑 ${ch.name} ${t('champBeat')} ${n}/${MB.FIG_WINS}`];
+    save.figs[ch.id] = Date.now(); save.coins += MB.FIG_COINS;
+    return [`${fig.icon} ${t('figGot')} ${ch.name}, ${L(fig.title)} ! +${MB.FIG_COINS} 🪙`];
+  }
+
   // ---------- Trophées ----------
   // Met à jour les totaux, débloque ce qui est atteint, crédite les pièces ; renvoie les lignes à afficher.
   function trophiesAfter(r, earned) {
@@ -690,7 +707,7 @@
   let tIdx = -1;
   function renderTrophies() {
     const got = MB.TROPHIES.filter((x) => save.troph[x.id]);
-    $('trophyCount').textContent = `${got.length} / ${MB.TROPHIES.length} · 🧸 ${Object.keys(save.toys).length} / ${MB.TOYS.length}`;
+    $('trophyCount').textContent = `${got.length} / ${MB.TROPHIES.length} · 🧸 ${Object.keys(save.toys).length} / ${MB.TOYS.length} · 👑 ${Object.keys(save.figs).length} / ${MB.FIGS.length}`;
     if (tIdx < 0) {
       const last = got.reduce((a, x) => (!a || (+save.troph[x.id] || 0) > (+save.troph[a.id] || 0) ? x : a), null);
       tIdx = last ? MB.TROPHIES.indexOf(last) : 0;
@@ -698,7 +715,7 @@
     const tiers = {};
     for (const x of MB.TROPHIES) tiers[x.id] = MB.trophyTier(x, save);
     toyHunt();
-    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys), released: MB.toysReleased(save.toyStart, today()) }, tIdx);
+    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys), released: MB.toysReleased(save.toyStart, today()), figs: Object.keys(save.figs).map(Number) }, tIdx);
     show('trophies');
     trophyCard();
   }
@@ -780,6 +797,7 @@
     }
     if (openCups().length > opened) notes.push(t('unlocked'));
     if (openWorlds().length > worldsBefore) notes.push(`${t('worldOpen')} ${openWorlds().slice(worldsBefore).map((w) => w.icon + ' ' + L(w.name)).join(', ')} !`);
+    notes.push(...champAfter(pos));
     const second = race.ranked[1], gap = pos === 1 && second && second.time ? second.time - p.time : 99;
     notes.push(...trophiesAfter({ done: true, solo: false, pos, walls: stat.walls, l2: stat.l2, coins: race.coinCount, lastLapPos: stat.lastLapPos, diff: save.diff, variant: currentVariant, gap, lap1Pos: stat.lap1Pos, ledAll: stat.ledAll, maxDrift: stat.maxDrift }, pendingCoins));
     notes.push(...missionsAfter({ races: 1, boosts: stat.boosts, l2: stat.l2, coins: race.coinCount, podium: pos <= 3 ? 1 : 0, win: pos === 1 ? 1 : 0, sc: stat.sc, items: stat.items, clean: stat.walls <= 2 ? 1 : 0 }));
@@ -854,6 +872,13 @@
   }
   // Position de défilement qui centre la page du monde i.
   const wLeft = (i) => { const r = $('wrail'), c = r.children[i]; return c.offsetLeft - (r.clientWidth - c.offsetWidth) / 2; };
+  // Ligne du champion dans la liste des circuits : son nom et la progression vers sa figurine.
+  function champLine(id) {
+    const r = MB.champOf(id);
+    if (r === null) return '';
+    const done = !!save.figs[r];
+    return `<small class="wchamp ${done ? 'done' : ''}">👑 ${MB.RIVALS[r]} ${done ? '✓' : `${save.figWins[r] || 0}/${MB.FIG_WINS}`}</small>`;
+  }
   function renderTracks() {
     const chrono = trackMode === 'chrono', total = starTotal(), worlds = MB.WORLDS;
     if (!selTrack || !openTracks().includes(selTrack)) { selTrack = openTracks().includes(currentTrack) ? currentTrack : openTracks()[0]; selVar = null; }
@@ -878,7 +903,7 @@
           return `<button data-pick="${id}" data-pvar="${v || ''}" class="${sel && v === selVar ? 'sel' : ''}" ${lock ? 'disabled' : ''}>${lock ? '🔒' : ic}<small>${lock ? '1★ ' + t('normal') : rec}</small></button>`;
         }).join('');
         return `<div class="wline ${sel ? 'open' : ''}"><button class="whead" data-pick="${id}"><span class="wthumb" style="background:${grad(w.col)}">${trackMap(id)}</span>
-          <span class="wnm">${L(def.name)}${hunt.includes(id) ? ' <i class="wtoy">🧸</i>' : ''}<span class="wbadges">${badge}</span></span></button>${sel ? `<div class="wmodes">${modes}</div>` : ''}</div>`;
+          <span class="wnm">${L(def.name)}${hunt.includes(id) ? ' <i class="wtoy">🧸</i>' : ''}${champLine(id)}<span class="wbadges">${badge}</span></span></button>${sel ? `<div class="wmodes">${modes}</div>` : ''}</div>`;
       }).join('')}</div>`;
     };
     $('trackList').innerHTML = `<div class="seg">${['race', 'chrono'].map((m) => `<button data-mode="${m}" class="${trackMode === m ? 'sel' : ''}">${t(m === 'race' ? 'modeRace' : 'modeChrono')}</button>`).join('')}</div>`
@@ -942,10 +967,10 @@
     } else if (gTab === 'style') {
       const row = (kind, label) => `<p class="tag">${t(label)}</p><div class="looks">${MB.LOOKS[kind].map((o) => {
         const have = save.looks.includes(`${kind}:${o.id}`), sel = save.look[kind] === o.id;
-        const face = kind === 'num' ? (o.id || '—') : `<span style="background:#${o.hex.toString(16).padStart(6, '0')}"></span>`;
+        const face = kind === 'num' ? (o.id || '—') : kind === 'deco' ? `<b class="deco">${o.icon}</b>` : `<span style="background:#${o.hex.toString(16).padStart(6, '0')}"></span>`;
         return `<button class="look ${sel ? 'sel' : ''}" data-look="${kind}:${o.id}" ${!have && save.coins < o.price ? 'disabled' : ''}>${face}<small>${have ? (sel ? '✓' : '') : `${o.price} 🪙`}</small></button>`;
       }).join('')}</div>`;
-      html = row('num', 'lookNum') + row('rim', 'lookRim') + row('trail', 'lookTrail') + `<p class="small">${t('lookHelp')}</p>`;
+      html = row('deco', 'lookDeco') + row('num', 'lookNum') + row('rim', 'lookRim') + row('trail', 'lookTrail') + `<p class="small">${t('lookHelp')}</p>`;
     } else {
       html = !own ? `<p class="tag">${t('buyFirst')}</p>` : `<div class="swatches">${MB.PAINTS.filter((p) => !p.premium || MB.FEATURES.premium).map((p) => {
         const have = save.paints.includes(p.id);
@@ -1189,7 +1214,7 @@
     };
     tDrag.addEventListener('pointerup', tUp);
     tDrag.addEventListener('pointercancel', () => { tX = null; view.dragTrophies(0); });
-    MB.debug = { go: (k) => { if (k === 'garage') renderGarage(); if (k === 'gup') { gTab = 'up'; renderGarage(); } if (k === 'settings') renderSettings(); if (k === 'tracks') renderTracks(); if (k === 'cups') renderCups(); if (k === 'shop') renderShop(); if (k === 'trophies') { tIdx = -1; renderTrophies(); } if (k === 'finish') { race.player.prog = race.laps * race.track.length - 2; } },
+    MB.debug = { go: (k) => { if (k === 'garage') renderGarage(); if (k === 'gup') { gTab = 'up'; renderGarage(); } if (k === 'gstyle') { gTab = 'style'; renderGarage(); } if (k === 'settings') renderSettings(); if (k === 'tracks') renderTracks(); if (k === 'cups') renderCups(); if (k === 'shop') renderShop(); if (k === 'trophies') { tIdx = -1; renderTrophies(); } if (k === 'finish') { race.player.prog = race.laps * race.track.length - 2; } },
       race: () => race, sound: () => Sound, finishNow: () => { while (race.state !== 'done') { race.step(1 / 60, MB.botInput(race)); recordFrame(); } race.events = []; startReplay(); }, start: buildRace, save: () => save, menu, setSave: (o) => Object.assign(save, o), view: () => view };
     menu();
     const m = location.hash.match(/race=(\w+)/);

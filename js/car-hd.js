@@ -87,13 +87,52 @@
     return [q(0), q(1)];
   }
 
-  function paintTexture(sp, hex, xs) {
+  // Autocollants peints sur la carrosserie, sous les vitres. u : long de la voiture (avant à droite), v : du dessous (0)
+  // au milieu du toit (1), le même dessin sert aux deux flancs. ink : blanc sur peinture foncée, noir sur peinture claire.
+  function drawDeco(g, deco, W, H, V, ink, hex) {
+    const r = (hex >> 16) & 255, gg = (hex >> 8) & 255, b = hex & 255, light = r * 0.3 + gg * 0.59 + b * 0.11 > 150;
+    const fg = ink || (light ? '#1b1b22' : '#ffffff');
+    g.save();
+    if (deco === 'bandes') {                                     // deux bandes de course, du capot au coffre
+      g.fillStyle = fg; g.fillRect(0, V(0.885), W, V(0.05)); g.fillRect(0, V(0.955), W, V(0.03));
+    } else if (deco === 'damier') {                              // damier sous la ceinture de caisse
+      const s = 13, y0 = V(0.4);
+      for (let x = 0, i = 0; x < W; x += s, i++) for (let k = 0; k < 2; k++) { g.fillStyle = (i + k) % 2 ? fg : (light ? '#ffffff' : '#1b1b22'); g.fillRect(x, y0 + k * s, s, s); }
+    } else if (deco === 'flammes') {                             // flammes qui partent du nez vers l'arrière
+      const lay = [['#ffd23f', 1], ['#ff8a1f', 0.74], ['#e5352b', 0.48]];   // jaune dehors, rouge au cœur, cerné de noir
+      g.strokeStyle = '#1b1b22'; g.lineWidth = 4; g.lineJoin = 'round';
+      for (const [cl, k] of lay) {
+        g.fillStyle = cl; g.beginPath(); g.moveTo(W, V(0.26));
+        const tips = [[0.42, 0.3], [0.62, 0.4], [0.3, 0.5], [0.55, 0.6], [0.36, 0.7], [0.6, 0.86], [0.5, 1]];
+        for (const [u, v] of tips) { const x = W - (W - W * u) * k; g.quadraticCurveTo(W - (W - x) * 0.35, V(v - 0.06), x, V(v)); g.quadraticCurveTo(W - (W - x) * 0.4, V(v + 0.03), W - (W - x) * 0.25, V(Math.min(1, v + 0.06))); }
+        g.lineTo(W, V(1)); g.closePath(); if (k === 1) g.stroke(); g.fill();
+      }
+    } else if (deco === 'eclair') {                              // éclair le long du flanc
+      g.fillStyle = '#ffd23f'; g.strokeStyle = '#1b1b22'; g.lineWidth = 3; g.beginPath();
+      const p = [[0.08, 0.5], [0.44, 0.56], [0.41, 0.44], [0.94, 0.5], [0.56, 0.3], [0.59, 0.42], [0.08, 0.5]];
+      p.forEach(([u, v], i) => (i ? g.lineTo(u * W, V(v)) : g.moveTo(u * W, V(v)))); g.fill(); g.stroke();
+    } else if (deco === 'pois') {                                // gros pois
+      g.fillStyle = fg;
+      for (let i = 0; i < 9; i++) for (let k = 0; k < 4; k++) { g.beginPath(); g.arc((i + (k % 2) * 0.5 + 0.25) * W / 9, V(0.3 + k * 0.19), 9, 0, 7); g.fill(); }
+    } else if (deco === 'etoiles') {                             // étoiles semées
+      const star = (x, y, R) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, q = i % 2 ? R * 0.45 : R; g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } g.closePath(); g.fill(); };
+      g.fillStyle = '#ffd23f';
+      for (let i = 0; i < 7; i++) star((i + 0.5) * W / 7, V(i % 2 ? 0.36 : 0.5), 13);
+      g.fillStyle = fg; for (let i = 0; i < 5; i++) star((i + 0.9) * W / 5.6, V(0.92), 9);
+    } else if (deco === 'numero') {                              // grand rond blanc sur la portière
+      g.fillStyle = '#ffffff'; g.beginPath(); g.arc(W * 0.5, V(0.42), 26, 0, 7); g.fill();
+    }
+    g.restore();
+  }
+
+  function paintTexture(sp, hex, xs, deco) {
     const W = 512, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
     const g = c.getContext('2d'), col = '#' + hex.toString(16).padStart(6, '0');
     g.fillStyle = col; g.fillRect(0, 0, W, H);
     const U = (x) => { let i = 0; while (i < N && xs[i] < x) i++; return (i / N) * W; };
     const V = (v) => v * H;
     const dark = '#0a1018';
+    if (deco) drawDeco(g, deco, W, H, V, null, hex);
     g.fillStyle = '#17181d'; g.fillRect(0, V(0), W, V(0.24));   // bas de caisse
     const [ga, gb] = sp.glass, ctrl = 7;                         // indices des points de contrôle dans la section
     const belt = 4 / ctrl, upper = 5.45 / ctrl;
@@ -156,6 +195,7 @@
     mat.userData.lin = true;
     const m = new T.Mesh(g, mat);
     m.castShadow = true;
+    m.repaint = (deco) => { const old = mat.map; mat.map = paintTexture(sp, hex, xs, deco); mat.needsUpdate = true; old.dispose(); };
     return { mesh: m, at: (x) => { const i = xs.findIndex((v) => v >= x); return { belt: belt[i], roof: roof[i], w: width[i] }; } };
   }
 
@@ -259,6 +299,7 @@
       }
     }
     g.add(body);
+    g.repaint = b.mesh.repaint;
     g.body = body; g.wheels = []; g.paint = paint; g.top = new T.Box3().setFromObject(b.mesh).max.y; g.roofX = (sp.glass[0] + sp.glass[1]) / 2;
     const zw = sp.zw || 0.96, wheelMats = {
       tyre: new T.MeshStandardMaterial({ color: 0x17171b, roughness: 0.82, envMap: env }),
@@ -278,6 +319,7 @@
     if (!look) return;
     const rim = look.rim && MB.LOOKS.rim.find((r) => r.id === look.rim);
     if (rim) g.rimMat.color.setHex(rim.hex);
+    if (look.deco && g.repaint) g.repaint(look.deco);
     if (look.num) {
       const c = document.createElement('canvas'); c.width = c.height = 128;
       const x = c.getContext('2d');
