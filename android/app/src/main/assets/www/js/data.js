@@ -351,9 +351,9 @@
   // unlock = victoires à remporter dans la cylindrée précédente pour ouvrir celle-ci.
   // skill = fraction de la vitesse max des rivaux ; le rattrapage reste doux pour que gagner ait du sens.
   MB.DIFFS = {
-    facile: { label: { fr: '50 cc', en: '50cc' }, cc: 0.9, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },
-    normal: { label: { fr: '100 cc', en: '100cc' }, cc: 1, unlock: 3, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35, plot: 0.2 },
-    expert: { label: { fr: '150 cc', en: '150cc' }, cc: 1.12, unlock: 3, skill: 1.08, catchUp: 0.12, slowDown: 0.02, duel: 0.32, gain: 1.6, sc: 0.5, plot: 0.08 },
+    facile: { label: { fr: '50 cc', en: '50cc' }, cc: 1, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },
+    normal: { label: { fr: '100 cc', en: '100cc' }, cc: 1.15, unlock: 3, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35, plot: 0.2 },
+    expert: { label: { fr: '150 cc', en: '150cc' }, cc: 1.32, unlock: 3, skill: 1.08, catchUp: 0.12, slowDown: 0.02, duel: 0.32, gain: 1.6, sc: 0.5, plot: 0.08 },
   };
 
   MB.ITEMS = {

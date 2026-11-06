@@ -1523,7 +1523,8 @@
         for (let i = 1; i < a.array.length; i += 3) { a.array[i] -= dt * 7; if (a.array[i] < 0) a.array[i] += 40; }
         a.needsUpdate = true;
       }
-      const want = p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 55 + ratio * ratio * 16;   // l'objectif s'ouvre nettement avec la vitesse : c'est lui qui la fait sentir
+      const ccK = Math.max(0, (this.race.cc || 1) - 1) * 18;             // grosse cylindrée : l'objectif s'ouvre davantage (100 cc +3°, 150 cc +6°)
+      const want = (p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 55 + ratio * ratio * 16) + ccK;   // l'objectif s'ouvre nettement avec la vitesse : c'est lui qui la fait sentir
       this.fov += (want - this.fov) * ease(3);
       if (Math.abs(this.cam.fov - this.fov) > 0.01) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
       this._windFx(P, finished ? 0 : ratio + (p.draft || 0) * 0.3, p.boost > 0);   // aspiration : le vent se voit davantage
