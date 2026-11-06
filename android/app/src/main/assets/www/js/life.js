@@ -293,7 +293,8 @@
       this._lights(by('feu'));
       if (life === 'cuisine') { this._steam([...by('tasse'), ...by('bol')]); this._toasters(by('grillepain')); this._flies(by('pot').slice(0, 2)); }
       if (life === 'plage') this._balls(by('ballon'));
-      if (life === 'foret') this._leaves(by('arbre'));
+      if (life === 'foret') this._leaves([...by('arbre'), ...by('tronc')]);
+      if (life === 'bain') this._float([...by('canard'), ...by('bateau'), ...by('mousse'), ...by('savon'), ...by('eponge')]);
       if (life === 'neige') { this._snowmen(by('bonhomme')); this._sparkles(by('glacon')); }
       if (life === 'chambre') this._tops(by('toupie'));
       if (life === 'ville') { this._windows(by('immeuble')); this._neons(by('immeuble').slice(0, 5)); this._fireflies(by('lampadaire')); }
@@ -551,6 +552,15 @@
       });
     }
 
+    // Bain : ce qui flotte se balance doucement sur l'eau.
+    _float(list) {
+      if (!list.length) return;
+      list.forEach((p, i) => { p.ph = i * 1.7; p.y0 = p.g.position.y; p.rz = p.g.rotation.z; });
+      this.add((dt, time, P, cars, lite) => {
+        if (lite) return;
+        for (const p of list) if (near(p.x, p.z, P, 220)) { p.g.position.y = p.y0 - 0.4 + Math.sin(time * 1.3 + p.ph) * 0.5; p.g.rotation.z = p.rz + Math.sin(time * 0.9 + p.ph) * 0.06; }
+      });
+    }
     _leaves(trees) {
       if (!trees.length) return;
       const s = new T.Shape(); s.moveTo(0, -1); s.bezierCurveTo(0.8, -0.4, 0.7, 0.6, 0, 1.1); s.bezierCurveTo(-0.7, 0.6, -0.8, -0.4, 0, -1);
@@ -570,7 +580,7 @@
             if (l.life <= 0) continue;
             const close = trees.filter((tr) => near(tr.x, tr.z, P, 200)), tr = close.length ? close[Math.floor(Math.random() * close.length)] : null;
             if (!tr) { l.life = -1; continue; }
-            Object.assign(l, { x: tr.x + (Math.random() - 0.5) * 30, y: 34 + Math.random() * 10, z: tr.z + (Math.random() - 0.5) * 30, vy: 2.4 + Math.random() * 1.6, ph: Math.random() * 6, life: 30, rest: 2 });
+            Object.assign(l, { x: tr.x + (Math.random() - 0.5) * 30, y: (tr.g.top || 34) + Math.random() * 10, z: tr.z + (Math.random() - 0.5) * 30, vy: 2.4 + Math.random() * 1.6, ph: Math.random() * 6, life: 30, rest: 2 });
           }
           if (l.y > 0.3) { l.y -= l.vy * dt; l.x += Math.sin(time * 1.6 + l.ph) * 3 * dt; l.z += Math.cos(time * 1.3 + l.ph) * 2 * dt; }
           else { l.y = 0.3; l.rest -= dt; if (l.rest <= 0) { l.life = -Math.random() * 3; O.scale.set(0, 0, 0); O.updateMatrix(); m.setMatrixAt(i, O.matrix); continue; } }

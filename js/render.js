@@ -12,14 +12,14 @@
       back: ['#8ed0f2', '#ffe8bd', '#f1cd8e'], glow: ['rgba(255,255,255,.9)', 'rgba(70,160,200,.5)'], props: ['seau', 'chateau', 'parasol', 'ballon', 'canard', 'pelle', 'etoile', 'coquille', 'seau', 'parasol', 'coquille', 'ballon', 'etoile', 'caillou'] },
     neige: { sky: 0xdcecfa, fog: [220, 660], hemi: [0xf4faff, 0xa8c4e0, 0.84], sun: [0xeaf4ff, 0.4], ground: 'neige', road: '#7a93ad', kerb: ['#3f8fe0', '#ffffff'], track: '#d6e6f2', snow: true, life: 'neige', verge: '255,255,255', hills: ['monts', '#c6dbef', '#4f7e6c'],
       back: ['#b7d5ee', '#e8f3fc', '#cfe2f2'], glow: ['rgba(255,255,255,.95)', 'rgba(150,190,230,.5)'], props: ['sapin', 'bonhomme', 'igloo', 'glacon', 'luge', 'batonnet', 'sapin', 'pot', 'glacon', 'bonhomme', 'luge'] },
-    foret: { sky: 0xcfe6b8, fog: [200, 620], hemi: [0xf4ffe0, 0x6c8a4a, 0.78], sun: [0xfff4cc, 0.44], ground: 'herbe', road: '#7a5a3c', kerb: ['#e0a030', '#fff4d8'], track: '#8c6c4a', life: 'foret', verge: '150,200,90', hills: ['collines', '#9fc48c', '#467636'],
-      back: ['#a5d8e8', '#dcecb0', '#88ad62'], glow: ['rgba(255,250,210,.9)', 'rgba(60,110,60,.5)'], props: ['arbre', 'champignon', 'marguerites', 'souche', 'caillou', 'arbre', 'coccinelle', 'gland', 'champignon', 'marguerites', 'arbre', 'feuille'] },
+    foret: { sky: 0x8fb07a, fog: [150, 540], hemi: [0xe8f4c8, 0x40602c, 0.72], sun: [0xfff0c0, 0.5], ground: 'mousse', road: '#7a5a3c', kerb: ['#6b4628', '#b08452'], track: '#8c6c4a', life: 'foret', verge: '40,70,20', hills: ['sousbois', '#9fc48c', '#467636'], dapple: true,
+      back: ['#16301a', '#2c5229', '#6f9a52'], glow: ['rgba(255,245,190,.75)', 'rgba(120,170,90,.5)'], props: ['tronc', 'fougere', 'champignon', 'gland', 'souche', 'pommepin', 'fougere', 'tronc', 'coccinelle', 'champignon', 'feuille', 'gland', 'fougere', 'pommepin'] },
     ville: { sky: 0x1b1f42, fog: [190, 600], hemi: [0xa8b0ff, 0x352c50, 0.8], sun: [0xc8d4ff, 0.5], ground: 'ville', road: '#2b2d3a', kerb: ['#ff4fa3', '#ffffff'], track: '#6a6f88', night: true, life: 'ville', verge: '120,126,150', hills: ['skyline', '#2c3163', '#1b1e40'],
       back: ['#0d1030', '#2a2358', '#4b2f6e'], glow: ['rgba(255,120,190,.5)', 'rgba(70,200,230,.4)'], props: ['immeuble', 'feu', 'immeuble', 'lampadaire', 'bus', 'immeuble', 'plot', 'feu', 'lampadaire', 'immeuble', 'bus', 'plot'] },
     chambre: { sky: 0xf6e7f2, fog: [240, 700], hemi: [0xfff6fb, 0xb8a3c9, 0.8], sun: [0xfff2e6, 0.42], ground: 'tapis', road: '#5d6a8c', kerb: ['#ffb23c', '#ffffff'], track: '#9aa6c8', life: 'chambre', verge: '60,50,90', hills: ['chambre', '#e7cfe0', '#c9a7d6'],
       back: ['#f9e6f1', '#fff4f9', '#efd7ea'], glow: ['rgba(255,255,255,.95)', 'rgba(255,200,120,.45)'], props: ['peluche', 'crayons', 'tour', 'livres', 'toupie', 'cubes', 'ballon', 'peluche', 'crayons', 'toupie', 'tour', 'livres'] },
-    bain: { sky: 0xe2f4f8, fog: [240, 700], hemi: [0xf6fdff, 0x9fc6d0, 0.84], sun: [0xffffff, 0.42], ground: 'carrelage', road: '#4f7f99', kerb: ['#2f8fd8', '#ffffff'], track: '#9cc7d8', life: 'bain', verge: '60,120,150', hills: ['bain', '#cfe8ef', '#8fc3d3'],
-      back: ['#d6f0f6', '#f4fbfd', '#cfe7ee'], glow: ['rgba(255,255,255,.95)', 'rgba(120,200,230,.45)'], props: ['savon', 'flacon', 'canard', 'eponge', 'brosse', 'serviette', 'flacon', 'savon', 'bulles', 'canard', 'eponge', 'brosse'] },
+    bain: { sky: 0xd8eef4, fog: [240, 700], hemi: [0xf6fdff, 0x8fc0cc, 0.84], sun: [0xffffff, 0.44], ground: 'eau', road: '#4f7f99', kerb: ['#2f8fd8', '#ffffff'], track: '#9cc7d8', life: 'bain', verge: '60,120,150', hills: ['bain', '#cfe8ef', '#8fc3d3'], rim: true,
+      back: ['#d2e4ea', '#f4fbfd', '#e4f2f6'], glow: ['rgba(255,255,255,.95)', 'rgba(120,200,230,.45)'], props: ['canard', 'mousse', 'bateau', 'savon', 'bulles', 'canard', 'eponge', 'mousse', 'bateau', 'bulles', 'canard', 'mousse'] },
     grenier: { sky: 0xd9c09a, fog: [190, 600], hemi: [0xfff0d8, 0x7a5a3c, 0.76], sun: [0xffe2b0, 0.5], ground: 'plancher', road: '#5e5045', kerb: ['#c9a06a', '#fff4dc'], track: '#8c7a66', life: 'chambre', verge: '60,40,24', hills: ['grenier', '#b89a72', '#7a5a3e'],
       back: ['#b8946a', '#ead6b4', '#c9a87c'], glow: ['rgba(255,236,190,.9)', 'rgba(140,100,60,.45)'], props: ['malle', 'carton', 'lampe', 'globe', 'valise', 'livres', 'toupie', 'carton', 'malle', 'tour', 'valise', 'carton'] },
   };
@@ -56,6 +56,22 @@
         for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${fleck},${Math.random() * 0.22})`; g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 3, 1 + Math.random() * 3); }
         g.strokeStyle = `rgba(${fleck},.2)`; g.lineWidth = 4;
         for (let y = 20; y < h; y += 58) { g.beginPath(); g.moveTo(0, y); for (let x = 0; x <= w; x += 32) g.lineTo(x, y + Math.sin((x / w) * 6.283) * 12); g.stroke(); }
+        return;
+      }
+      if (kind === 'mousse') {                                      // sous-bois : mousse, feuilles mortes, brindilles
+        g.fillStyle = '#365a24'; g.fillRect(0, 0, w, h);
+        for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? '30,60,20' : '120,170,70'},${Math.random() * 0.25})`; g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 3, 1 + Math.random() * 3); }
+        const leafCols = ['#c9772e', '#a8552a', '#e0a040', '#7d4a22', '#b98a3a'];
+        for (let i = 0; i < 300; i++) { const x = Math.random() * w, y = Math.random() * h, r = 6 + Math.random() * 9; g.fillStyle = leafCols[i % 5]; g.beginPath(); g.ellipse(x, y, r, r * 0.5, Math.random() * 3.2, 0, 7); g.fill(); }
+        g.strokeStyle = 'rgba(70,45,25,.6)'; g.lineWidth = 2; for (let i = 0; i < 24; i++) { const x = Math.random() * w, y = Math.random() * h, a = Math.random() * 3.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * 26, y + Math.sin(a) * 26); g.stroke(); }
+        return;
+      }
+      if (kind === 'eau') {                                         // eau du bain : turquoise, reflets de lumière, mousse
+        g.fillStyle = '#3fa5c6'; g.fillRect(0, 0, w, h);
+        for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(${Math.random() < 0.5 ? '40,140,180' : '150,225,240'},.18)`; g.beginPath(); g.ellipse(Math.random() * w, Math.random() * h, 40 + Math.random() * 60, 20 + Math.random() * 30, Math.random() * 3, 0, 7); g.fill(); }
+        g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 2.5;
+        for (let i = 0; i < 46; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + 14, y - 10, x + 30, y + 10, x + 46, y); g.stroke(); }
+        for (let i = 0; i < 18; i++) { const x = Math.random() * w, y = Math.random() * h; for (let k = 0; k < 6; k++) { g.fillStyle = 'rgba(255,255,255,.75)'; g.beginPath(); g.arc(x + (Math.random() - 0.5) * 30, y + (Math.random() - 0.5) * 16, 3 + Math.random() * 6, 0, 7); g.fill(); } }
         return;
       }
       if (kind === 'carrelage') {                                   // grands carreaux blancs, joints bleutés, quelques carreaux bleus
@@ -367,6 +383,43 @@
       [[0, 42, 0, 19], [11, 36, 5, 13], [-10, 37, -6, 14]].forEach(([x, y, z, r], i) => { const s = new T.Mesh(lump(r, 0.09, c.rot * 5 + i * 2), lam(greens[i], { roughness: 0.7 })); s.position.set(x, y, z); g.add(s); });
       g.rotation.y = c.rot; g.r = 22; return g;
     },
+    // Grand arbre du sous-bois : le tronc monte hors de vue, racines et mousse au pied.
+    tronc(c) {
+      const bark = canvas(128, 256, (x, w, h) => {
+        x.fillStyle = '#5e4632'; x.fillRect(0, 0, w, h);
+        for (let i = 0; i < 26; i++) { const xx = Math.random() * w; x.strokeStyle = `rgba(${Math.random() < 0.5 ? '30,18,8' : '140,110,80'},.45)`; x.lineWidth = 2 + Math.random() * 4; x.beginPath(); x.moveTo(xx, 0); x.bezierCurveTo(xx + 8, 80, xx - 8, 170, xx, h); x.stroke(); }
+      });
+      bark.repeat.set(3, 4);
+      const g = new T.Group(), m = lam(0xffffff, { map: bark, roughness: 0.95 }), tr = new T.Mesh(new T.CylinderGeometry(9, 13, 240, 28, 1, true), m); tr.position.y = 120; g.add(tr);
+      for (let i = 0; i < 5; i++) {
+        const a = c.rot + i * 1.26, r = new T.Mesh(new T.SphereGeometry(4, 16, 10), lam(0x5e4632, { roughness: 0.95 }));
+        r.scale.set(1, 0.8, 4.2); r.position.set(Math.cos(a) * 13, 1.6, Math.sin(a) * 13); r.rotation.y = -a + Math.PI / 2; g.add(r);
+      }
+      const moss = lam(0x6f9e3c, { roughness: 1 });
+      for (let i = 0; i < 4; i++) { const a = c.rot * 2 + i * 1.7, mm = new T.Mesh(lump(4 + (i % 2) * 2, 0.2, c.rot + i), moss); mm.scale.y = 0.55; mm.position.set(Math.cos(a) * 11.5, 6 + i * 9, Math.sin(a) * 11.5); g.add(mm); }
+      g.r = 24; g.top = 70; return g;
+    },
+    fougere(c) {
+      const g = new T.Group(), s = new T.Shape();
+      s.moveTo(0, 0); s.bezierCurveTo(3, 6, 4, 18, 0, 30); s.bezierCurveTo(-4, 18, -3, 6, 0, 0);
+      const geo = new T.ShapeGeometry(s, 10), greens = [0x4f9a3e, 0x5aa848, 0x438a35];
+      for (let i = 0; i < 9; i++) {
+        const f = new T.Mesh(geo, lam(greens[i % 3], { side: T.DoubleSide, roughness: 0.8 })), a = (i / 9) * Math.PI * 2 + c.rot;
+        f.rotation.order = 'YXZ'; f.rotation.y = a; f.rotation.x = -0.75 - (i % 2) * 0.25; f.scale.setScalar(0.9 + (i % 3) * 0.15); g.add(f);
+        // folioles : petites feuilles de part et d'autre de la tige
+        for (let q = 1; q < 6; q++) for (const k of [-1, 1]) { const l = new T.Mesh(new T.PlaneGeometry(5 - q * 0.6, 1.6), f.material); l.position.set(k * 3, q * 5, 0.1); l.rotation.z = k * 0.3; f.add(l); }
+      }
+      g.r = 18; return g;
+    },
+    pommepin(c) {
+      const g = new T.Group(), body = lam(0x7a4f2c, { roughness: 0.8 }), sc = lam(0x8f6034, { roughness: 0.7 });
+      const core = new T.Mesh(new T.SphereGeometry(6, 20, 14), body); core.scale.set(1, 1.7, 1); core.position.y = 10; g.add(core);
+      for (let r = 0; r < 7; r++) for (let k = 0; k < 8; k++) {
+        const y = 2 + r * 2.7, a = k * 0.785 + r * 0.39, rad = 6.5 * Math.sin(Math.PI * (0.15 + r / 8)) + 1;
+        const q = new T.Mesh(new T.SphereGeometry(2.6, 10, 6), sc); q.scale.set(1.2, 0.5, 0.9); q.position.set(Math.cos(a) * rad, y, Math.sin(a) * rad); q.rotation.y = -a; q.rotation.z = 0.5; g.add(q);
+      }
+      g.rotation.y = c.rot; g.rotation.z = 0.25; g.r = 12; return g;
+    },
     champignon() {
       const g = new T.Group(), p = new T.Mesh(new T.CylinderGeometry(4, 5, 14, 24), lam(0xf4ecd8)); p.position.y = 7; g.add(p);
       const c = new T.Mesh(new T.SphereGeometry(14, 40, 16, 0, 6.3, 0, 1.57), lam(0xd8322e, { roughness: 0.35 })); c.position.y = 13; c.scale.y = 0.8; g.add(c);
@@ -458,6 +511,22 @@
         const bout = new T.Mesh(new T.CircleGeometry(8.6, 24), lam(i ? 0xf0f0f0 : col)); bout.position.set(20.1, 9 + i * 17, i * 2); bout.rotation.y = Math.PI / 2; g.add(bout);
       }
       g.rotation.y = c.rot; g.r = 24; return g;
+    },
+    bateau(c) {
+      const g = new T.Group(), col = [0xe8564a, 0x2f62d9, 0xf2b632][Math.floor(c.rot) % 3];
+      const coque = new T.Mesh(roundBox(14, 5, 30, 2.4), shiny(col)); coque.position.y = 1.5; g.add(coque);
+      const pont = new T.Mesh(roundBox(11, 1, 26, 1), lam(0xf4ead6)); pont.position.y = 4.2; g.add(pont);
+      const mat = new T.Mesh(new T.CylinderGeometry(0.6, 0.6, 26, 10), lam(0x8a5a34)); mat.position.y = 17; g.add(mat);
+      const sh = new T.Shape(); sh.moveTo(0, 0); sh.lineTo(0, 20); sh.lineTo(-13, 0); sh.closePath();
+      const voile = new T.Mesh(new T.ShapeGeometry(sh), lam(0xffffff, { side: T.DoubleSide })); voile.position.set(0, 7, 0.6); voile.rotation.y = Math.PI / 2; g.add(voile);
+      const fan = new T.Mesh(new T.PlaneGeometry(4, 2.4), lam(0xe8564a, { side: T.DoubleSide })); fan.position.set(0, 29, -2); fan.rotation.y = Math.PI / 2; g.add(fan);
+      g.rotation.y = c.rot; g.r = 17; g.floats = true; return g;
+    },
+    // Îlot de mousse de bain qui flotte.
+    mousse(c) {
+      const g = new T.Group(), m = lam(0xffffff, { roughness: 0.9 });
+      for (let i = 0; i < 9; i++) { const a = c.rot + i * 0.7, d = (i % 3) * 5, b = new T.Mesh(new T.SphereGeometry(4 + ((i * 7) % 4), 14, 10), m); b.scale.y = 0.6; b.position.set(Math.cos(a) * d, 1 + (i % 2), Math.sin(a) * d); g.add(b); }
+      g.r = 14; g.flat = true; return g;
     },
     bulles(c) {
       const g = new T.Group(), m = new T.MeshStandardMaterial({ color: 0xe8f8ff, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.35, envMap: lam.env || null });
@@ -1001,7 +1070,7 @@
       this.sun = sun;
 
       const gt = groundTexture(mood.ground); gt.repeat.set(9, 9);
-      const ground = new T.Mesh(new T.PlaneGeometry(1800, 1800), new T.MeshStandardMaterial({ map: gt, roughness: 0.45, envMap: lam.env, envMapIntensity: 0.55 }));
+      const wet = mood.ground === 'eau', ground = new T.Mesh(new T.PlaneGeometry(1800, 1800), new T.MeshStandardMaterial({ map: gt, roughness: wet ? 0.3 : mood.ground === 'mousse' ? 0.95 : 0.45, envMap: lam.env, envMapIntensity: wet ? 0.25 : mood.ground === 'mousse' ? 0.15 : 0.55 }));
       ground.rotation.x = -Math.PI / 2; s.add(ground);
 
       // Horizon : deux couronnes de silhouettes que le brouillard estompe (lointaine puis proche).
@@ -1035,7 +1104,9 @@
       });
       vergeTex.wrapS = T.ClampToEdgeWrapping;
       const verge = new T.MeshLambertMaterial({ map: vergeTex, transparent: true, depthWrite: false, side: T.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
-      s.add(ribbon(track, -w - 1.7, -w - 9, 0.03, 0.03, 40, verge), ribbon(track, w + 1.7, w + 9, 0.03, 0.03, 40, verge));
+      if (mood.rim) this._rim(s, track, w);
+      else s.add(ribbon(track, -w - 1.7, -w - 9, 0.03, 0.03, 40, verge), ribbon(track, w + 1.7, w + 9, 0.03, 0.03, 40, verge));
+      if (mood.dapple) this._dapple(s, track, w);
 
       // Raccourcis : même route et mêmes bordures que le circuit, posée juste sous lui pour que la bifurcation se fonde.
       const branchRoad = new T.MeshStandardMaterial({ map: road, roughness: 0.82, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 });
@@ -1046,7 +1117,7 @@
           const hole = p.wallHole[k], a = k * hw, b = k * (hw + 1);
           s.add(ribbon(p, Math.min(a, b), Math.max(a, b), 0.2, 0.2, 7, new T.MeshLambertMaterial({ map: kerb }), hole));
           s.add(wallStrip(p, b, wallMat, hole));
-          s.add(ribbon(p, b + k * 0.2, b + k * 7.5, 0.03, 0.03, 40, verge, hole));
+          if (!mood.rim) s.add(ribbon(p, b + k * 0.2, b + k * 7.5, 0.03, 0.03, 40, verge, hole));
         }
         // Dalle turbo de sortie : flèches orange qui défilent, la poussée se voit avant de se sentir.
         const padTex = canvas(128, 128, (g, W, H) => {
@@ -1146,6 +1217,37 @@
       this.carMeshes = []; this.boxes = []; this.coins = []; this.syrups = []; this.toyGs = [];
       this._fx();
       this._weather(mood);
+    }
+
+    // Salle de bain : la piste court sur le rebord émaillé de la baignoire, l'eau et sa mousse de chaque côté.
+    _rim(s, track, w) {
+      const enamel = new T.MeshStandardMaterial({ color: 0xfbfdfe, roughness: 0.22, envMap: lam.env, envMapIntensity: 0.8, side: T.DoubleSide });
+      const foam = new T.MeshLambertMaterial({ transparent: true, depthWrite: false, side: T.DoubleSide, map: canvas(64, 128, (g, W, H) => {
+        for (let i = 0; i < 40; i++) { const x = Math.random() * W * 0.8, y = Math.random() * H, r = 4 + Math.random() * 9; g.fillStyle = `rgba(255,255,255,${0.75 + Math.random() * 0.25})`; g.beginPath(); g.arc(x, y, r * (1 - x / W), 0, 7); g.fill(); }
+      }) });
+      for (const k of [-1, 1]) {
+        const a = k * (w + 1.5), b = k * (w + 8), c = k * (w + 12);
+        s.add(strip(track, [[a, 0.12], [b, 0.12], [b + k * 0.4, -0.6]], 30, enamel));
+        s.add(ribbon(track, b + k * 0.2, c, 0.08, 0.08, 14, foam));
+      }
+      for (const p of track.shortcuts) {
+        const hw = p.width / 2;
+        for (const k of [-1, 1]) s.add(ribbon(p, k * (hw + 1), k * (hw + 6), 0.11, 0.11, 30, enamel, p.wallHole[k]));
+      }
+    }
+    // Sous-bois : taches de soleil tombées des feuilles, sur la route et autour.
+    _dapple(s, track, w) {
+      const tex = canvas(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 2, 32, 32, 31); r.addColorStop(0, 'rgba(255,240,170,.9)'); r.addColorStop(0.6, 'rgba(255,235,160,.45)'); r.addColorStop(1, 'rgba(255,235,160,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
+      const mat = new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: 0.32, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -6 });
+      const geo = new T.PlaneGeometry(1, 1); geo.rotateX(-Math.PI / 2);
+      let sd = track.def.seed * 9301 + 7; const rnd = () => { sd = (sd * 16807) % 2147483647; return (sd % 100000) / 100000; };
+      const n = Math.min(70, Math.floor(track.count / 6)), m = new T.InstancedMesh(geo, mat, n), O = new T.Object3D();
+      for (let k = 0; k < n; k++) {
+        const i = Math.floor(rnd() * track.count), lat = (rnd() - 0.5) * (w * 2 + 10), sz = 5 + rnd() * 9;
+        O.position.set(track.px[i] - track.tz[i] * lat, 0.24, track.pz[i] + track.tx[i] * lat); O.rotation.set(0, rnd() * 3, 0); O.scale.set(sz, 1, sz * (0.5 + rnd() * 0.5)); O.updateMatrix();
+        m.setMatrixAt(k, O.matrix);
+      }
+      s.add(m);
     }
 
     // Neige : un seul nuage de points qui suit le joueur, peu coûteux même sur petit téléphone.

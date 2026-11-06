@@ -44,9 +44,68 @@
   }
 
   // ---------- Ciel ----------
+  // Pièces de la maison : pas de ciel, le haut du mur et le plafond (la bande basse est cachée par le lointain).
+  const INDOOR = { cuisine: 1, chambre: 1, bain: 1 };
+  function indoor(g, k, kind, night) {
+    const wall = { cuisine: ['#efdcbf', '#f2e3cb'], chambre: ['#efd2e2', '#f3dbe8'], bain: ['#e4f2f6', '#eef8fb'] }[kind];
+    const ceil = { cuisine: ['#d9c3a0', '#f3e8d6'], chambre: ['#b9c9ef', '#e4ecfb'], bain: ['#d2e4ea', '#f4fafc'] }[kind];
+    g.fillStyle = k.vgrad(0, 190, ceil); g.fillRect(0, 0, W, 190);
+    g.fillStyle = k.vgrad(190, H, wall); g.fillRect(0, 190, W, H - 190);
+    g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(0, 196, W, 6);
+    const lamps = [];
+    if (kind === 'cuisine') {
+      for (let x = 0; x < W; x += 256) { g.fillStyle = '#b98b5e'; g.fillRect(x, 0, 46, 176); g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(x + 36, 0, 10, 176); }   // poutres
+      g.fillStyle = '#c9a77f'; g.fillRect(0, 176, W, 20);   // corniche
+      g.strokeStyle = 'rgba(160,130,95,.3)'; g.lineWidth = 2; for (let y = 230; y < H; y += 34) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+      for (let x = 180; x < W; x += 512) {   // suspensions
+        g.fillStyle = '#4a3424'; g.fillRect(x - 2, 0, 4, 250);
+        g.fillStyle = '#e8564a'; g.beginPath(); g.moveTo(x - 60, 330); g.lineTo(x + 60, 330); g.lineTo(x + 26, 250); g.lineTo(x - 26, 250); g.fill();
+        g.fillStyle = 'rgba(255,255,255,.3)'; g.fillRect(x - 20, 256, 8, 70);
+        lamps.push([x, 336]); k.circ(x, 334, 14, '#fff3c8');
+      }
+      for (let x = 420; x < W; x += 512) { g.fillStyle = '#8d6440'; g.fillRect(x, 300, 150, 10); for (let i = 0; i < 4; i++) k.rr(x + 10 + i * 36, 250 + (i % 2) * 10, 28, 50 - (i % 2) * 10, 6, ['#f2b632', '#3f8fe0', '#d8483d', '#ffffff'][i]); }   // étagère à bocaux
+    } else if (kind === 'chambre') {
+      for (let i = 0; i < 60; i++) { const x = k.rnd() * W, y = 10 + k.rnd() * 160; star(g, x, y, 5 + k.rnd() * 6, 'rgba(255,240,160,.85)'); }   // étoiles collées au plafond
+      g.fillStyle = '#d9b7cc'; g.fillRect(0, 186, W, 12);
+      g.fillStyle = 'rgba(255,255,255,.5)'; for (let x = 0; x < W; x += 48) g.fillRect(x, 198, 20, H - 198);
+      // Guirlande de fanions.
+      for (let x0 = 0; x0 < W; x0 += 512) {
+        g.strokeStyle = '#8a6a8a'; g.lineWidth = 3; g.beginPath(); g.moveTo(x0, 230); g.quadraticCurveTo(x0 + 256, 330, x0 + 512, 230); g.stroke();
+        for (let i = 1; i < 12; i++) { const t = i / 12, x = x0 + t * 512, y = 230 + 100 * 2 * t * (1 - t) * 1; g.fillStyle = ['#e14b3a', '#f2b632', '#48b58a', '#2a70c9', '#9b6ad6'][i % 5]; g.beginPath(); g.moveTo(x - 14, y); g.lineTo(x + 14, y); g.lineTo(x, y + 34); g.fill(); }
+      }
+      for (let x = 300; x < W; x += 1024) {   // mobile suspendu
+        g.strokeStyle = '#8a6a8a'; g.lineWidth = 2; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 120); g.moveTo(x - 80, 120); g.lineTo(x + 80, 120); g.stroke();
+        for (const [dx, c] of [[-80, '#f2b632'], [0, '#ff8fb5'], [80, '#7fd0ff']]) { g.beginPath(); g.moveTo(x + dx, 120); g.lineTo(x + dx, 160); g.stroke(); star(g, x + dx, 176, 16, c); }
+      }
+    } else {
+      // Faïence jusqu'au plafond, frise, plafonnier rond et buée.
+      for (let y = 210; y < H; y += 40) for (let x = 0; x < W; x += 40) { g.fillStyle = (x / 40 + y / 40) % 9 === 0 ? '#9fd3e6' : '#f8fdff'; g.fillRect(x + 2, y + 2, 36, 36); }
+      g.fillStyle = '#5aa9c9'; g.fillRect(0, 196, W, 16); g.fillStyle = '#ffffff'; for (let x = 6; x < W; x += 24) g.fillRect(x, 201, 10, 6);
+      for (let x = 400; x < W; x += 1024) { k.circ(x, 60, 70, '#ffffff'); k.circ(x, 60, 56, '#fff9e6'); lamps.push([x, 60]); }
+      g.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < 26; i++) { g.beginPath(); g.ellipse(k.rnd() * W, 140 + k.rnd() * 200, 120 + k.rnd() * 160, 26, 0, 0, 7); g.fill(); }   // buée
+      for (let i = 0; i < 40; i++) { const x = k.rnd() * W, y = 220 + k.rnd() * 260, r = 5 + k.rnd() * 12; g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); k.circ(x - r * 0.35, y - r * 0.35, r * 0.25, 'rgba(255,255,255,.9)'); }   // bulles qui montent
+    }
+    if (night) nightOver(g, () => { for (const [x, y] of lamps) { const gr = g.createRadialGradient(x, y, 4, x, y, 150); gr.addColorStop(0, 'rgba(255,230,160,.85)'); gr.addColorStop(1, 'rgba(255,230,160,0)'); g.fillStyle = gr; g.fillRect(x - 150, y - 150, 300, 300); } });
+  }
+  function star(g, x, y, r, c) {
+    g.fillStyle = c; g.beginPath();
+    for (let i = 0; i <= 10; i++) { const a = (i / 10) * Math.PI * 2 - Math.PI / 2, d = i % 2 ? r * 0.45 : r; i ? g.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d) : g.moveTo(x + Math.cos(a) * d, y + Math.sin(a) * d); }
+    g.fill();
+  }
+
   function sky(kind, night, seed) {
     return paint((g) => {
       const k = kit(g, seed + 5);
+      if (INDOOR[kind]) return indoor(g, k, kind, night);
+      if (kind === 'sousbois') {
+        // Voûte des feuilles : vert sombre en haut, trouées de lumière, rayons de soleil en biais.
+        g.fillStyle = k.vgrad(0, H, ['#16301a', '#2c5229', '#5f8a4a', '#a9c48a']); g.fillRect(0, 0, W, H);
+        k.thrice((o) => { for (let i = 0; i < 260; i++) { const x = (i * 97.3) % W + o, y = ((i * 61.7) % 300) - 20, r = 22 + ((i * 13) % 40); k.circ(x, y, r, ['#173219', '#21431f', '#2b5428', '#1b3a1c'][i % 4]); } });
+        for (let i = 0; i < 70; i++) k.circ(k.rnd() * W, 40 + k.rnd() * 220, 4 + k.rnd() * 9, `rgba(255,248,200,${0.5 + k.rnd() * 0.4})`);
+        for (let x = 60; x < W; x += 170 + k.rnd() * 160) { const w = 30 + k.rnd() * 50; g.fillStyle = 'rgba(255,244,190,.13)'; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + w, 0); g.lineTo(x + w + 140, H); g.lineTo(x + 140, H); g.fill(); }
+        if (night) nightOver(g);
+        return;
+      }
       if (night) {
         for (let i = 0; i < 420; i++) { const x = k.rnd() * W, y = k.rnd() * 330, r = k.rnd() < 0.08 ? 2.2 : 1 + k.rnd(); k.circ(x, y, r, `rgba(255,255,240,${0.4 + k.rnd() * 0.6})`); }
         k.circ(W * 0.3, 110, 46, 'rgba(255,250,220,.95)'); k.circ(W * 0.3 + 18, 98, 40, 'rgba(20,26,70,1)');   // croissant de lune
@@ -127,19 +186,20 @@
         if (night) nightOver(g, () => { k.circ(1323, 192, 16, 'rgba(255,240,170,1)'); });
         return;
       }
-      if (kind === 'collines') {
-        // Trois rangées de collines bleutées puis vertes, avec un moulin et des arbres ronds.
-        k.wave(250, [[40, 2, seed], [20, 5, seed]], '#a9c9c8');
-        k.wave(300, [[34, 3, seed + 1], [12, 7, seed]], '#8fbd8a');
-        k.wave(360, [[26, 2, seed + 2], [10, 9, seed]], '#6fa868');
-        g.fillStyle = 'rgba(255,255,255,.35)'; for (let y = 380; y < 480; y += 22) { g.fillRect(0, y, W, 3); }
-        for (let x = 0; x < W; x += 30 + k.rnd() * 50) { const y = 340 + k.rnd() * 60, r = 10 + k.rnd() * 12; g.fillStyle = '#6b4a2e'; g.fillRect(x - 2, y, 4, r); k.circ(x, y, r, ['#3f7f45', '#4f9150', '#2f6a3a'][Math.floor(k.rnd() * 3)]); }
-        for (const mx of [520, 1560]) {
-          g.fillStyle = '#efe6d6'; g.beginPath(); g.moveTo(mx - 22, 330); g.lineTo(mx - 14, 240); g.lineTo(mx + 14, 240); g.lineTo(mx + 22, 330); g.fill();
-          g.fillStyle = '#c4473b'; g.beginPath(); g.moveTo(mx - 20, 242); g.lineTo(mx, 214); g.lineTo(mx + 20, 242); g.fill();
-          g.strokeStyle = '#7a5a3c'; g.lineWidth = 6; for (let a = 0; a < 4; a++) { const an = a * Math.PI / 2 + 0.4; g.beginPath(); g.moveTo(mx, 236); g.lineTo(mx + Math.cos(an) * 60, 236 + Math.sin(an) * 60); g.stroke(); }
-        }
-        k.wave(base - 30, [[8, 11, seed]], '#5d9a57');
+      if (kind === 'sousbois') {
+        // Troncs géants dans une brume verte ; les plus proches sont plus sombres, avec mousse et racines.
+        g.fillStyle = k.vgrad(250, base, ['rgba(170,200,140,0)', 'rgba(150,185,120,.9)', '#6f9a52']); g.fillRect(0, 250, W, base - 250);
+        const trunk = (x, w, col, moss) => {
+          g.fillStyle = col; g.fillRect(x, 0, w, base - 6);
+          g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(x + w * 0.7, 0, w * 0.3, base - 6);
+          g.strokeStyle = 'rgba(20,12,6,.25)'; g.lineWidth = 2; for (let j = 1; j < 5; j++) { const xx = x + (j * w) / 5; g.beginPath(); g.moveTo(xx, 0); g.bezierCurveTo(xx + 4, 150, xx - 4, 300, xx, base); g.stroke(); }
+          g.fillStyle = col; g.beginPath(); g.ellipse(x + w / 2, base - 6, w * 0.9, 14, 0, Math.PI, 0); g.fill();   // pied évasé
+          if (moss) for (let j = 0; j < 3; j++) { g.fillStyle = '#7fae4a'; g.beginPath(); g.ellipse(x + k.rnd() * w, 150 + k.rnd() * 300, 8 + k.rnd() * 8, 5, 0, 0, 7); g.fill(); }
+        };
+        for (let x = 0; x < W; x += 60 + k.rnd() * 70) trunk(x, 18 + k.rnd() * 18, '#8a9a76', false);
+        g.fillStyle = 'rgba(190,215,165,.45)'; g.fillRect(0, 0, W, base);
+        for (let x = 30; x < W; x += 150 + k.rnd() * 140) trunk(x, 34 + k.rnd() * 30, ['#5e5040', '#6a5a46', '#544636'][Math.floor(k.rnd() * 3)], true);
+        k.wave(base - 18, [[6, 13, seed]], '#5b8a3e');
         if (night) nightOver(g);
         return;
       }
@@ -251,13 +311,15 @@
         if (night) nightOver(g);
         return;
       }
-      if (kind === 'collines') {
-        k.wave(base - 24, [[8, 7, seed]], '#5d9a57');
+      if (kind === 'sousbois') {
+        // Fougères, champignons géants, souches moussues et pieds de troncs.
+        k.wave(base - 20, [[8, 9, seed]], '#4f7f37');
         for (let x = 0; x < W; ) {
-          const t = Math.floor(k.rnd() * 3);
-          if (t === 0) { const h = 150 + k.rnd() * 80; g.fillStyle = '#6b4a2e'; g.fillRect(x + 36, base - h * 0.5, 22, h * 0.5); for (const [dx, dy, r] of [[47, -h * 0.62, 50], [16, -h * 0.5, 36], [80, -h * 0.5, 38], [47, -h * 0.85, 36]]) k.circ(x + dx, base + dy, r, ['#3f7f45', '#4f9150', '#5aa35a'][Math.floor(k.rnd() * 3)]); x += 130; }   // arbre
-          else if (t === 1) { const c = ['#e04b3b', '#f2b632', '#9b6ad6'][Math.floor(k.rnd() * 3)]; k.rr(x + 30, base - 80, 26, 80, 8, '#f6efe2'); g.fillStyle = c; g.beginPath(); g.ellipse(x + 43, base - 80, 54, 38, 0, Math.PI, 0); g.fill(); for (let i = 0; i < 5; i++) k.circ(x + 10 + i * 17, base - 92 - (i % 2) * 14, 6, '#ffffff'); x += 120; }   // champignon
-          else { for (let i = 0; i < 5; i++) { const fx = x + i * 22, fh = 40 + k.rnd() * 40; g.fillStyle = '#3f7f45'; g.fillRect(fx, base - fh, 4, fh); k.circ(fx + 2, base - fh, 9, ['#ff6fa8', '#ffd25e', '#ffffff', '#8bc6ff'][i % 4]); k.circ(fx + 2, base - fh, 4, '#f2b632'); } x += 130; }   // fleurs
+          const t = Math.floor(k.rnd() * 4);
+          if (t === 0) { for (let a = -3; a <= 3; a++) { const len = 90 - Math.abs(a) * 10; g.strokeStyle = '#3f7a32'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 70, base); g.quadraticCurveTo(x + 70 + a * 16, base - len, x + 70 + a * 30, base - len * 0.7); g.stroke(); for (let q = 1; q < 8; q++) { const u = q / 8, px = x + 70 + a * 30 * u, py = base - len * Math.sin(u * 2.4) * 0.95; g.fillStyle = ['#4f9a3e', '#5aa848', '#468a36'][q % 3]; g.beginPath(); g.ellipse(px, py, 10 * (1 - u * 0.5), 3.5, a * 0.35 + 0.5, 0, 7); g.fill(); } } x += 150; }   // fougère
+          else if (t === 1) { const c = ['#d8382e', '#e0782e', '#c9a46a'][Math.floor(k.rnd() * 3)]; k.rr(x + 34, base - 90, 28, 90, 10, '#f4ead6'); g.fillStyle = c; g.beginPath(); g.ellipse(x + 48, base - 90, 62, 42, 0, Math.PI, 0); g.fill(); if (c !== '#c9a46a') for (let i = 0; i < 5; i++) k.circ(x + 14 + i * 17, base - 104 - (i % 2) * 16, 6, '#ffffff'); x += 140; }   // champignon
+          else if (t === 2) { k.rr(x, base - 70, 120, 70, 10, '#7a5233'); g.fillStyle = '#d9b07a'; g.beginPath(); g.ellipse(x + 60, base - 70, 60, 14, 0, 0, 7); g.fill(); g.fillStyle = '#7fae4a'; g.beginPath(); g.ellipse(x + 30, base - 40, 22, 10, 0, 0, 7); g.fill(); x += 160; }   // souche
+          else { g.fillStyle = '#4a3a2a'; g.fillRect(x + 20, 0, 80, base); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(x + 76, 0, 24, base); for (const d of [-1, 1]) { g.beginPath(); g.moveTo(x + 60, base - 40); g.quadraticCurveTo(x + 60 + d * 60, base - 16, x + 60 + d * 90, base); g.lineTo(x + 60 + d * 30, base); g.fill(); } g.fillStyle = '#7fae4a'; g.beginPath(); g.ellipse(x + 40, base - 140, 16, 9, 0, 0, 7); g.fill(); x += 170; }   // pied de grand arbre
         }
         if (night) nightOver(g);
         return;
