@@ -902,8 +902,10 @@
     resize() {
       const w = window.innerWidth, h = window.innerHeight;
       this.r.setSize(w, h, false);
-      this.cam.aspect = w / h;
+      const duo = !!this.duoView;
+      this.cam.aspect = duo ? w / (h / 2) : w / h;
       this.cam.updateProjectionMatrix();
+      if (this.cam2) { this.cam2.aspect = w / (h / 2); this.cam2.updateProjectionMatrix(); }
     }
 
     // Qualité adaptative : si le téléphone peine, on baisse la résolution une fois pour toutes.
@@ -1230,9 +1232,9 @@
 
     bindRace(race, paints) {
       for (const c of race.cars) {
-        const hex = c.isPlayer ? paints.player : paints.rivals[c.id % paints.rivals.length];
+        const hex = c.pn === 2 ? paints.player2 || 0x2f8bff : c.isPlayer ? paints.player : paints.rivals[c.id % paints.rivals.length];
         const m = MB.buildCarHD(c.spec.shape, hex, lam.env);
-        if (c.isPlayer) MB.styleCar(m, paints.look); else if (m.repaint) m.repaint(MB.RIVAL_DECO[c.id % MB.RIVAL_DECO.length]);
+        if (c.pn === 2) { if (m.repaint) m.repaint('bandes'); } else if (c.isPlayer) MB.styleCar(m, paints.look); else if (m.repaint) m.repaint(MB.RIVAL_DECO[c.id % MB.RIVAL_DECO.length]);
         if (c.champ) {                                          // champion du circuit : couronne dorée au-dessus du toit
           const gold = new T.MeshStandardMaterial({ color: 0xf2c14e, metalness: 1, roughness: 0.25, envMap: lam.env, emissive: 0x7a5200, emissiveIntensity: 0.35 });
           const cr = new T.Group(), ring = new T.Mesh(new T.CylinderGeometry(0.62, 0.55, 0.36, 18, 1, true), gold); ring.material.side = T.DoubleSide; cr.add(ring);
@@ -1274,6 +1276,13 @@
       this.focX = p.x; this.focZ = p.z; this.camLift = 0;
       this.camBack = 13.6; this.camUp = 7.2; this.camAhead = 11; this.finA = 0;
       this.fov = 62; this.frames = 0; this.fpsT = 0;
+      this.duoView = !!race.player2;
+      if (race.player2) {
+        const q = race.player2;
+        if (!this.cam2) this.cam2 = new T.PerspectiveCamera(64, 1, 1, 900);
+        this.s2 = { camH: q.h, focX: q.x, focZ: q.z, camLift: 0, camBack: 13.6, camUp: 7.2, camAhead: 11, finA: 0, fov: 62 };
+      }
+      this.resize();
       for (const w of this.wind) w.on = false;
       while (this.syrups.length < 2) this.syrups.push(this._honey());
       if (this.dropShadows) this._applyShadows();
@@ -1480,6 +1489,34 @@
       }
     }
 
+    // Caméra de poursuite d'une voiture : S garde son état (le View lui-même pour le joueur 1, this.s2 pour le joueur 2).
+    _chase(S, cam, p, P, dt) {
+      const finished = p.finished, ease = (k) => 1 - Math.exp(-dt * k);
+      // La caméra regarde entre le cap et la route : les petites corrections au doigt ne la balancent plus.
+      const aim = P.h + MB.angleDiff(this.race._dirAt(p, 6), P.h) * 0.35;
+      S.camH += MB.angleDiff(aim, S.camH) * ease(4.6);
+      // Elle suit un point souple, en avance de son propre retard : à vitesse stable la distance ne change pas,
+      // et un choc ou un mur amortissent au lieu de secouer tout l'écran.
+      const lead = p.v / 12, ch = Math.cos(P.h), sh = Math.sin(P.h), kf = ease(12);
+      S.focX += (P.x + ch * lead - S.focX) * kf;
+      S.focZ += (P.z + sh * lead - S.focZ) * kf;
+      const kc = ease(2.6), ratio = p.v / p.spec.vmax;
+      S.camBack += ((finished ? 13 : p.boost > 0 ? (p.boostPow > 1.25 ? 17.5 : 16) : 13.6 + ratio * 0.6) - S.camBack) * kc;
+      S.camUp += ((finished ? 5.5 : 7.2) - S.camUp) * kc;
+      S.camAhead += ((finished ? 0 : 11) - S.camAhead) * kc;
+      if (finished) S.finA += dt * 0.7;                     // à l'arrivée, elle tourne autour du vainqueur
+      S.camLift += (P.lift * 0.35 - S.camLift) * ease(6);
+      const sk = S === this ? this.shakeA : 0, sx = sk ? Math.sin(this.t * 47) * sk : 0, sy = sk ? Math.sin(this.t * 61 + 1) * sk : 0;
+      const a = S.camH + S.finA, cx = Math.cos(S.camH), cz = Math.sin(S.camH);
+      cam.position.set(S.focX - Math.cos(a) * S.camBack + sx, S.camUp + S.camLift + sy, S.focZ - Math.sin(a) * S.camBack + sx);
+      cam.lookAt(S.focX + cx * S.camAhead, 1.2 + S.camLift, S.focZ + cz * S.camAhead);
+      const ccK = Math.max(0, (this.race.cc || 1) - 1) * 18;             // grosse cylindrée : l'objectif s'ouvre davantage (100 cc +3°, 150 cc +6°)
+      const want = (p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 55 + ratio * ratio * 16) + ccK;   // l'objectif s'ouvre nettement avec la vitesse : c'est lui qui la fait sentir
+      S.fov += (want - S.fov) * ease(3);
+      if (Math.abs(cam.fov - S.fov) > 0.01) { cam.fov = S.fov; cam.updateProjectionMatrix(); }
+      return ratio;
+    }
+
     frameRace(dt, alpha) {
       this.t += dt; this.inReplay = false;
       if (this.poles && !this.poles[0].visible) for (const p of this.poles) p.visible = true;
@@ -1487,25 +1524,13 @@
       const p = this.race.player, P = MB.pose(p, alpha, this.pose), finished = p.finished;
       const ease = (k) => 1 - Math.exp(-dt * k);
       this._sun(P.x, P.z);
-      // La caméra regarde entre le cap et la route : les petites corrections au doigt ne la balancent plus.
-      const aim = P.h + MB.angleDiff(this.race._dirAt(p, 6), P.h) * 0.35;
-      this.camH += MB.angleDiff(aim, this.camH) * ease(4.6);
-      // Elle suit un point souple, en avance de son propre retard : à vitesse stable la distance ne change pas,
-      // et un choc ou un mur amortissent au lieu de secouer tout l'écran.
-      const lead = p.v / 12, ch = Math.cos(P.h), sh = Math.sin(P.h), kf = ease(12);
-      this.focX += (P.x + ch * lead - this.focX) * kf;
-      this.focZ += (P.z + sh * lead - this.focZ) * kf;
-      const kc = ease(2.6), ratio = p.v / p.spec.vmax;
-      this.camBack += ((finished ? 13 : p.boost > 0 ? (p.boostPow > 1.25 ? 17.5 : 16) : 13.6 + ratio * 0.6) - this.camBack) * kc;
-      this.camUp += ((finished ? 5.5 : 7.2) - this.camUp) * kc;
-      this.camAhead += ((finished ? 0 : 11) - this.camAhead) * kc;
-      if (finished) this.finA += dt * 0.7;                     // à l'arrivée, elle tourne autour du vainqueur
-      this.camLift += (P.lift * 0.35 - this.camLift) * ease(6);
       this.shakeA = Math.max(0, this.shakeA - dt * 0.9);
-      const sk = this.shakeA, sx = sk ? Math.sin(this.t * 47) * sk : 0, sy = sk ? Math.sin(this.t * 61 + 1) * sk : 0;
-      const a = this.camH + this.finA, cx = Math.cos(this.camH), cz = Math.sin(this.camH);
-      this.cam.position.set(this.focX - Math.cos(a) * this.camBack + sx, this.camUp + this.camLift + sy, this.focZ - Math.sin(a) * this.camBack + sx);
-      this.cam.lookAt(this.focX + cx * this.camAhead, 1.2 + this.camLift, this.focZ + cz * this.camAhead);
+      const ratio = this._chase(this, this.cam, p, P, dt), duo = this.race.duo && this.race.player2;
+      if (duo) {                                               // à deux : le joueur 2 en haut, image retournée (il est en face)
+        const p2 = this.race.player2, P2 = MB.pose(p2, alpha, this.pose2 || (this.pose2 = {}));
+        this._chase(this.s2, this.cam2, p2, P2, dt);
+        this.cam2.rotateZ(Math.PI);
+      }
       if (this.rain) {
         this.rain.position.set(P.x, 0, P.z);
         const a = this.rain.geometry.attributes.position.array, fall = dt * 38;
@@ -1523,15 +1548,17 @@
         for (let i = 1; i < a.array.length; i += 3) { a.array[i] -= dt * 7; if (a.array[i] < 0) a.array[i] += 40; }
         a.needsUpdate = true;
       }
-      const ccK = Math.max(0, (this.race.cc || 1) - 1) * 18;             // grosse cylindrée : l'objectif s'ouvre davantage (100 cc +3°, 150 cc +6°)
-      const want = (p.boost > 0 ? (p.boostPow > 1.25 ? (this.calm ? 72 : 82) : 76) : 55 + ratio * ratio * 16) + ccK;   // l'objectif s'ouvre nettement avec la vitesse : c'est lui qui la fait sentir
-      this.fov += (want - this.fov) * ease(3);
-      if (Math.abs(this.cam.fov - this.fov) > 0.01) { this.cam.fov = this.fov; this.cam.updateProjectionMatrix(); }
       this._windFx(P, finished ? 0 : ratio + (p.draft || 0) * 0.3, p.boost > 0);   // aspiration : le vent se voit davantage
       for (const tx of this.pads || []) tx.offset.y -= dt * 1.6;      // les flèches de la dalle turbo avancent
       if (this.life) this.life.update(dt, this.t, P, this.race.cars, this.lite);
       this._adapt(dt);
-      this.r.render(this.scene, this.cam);
+      if (duo) {
+        const w = window.innerWidth, h = window.innerHeight, hh = Math.floor(h / 2);
+        this.r.setScissorTest(true);
+        this.r.setViewport(0, 0, w, hh); this.r.setScissor(0, 0, w, hh); this.r.render(this.scene, this.cam);
+        this.r.setViewport(0, h - hh, w, hh); this.r.setScissor(0, h - hh, w, hh); this.r.render(this.scene, this.cam2);
+        this.r.setScissorTest(false); this.r.setViewport(0, 0, w, h);
+      } else this.r.render(this.scene, this.cam);
       if (this.onSnap) { const cb = this.onSnap; this.onSnap = null; cb(this.snapshot()); }
     }
 
@@ -1742,6 +1769,7 @@
 
     // Voiture sur la ligne de départ, vue tournante, pour les menus.
     showcase(track, shape, hex, look) {
+      if (this.duoView) { this.duoView = false; this.resize(); }
       if (!this.scene || this.track !== track) this.world(track);
       this.mode = 'track';
       const key = shape + hex + JSON.stringify(look || {});

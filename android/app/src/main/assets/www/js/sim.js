@@ -46,7 +46,8 @@
       this.coinCount = 0;
       this.playerFinished = false;
       this.alpha = 0;
-      this.solo = !!opts.solo;                                 // contre-la-montre : seul en piste, sans boîtes
+      this.solo = !!opts.solo;
+      this.duo = !!opts.duo && !opts.solo;                     // deux joueurs sur le même écran                                 // contre-la-montre : seul en piste, sans boîtes
       this.toys = (opts.toys || []).map((y) => ({ id: y.id, dup: !!y.dup, x: y.x, z: y.z, taken: false }));   // jouets cachés (nouveaux ou doublons)
       this._grid(opts);
       this._pickups();
@@ -58,15 +59,16 @@
       const n = opts.solo ? 1 : opts.carCount || MB.CONFIG.carCount;
       const rivals = MB.RIVAL_CARS.map((id) => MB.CARS.find((c) => c.id === id));
       for (let g = 0; g < n; g++) {
-        const isPlayer = g === n - 1;                         // le joueur part dernier : doubler, c'est le plaisir du jeu
-        const base = isPlayer ? playerCar : rivals[g % rivals.length], k = this.cc;
+        // Le joueur part dernier : doubler, c'est le plaisir du jeu. À deux, le joueur 2 part juste devant lui.
+        const isPlayer = g === n - 1 || (this.duo && g === n - 2), pn = g === n - 1 ? 1 : isPlayer ? 2 : 0;
+        const base = pn === 1 ? playerCar : pn === 2 ? opts.carSpec2 || playerCar : rivals[g % rivals.length], k = this.cc;
         // Plus vite, on braque aussi un peu plus vite : en 150 cc le virage reste jouable, simplement plus exigeant.
         const spec = k === 1 ? base : Object.assign({}, base, { vmax: base.vmax * k, accel: base.accel * (1 + (k - 1) * 0.8), turn: base.turn * (1 + (k - 1) * 0.6) });
         const back = 8 + g * 6;
         const i = (t.count - Math.round(back / t.ds)) % t.count;
         const lat = (g % 2 ? 1 : -1) * 3.4;
         const c = {
-          id: g, isPlayer, spec, name: isPlayer ? 'P' : MB.RIVALS[g % MB.RIVALS.length],
+          id: g, isPlayer, pn, coins: 0, spec, name: isPlayer ? 'P' + (pn === 2 ? '2' : '') : MB.RIVALS[g % MB.RIVALS.length],
           x: t.px[i] - t.tz[i] * lat, z: t.pz[i] + t.tx[i] * lat, h: Math.atan2(t.tz[i], t.tx[i]), v: 0,
           idx: i, prog: -back, lat, steer: 0, slip: 0, held: 0, heldDir: 0, drifting: false, driftDir: 0, charge: 0,
           boost: 0, boostPow: 1, spin: 0, shield: 0, magnet: 0, sticky: 0, piggy: 0, item: null, itemDelay: 0, finished: false, time: 0, wrong: 0,
@@ -76,8 +78,10 @@
         // Champion du circuit : un peu plus vif, et il ferme la porte.
         if (!isPlayer && opts.champ === g) { c.champ = true; c.style = Object.assign({}, c.style, { pace: c.style.pace * MB.CHAMP_PACE, block: true }); }
         this.cars.push(c);
-        if (isPlayer) this.player = c;
+        if (pn === 1) this.player = c;
+        if (pn === 2) this.player2 = c;
       }
+      this.humans = this.player2 ? [this.player, this.player2] : [this.player];
       this.ranked = this.cars.slice();
     }
 
@@ -114,7 +118,8 @@
     position(c) { return this.ranked.indexOf(c) + 1; }
     lap(c) { return clamp(Math.floor(c.prog / this.track.length) + 1, 1, this.laps); }
 
-    step(dt, input) {
+    step(dt, input, input2) {
+      this.input2 = input2 || { steer: 0 };
       this.acc = (this.acc || 0) + Math.min(dt, 0.1);
       this.ticked = 0;
       while (this.acc >= DT) { this.acc -= DT; this.ticked++; this._save(); this._tick(input); }
@@ -137,7 +142,7 @@
       if (before < 0) { this.state = 'run'; this.events.push({ t: 'go' }); }
       for (const c of this.cars) {
         if (c.finished) { this._cruise(c); continue; }
-        const ctl = c.isPlayer ? input : this._ai(c);
+        const ctl = c.isPlayer ? (c.pn === 2 ? this.input2 : input) : this._ai(c);
         this._drive(c, ctl);
       }
       this._collide();
@@ -148,6 +153,7 @@
         if (a.finished !== b.finished) return a.finished ? -1 : 1;
         return b.prog - a.prog;
       });
+      if (this.waitHuman && this.clock > this.waitHuman) this.playerFinished = true;
       if (this.playerFinished) this._finishAll();
     }
 
@@ -162,7 +168,7 @@
     }
 
     _ai(c) {
-      const t = this.track, p = this.player;
+      const t = this.track, p = this.player2 && Math.abs(this.player2.prog - c.prog) < Math.abs(this.player.prog - c.prog) ? this.player2 : this.player;
       if (c.sc) return this._aiBranch(c);
       const look = Math.round((10 + c.v * 0.42) / t.ds);
       const i = (c.idx + look) % t.count;
@@ -324,11 +330,11 @@
       const was = c.draftT || 0;
       if (behind) {
         c.draftT = was + DT;
-        if (isP && was < DRAFT_FULL && c.draftT >= DRAFT_FULL) this.events.push({ t: 'draftFull' });
+        if (isP && was < DRAFT_FULL && c.draftT >= DRAFT_FULL) this.events.push({ pn: c.pn, t: 'draftFull' });
       } else {
         if (was >= DRAFT_FULL) {                                // on sort de l'aspiration bien chargé : coup de fouet, une fois
           if (c.boost < DRAFT_KICK) { c.boost = DRAFT_KICK; c.boostPow = 1.1; }
-          if (isP) this.events.push({ t: 'draftKick' });
+          if (isP) this.events.push({ pn: c.pn, t: 'draftKick' });
           c.draftT = 0;
         } else c.draftT = Math.max(0, was - DT * 3);
       }
@@ -352,7 +358,7 @@
       c.y = 0; c.vy = 0;
       if (!c.isPlayer) return;
       if (c.boost < 0.4) { c.boost = 0.4; c.boostPow = 1.12; }  // bien atterrir donne un petit coup de fouet
-      this.events.push({ t: 'land' });
+      this.events.push({ pn: c.pn, t: 'land' });
     }
 
     _driftLogic(c, steer) {
@@ -369,8 +375,8 @@
         } else {
           const prev = c.charge;
           c.charge += DT;
-          if (prev < DRIFT_L1 && c.charge >= DRIFT_L1) this.events.push({ t: 'charge', lvl: 1 });
-          if (prev < DRIFT_L2 && c.charge >= DRIFT_L2) this.events.push({ t: 'charge', lvl: 2 });
+          if (prev < DRIFT_L1 && c.charge >= DRIFT_L1) this.events.push({ pn: c.pn, t: 'charge', lvl: 1 });
+          if (prev < DRIFT_L2 && c.charge >= DRIFT_L2) this.events.push({ pn: c.pn, t: 'charge', lvl: 2 });
         }
         return;
       }
@@ -380,7 +386,7 @@
         // On ne part en drift que dans un vrai virage, du côté où il tourne.
         if (c.held > DRIFT_ARM && c.v > c.spec.vmax * 0.55 && Math.sign(bend) === dir && Math.abs(bend) > 0.22) {
           c.drifting = true; c.driftDir = dir; c.charge = 0;
-          this.events.push({ t: 'drift' });
+          this.events.push({ pn: c.pn, t: 'drift' });
         }
       } else { c.heldDir = dir; c.held = 0; }
     }
@@ -403,12 +409,12 @@
           if (c.shield > 0) { c.shield = 0; this.events.push({ t: 'pop', car: c.id, x: c.x, z: c.z }); continue; }
           c.spin = 0.6; c.drifting = false; c.charge = 0; c.v *= 0.7; c.aiSlip = 0;
           this.events.push({ t: 'plot', car: c.id, x: o.x, z: o.z });
-          if (c.isPlayer) this.events.push({ t: 'spin', why: 'plot' });
+          if (c.isPlayer) this.events.push({ pn: c.pn, t: 'spin', why: 'plot' });
         }
         if (pr.i >= p.pad && pr.i <= p.padEnd + 3 && c.padT !== p.a + this.lap(c) * 1000) {   // la dalle turbo de sortie, une fois par passage
           c.padT = p.a + this.lap(c) * 1000;
           if (c.boost < 0.7) { c.boost = 0.7; c.boostPow = 1.15; }
-          if (c.isPlayer) this.events.push({ t: 'pad' });
+          if (c.isPlayer) this.events.push({ pn: c.pn, t: 'pad' });
         }
         if (pr.i >= p.count - 2 || (pr.i <= 0 && backward)) { c.sc = null; p = null; }
         // Dans la bouche de la bifurcation, revenir vers le circuit n'est pas un mur : on y retourne simplement.
@@ -428,7 +434,7 @@
             const fresh = !c.scSeen || this.clock - c.scSeen > 3;
             c.sc = q; c.sci = sp.i; c.lat = sp.lat; c.scSeen = this.clock; c.scEase = on ? 0 : 0.6; c.scWant = null;
             if (!c.isPlayer) c.aiSlip = this.random() < this.diff.plot ? 1 + this.random() * 2 : 0;   // parfois un rival rate son slalom
-            if (fresh) this.events.push(c.isPlayer ? { t: 'shortcut' } : { t: 'rivalShortcut', car: c.id });
+            if (fresh) this.events.push(c.isPlayer ? { pn: c.pn, t: 'shortcut' } : { t: 'rivalShortcut', car: c.id });
             return;
           }
         }
@@ -471,18 +477,18 @@
         }
         if (c.y <= 0 && d > 0 && (j - prev + t.count) % t.count <= d && c.v > 12) {
           c.y = RAMP_H; c.vy = 7 + c.v * 0.2;
-          if (c.isPlayer) this.events.push({ t: 'jump' });
+          if (c.isPlayer) this.events.push({ pn: c.pn, t: 'jump' });
         }
       }
       const lapBefore = Math.floor(c.prog / t.length);
       c.prog += d * t.ds;
       if (c.scrape) c.scrape = Math.max(0, c.scrape - DT);
       const lapNow = Math.floor(c.prog / t.length);
-      if (c.isPlayer && lapNow > lapBefore && lapNow >= (this.bestLapSeen || 0) && lapNow > 0 && lapNow < this.laps) {
-        this.bestLapSeen = lapNow + 1;
-        this.events.push({ t: 'lap', n: lapNow + 1 });
+      if (c.isPlayer && lapNow > lapBefore && lapNow >= (c.lapSeen || 0) && lapNow > 0 && lapNow < this.laps) {
+        c.lapSeen = lapNow + 1;
+        this.events.push({ pn: c.pn, t: 'lap', n: lapNow + 1 });
       }
-      if (c.isPlayer && lapNow > lapBefore && lapNow > 0) {
+      if (c === this.player && lapNow > lapBefore && lapNow > 0) {
         const lt = this.clock - (this.lapStart || 0);
         this.lapStart = this.clock;
         if (!this.bestLap || lt < this.bestLap) this.bestLap = lt;
@@ -490,7 +496,11 @@
       }
       if (c.prog >= this.laps * t.length && !c.finished) {
         c.finished = true; c.time = this.clock; c.drifting = false;
-        if (c.isPlayer) this.playerFinished = true;
+        if (c.isPlayer) {
+          this.events.push({ t: 'humanDone', pn: c.pn });
+          if (this.humans.every((h) => h.finished)) this.playerFinished = true;
+          else this.waitHuman = this.clock + 25;              // à deux : le second a 25 s pour finir
+        }
       }
     }
 
@@ -576,7 +586,7 @@
         this.marbles.push({ x: c.x + Math.cos(c.h) * 3.5, z: c.z + Math.sin(c.h) * 3.5, h: c.h, v, life: 4.5, owner: c.id, idx: c.idx, roll: 0 });
       } else if (it === 'ressort') {
         c.y = 0.05; c.vy = 11;
-        if (c.isPlayer) this.events.push({ t: 'jump' });
+        if (c.isPlayer) this.events.push({ pn: c.pn, t: 'jump' });
       }
       this.events.push({ t: 'item', item: it, car: c.id });
     }
@@ -590,22 +600,22 @@
             if (!c.item && !c.finished) {
               c.item = this._rollItem(c);
               c.itemDelay = c.style ? c.style.item[0] + this.random() * c.style.item[1] : 0;
-              if (c.isPlayer) this.events.push({ t: 'gotItem', item: c.item });
+              if (c.isPlayer) this.events.push({ pn: c.pn, t: 'gotItem', item: c.item });
             }
             break;
           }
         }
       }
-      const p = this.player;
-      for (const k of this.coins) {
+      for (const p of this.humans) for (const k of this.coins) {
         if (k.taken) continue;
         if (p.magnet > 0) {                                    // l'aimant attire vraiment les pièces proches
           const mx = p.x - k.x, mz = p.z - k.z, md = Math.hypot(mx, mz);
           if (md < 22) { const pull = Math.min(1, (70 * DT) / md); k.x += mx * pull; k.z += mz * pull; }
         }
         const dx = p.x - k.x, dz = p.z - k.z;
-        if (dx * dx + dz * dz < COIN_R * COIN_R) { k.taken = true; this.coinCount += p.piggy > 0 ? 2 : 1; this.events.push({ t: 'coin' }); }
+        if (dx * dx + dz * dz < COIN_R * COIN_R) { k.taken = true; const n = p.piggy > 0 ? 2 : 1; p.coins += n; if (p === this.player) this.coinCount += n; this.events.push({ pn: p.pn, t: 'coin' }); }
       }
+      const p = this.player;
       for (const y of this.toys) {
         if (y.taken || p.y > 1.5) continue;
         const dx = p.x - y.x, dz = p.z - y.z;
@@ -620,7 +630,7 @@
             if (c.shield > 0) { c.shield = 0; this.events.push({ t: 'pop', car: c.id, x: c.x, z: c.z }); } else {
               c.spin = 0.6; c.drifting = false; c.charge = 0; c.v *= 0.85;   // le miel colle, sans ruiner la course
               this.events.push({ t: 'splat', car: c.id, x: c.x, z: c.z });
-              if (c.isPlayer) this.events.push({ t: 'spin' });
+              if (c.isPlayer) this.events.push({ pn: c.pn, t: 'spin' });
             }
             this.syrups.splice(i, 1);
             break;
@@ -650,14 +660,14 @@
         if (c.y > 0.8 || c.finished || bodyDist(c, m.x, m.z) > MB.MARBLE_R + CAR_SIDE) continue;
         if (c.id === m.owner) {                                           // sa propre bille revenue d'un rebond : elle ricoche sur la carrosserie
           const nx = m.x - c.x, nz = m.z - c.z, nl = Math.hypot(nx, nz) || 1, vx = Math.cos(m.h) * m.v - Math.cos(c.h) * c.v, vz = Math.sin(m.h) * m.v - Math.sin(c.h) * c.v;
-          if (vx * nx + vz * nz < 0) { const away = Math.atan2(nz, nx); m.h = away; m.v = Math.max(m.v * 0.7, c.v + 8); if (c.isPlayer) this.events.push({ t: 'marbleBounce' }); }
+          if (vx * nx + vz * nz < 0) { const away = Math.atan2(nz, nx); m.h = away; m.v = Math.max(m.v * 0.7, c.v + 8); if (c.isPlayer) this.events.push({ pn: c.pn, t: 'marbleBounce' }); }
           continue;
         }
         if (c.shield > 0) { c.shield = 0; this.events.push({ t: 'pop', car: c.id, x: c.x, z: c.z }); }
         else {
           c.spin = 0.6; c.drifting = false; c.charge = 0; c.v *= 0.8;
           this.events.push({ t: 'marbleHit', car: c.id, x: c.x, z: c.z, by: m.owner });
-          if (c.isPlayer) this.events.push({ t: 'spin', why: 'bille' });
+          if (c.isPlayer) this.events.push({ pn: c.pn, t: 'spin', why: 'bille' });
         }
         this.marbles.splice(i, 1);
         break;
@@ -675,7 +685,7 @@
   };
 
   MB.botInput = function (race, opts) {
-    const c = race.player, t = race.track, look = Math.round((10 + c.v * 0.42) / t.ds);
+    const c = (opts && opts.car) || race.player, t = race.track, look = Math.round((10 + c.v * 0.42) / t.ds);
     if (c.sc) {
       const p = c.sc, a = MB.branchAim(p, c.sci, Math.min(c.sci + Math.round(look * 0.6), p.count - 1), 0), d = angleDiff(Math.atan2(a[1] - c.z, a[0] - c.x), c.h);
       return { steer: Math.abs(d) < 0.09 ? 0 : Math.sign(d), item: !!c.item };

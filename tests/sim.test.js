@@ -240,6 +240,11 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   const cross = MB.checkTrack(MB.buildTrack({ id: 'x', pts: [[10, 10], [90, 10], [90, 90], [52, 90], [52, 20], [48, 20], [48, 90], [10, 90]] }));
   check(all && !cross.ok, `atelier : 13 circuits valides, tracé collé refusé (écart ${cross.gap.toFixed(1)} m)`);
 }
+{ // à deux : deux humains, chacun ses tours et ses pièces, la course finit quand les deux ont fini
+  const r = new MB.Race({ trackId: 'bol', seed: 5, duo: true }); let k = 0, laps = { 1: 0, 2: 0 };
+  while (r.state !== 'done' && k++ < 60 * 200) { r.step(1 / 60, MB.botInput(r), MB.botInput(r, { car: r.player2 })); for (const e of r.events) if (e.t === 'lap') laps[e.pn]++; r.events.length = 0; }
+  check(r.state === 'done' && r.humans.length === 2 && r.player2.isPlayer && r.player.finished && r.player2.finished && laps[1] === 2 && laps[2] === 2 && r.player2.coins > 0, `à deux : J1 ${r.position(r.player)}e, J2 ${r.position(r.player2)}e, pièces ${r.player.coins}/${r.player2.coins}`);
+}
 { // défi de la semaine : stable sur la semaine, change le lundi, cylindrée toujours ouverte
   const ids = MB.TRACKS.map((t) => t.id), open = { facile: 1 };
   const a = MB.weeklyChallenge('2026-11-02', ids, open), b = MB.weeklyChallenge('2026-11-08', ids, open), c = MB.weeklyChallenge('2026-11-09', ids, open);

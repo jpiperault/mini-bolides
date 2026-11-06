@@ -21,7 +21,7 @@
     next: ['Course suivante', 'Next race'], again: ['Rejouer', 'Race again'], home: ['Menu', 'Menu'], lap: ['Tour', 'Lap'],
     pos: ['Arrivée', 'Result'], coins: ['pièces', 'coins'], best: ['Meilleur tour', 'Best lap'], cup: ['Classement', 'Standings'],
     you: ['Toi', 'You'], choose: ['Choisis un circuit', 'Pick a track'], buy: ['Acheter', 'Buy'], use: ['Choisir', 'Select'], used: ['En piste', 'Selected'],
-    diff: ['Cylindrée', 'Engine class'], ccOpen: ['débloqué ! Choisis-le au-dessus du bouton COURSE', 'unlocked! Pick it above the RACE button'], newTag: ['NOUVEAU', 'NEW'], ccHelp: ['Plus de cylindrée : tout le monde va plus vite (100 cc +15 %, 150 cc +32 %) et les rivaux sont plus forts. Gagne 3 courses pour ouvrir la suivante. Le contre-la-montre se court toujours en 50 cc.', 'Bigger engines: everyone is faster (100cc +15%, 150cc +32%) and rivals are tougher. Win 3 races to unlock the next class. Time trial is always 50cc.'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'],
+    diff: ['Cylindrée', 'Engine class'], ccOpen: ['débloqué ! Choisis-le au-dessus du bouton COURSE', 'unlocked! Pick it above the RACE button'], newTag: ['NOUVEAU', 'NEW'], ccHelp: ['Plus de cylindrée : tout le monde va plus vite (100 cc +15 %, 150 cc +32 %) et les rivaux sont plus forts. Gagne 3 courses pour ouvrir la suivante. Le contre-la-montre se court toujours en 50 cc.', 'Bigger engines: everyone is faster (100cc +15%, 150cc +32%) and rivals are tougher. Win 3 races to unlock the next class. Time trial is always 50cc.'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'], modeDuo: ['👥 À deux', '👥 Two players'], duoWin: ['Joueur {n} gagne !', 'Player {n} wins!'], duoP: ['Joueur', 'Player'], duoAgain: ['Revanche !', 'Rematch!'], duoHelp: ['À deux sur le même téléphone, posé à plat entre vous : chacun dirige avec son pouce sur sa moitié d\'écran.', 'Two players, one phone laid flat between you: each steers with a thumb on their half of the screen.'],
     record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : modes ouverts dès une étoile en Normal. Chaque mode rapporte ses étoiles.', '🌙 🌧️ 🔄: modes open with one star in Normal. Each mode earns its own stars.'], tagline: ['COURSE DE PETITES VOITURES', 'TOY CAR RACING'], worldOpen: ['Nouveau monde :', 'New world:'], worldNeed: ['Encore', 'Still'], worldNeed2: ['étoiles pour ouvrir ce monde. Chaque mode de chaque circuit en rapporte.', 'stars to open this world. Every mode of every track earns them.'], pickTrack: ['Choisis un circuit', 'Pick a track'], run: ['COURIR', 'RACE'], normal: ['Normal', 'Normal'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], assist: ['Volant magique', 'Magic wheel'],
     assistHelp: ['Sans doigt posé, la voiture se recale seule.', 'With no finger down, the car straightens itself.'],
     back: ['Retour', 'Back'], how: ['Pose le pouce où tu veux et glisse à gauche ou à droite pour tourner. Braque fort pour drifter, relâche pour le turbo !', 'Put your thumb anywhere and slide left or right to steer. Steer hard to drift, release for turbo!'],
@@ -200,7 +200,7 @@
 
   // ---------- État ----------
   let view, race = null, phase = 'menu', paused = false, cup = null, chal = null, week = null, raceCc = 'facile', stat = null, shopFrom = 'home', slowT = 0, finFx = false, lastPos = 6, tickT = 0, trackCache = {}, currentTrack = null, lastT = 0, pendingCoins = 0;
-  const input = { steer: 0, item: false, keyL: false, keyR: false };
+  const input = { steer: 0, item: false, keyL: false, keyR: false }, input2 = { steer: 0, item: false };
   const auto = location.hash.indexOf('auto') >= 0;
   // Variantes : 'nuit' (décor de nuit, phares), 'pluie' (gouttes, route mouillée, un peu moins d'adhérence), 'inverse' (sens inverse).
   const VARIANTS = { nuit: { icon: '🌙', name: ['Nuit', 'Night'] }, pluie: { icon: '🌧️', name: ['Pluie', 'Rain'] }, inverse: { icon: '🔄', name: ['Sens inverse', 'Reverse'] } };
@@ -427,15 +427,19 @@
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
     const solo = trackMode === 'chrono' && !cup && !chal && !week;
+    const duo = trackMode === 'duo' && !cup && !chal && !week;
     raceCc = cup ? cup.diff : week ? week.cc : save.diff;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: raceCc, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto || isCustom(trackId) ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined });   // contre-la-montre toujours en 50 cc : records comparables
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: raceCc, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto || isCustom(trackId) ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined, duo, carSpec2: spec });   // contre-la-montre toujours en 50 cc : records comparables
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
       journal.gpu = view.gpuInfo();
     }
-    const palette = MB.PAINTS.map((p) => p.hex).filter((h) => h !== paintHex() && h !== 0xd9dee6);
-    view.bindRace(race, { player: paintHex(), rivals: palette, look: save.look });
+    const p2hex = paintHex() === 0x2f62d9 ? 0xe5352b : 0x2f62d9;   // joueur 2 : bleu (rouge si le joueur 1 est déjà bleu)
+    const palette = MB.PAINTS.map((p) => p.hex).filter((h) => h !== paintHex() && h !== 0xd9dee6 && !(duo && h === p2hex));
+    view.bindRace(race, { player: paintHex(), player2: p2hex, rivals: palette, look: save.look });
+    $('hud').classList.toggle('duo', duo); $('hud2').hidden = !duo;
+    $('itemBtn2').className = 'empty'; $('itemBtn2').textContent = ''; input2.item = false;
     drawMap(track);
     ghost = solo ? { best: save.ghosts[trackKey()] || null, hadGhost: !!save.ghosts[trackKey()], lapStart: 0, seg: 0, pts: [], laps: [], next: 0, record: false } : null;
     view.setGhost(ghost && ghost.best ? ghost.best.shape : null, ghost && ghost.best ? ghost.best.hex : 0);
@@ -486,6 +490,10 @@
   function updateHud(force) {
     const p = race.player;
     const pos = race.position(p);
+    if (race.duo) {
+      const q = race.player2, qp = race.position(q);
+      setText('posVal2', qp); setText('posSuf2', placeSuf(qp)); setText('lapVal2', `${race.lap(q)}/${race.laps}`); setText('coinsVal2', q.coins);
+    }
     setText('posVal', pos);
     setText('posSuf', placeSuf(pos));
     setText('lapVal', `${race.lap(p)}/${race.laps}`);
@@ -530,9 +538,36 @@
     el.textContent = text; el.className = ''; void el.offsetWidth; el.className = 'show ' + (cls || '');
   }
 
+  function flash2(text, cls) {
+    const el = $('flash2');
+    el.textContent = text; el.className = ''; void el.offsetWidth; el.className = 'show ' + (cls || '');
+  }
+  // À deux : ce qui arrive au joueur 2 s'affiche dans sa moitié d'écran (en haut, retournée).
+  function duoEvent(e) {
+    const q = race.player2, it = e.item && MB.ITEMS[e.item];
+    switch (e.t) {
+      case 'lap': flash2(`${t('lap')} ${e.n}/${race.laps}`); Sound.play('lap', [660, 0.22, 'triangle', 0.18, 990], 0); break;
+      case 'coin': Sound.play('coin', [1320, 0.09, 'triangle', 0.14, 1760]); break;
+      case 'gotItem': { const b = $('itemBtn2'); b.className = 'full'; b.textContent = it.icon; flash2(`${it.icon} ${L(it.name)}`); break; }
+      case 'item': if (e.car === q.id) { const b = $('itemBtn2'); b.className = 'empty'; b.textContent = ''; flash2(`${it.icon} ${L(it.name)} !`, 'boost'); } break;
+      case 'boost': if (e.car === q.id) flash2(e.big ? 'SUPER TURBO !' : 'TURBO !', 'boost'); break;
+      case 'spin': flash2(lang === 'fr' ? 'Oups !' : 'Oops!'); break;
+      case 'shortcut': flash2(t('shortcut'), 'boost'); break;
+      case 'draftKick': case 'pad': flash2(lang === 'fr' ? 'TURBO !' : 'BOOST!', 'boost'); break;
+      case 'humanDone': flash2(`${race.position(q)}${placeSuf(race.position(q))} !`, 'big'); break;
+      case 'count': flash2(String(e.n), 'big'); break;
+      case 'go': flash2('GO !', 'big'); break;
+    }
+  }
+
   function handleEvents() {
     if (journal) journal.note(race.events);
     for (const e of race.events) {
+      if (race.duo) {
+        if (e.pn === 2) { duoEvent(e); continue; }
+        if ((e.t === 'count' && e.n >= 1 && e.n <= 3) || e.t === 'go' || ((e.t === 'boost' || e.t === 'item') && e.car === race.player2.id)) duoEvent(e);
+        if ((e.t === 'boost' || e.t === 'item') && e.car === race.player2.id) continue;
+      }
       switch (e.t) {
         case 'count': if (e.n >= 1 && e.n <= 3) { flash(String(e.n), 'big'); Sound.play('count', [440, 0.14, 'square', 0.14], 0); } break;
         case 'go': if (journal) { const a = Sound.diag(); window.mbJournal(`Son : ${a.actif ? 'activé' : 'coupé'}, ${a.etat}, ${a.sons} sons${a.erreurs.length ? ' · ' + a.erreurs[0] : ''}`); }
@@ -591,6 +626,7 @@
         case 'marbleHit': view.splat(e.x, e.z, 0x3f8fe0); if (e.by === race.player.id && e.car !== race.player.id) { stat.marbles++; flash(lang === 'fr' ? 'Touché !' : 'Hit!', 'boost'); Sound.play('bump', [150, 0.08, 'square', 0.08], 0.12); buzz(20); } break;
         case 'marbleBounce': if (!marbleT || race.clock - marbleT > 0.15) { marbleT = race.clock; Sound.play('tap', [900, 0.04, 'triangle', 0.06]); } break;
         case 'pop': view.pop(e.x, e.z); if (e.car === race.player.id) { flash(lang === 'fr' ? 'Bulle éclatée, sauvé !' : 'Bubble burst, saved!', 'boost'); Sound.play('pop', [900, 0.18, 'sine', 0.16, 240]); buzz(30); } break;
+        case 'humanDone': { const q = race.position(race.player); flash(`${q}${placeSuf(q)} !`, 'big'); break; }
         case 'finish': startReplay(); break;
       }
     }
@@ -612,7 +648,7 @@
   };
   let coachT = null;
   function coach(key) {
-    if (!race || race.solo || save.tuto[key]) return;
+    if (!race || race.solo || race.duo || save.tuto[key]) return;
     save.tuto[key] = 1; persist();
     const el = $('coach'); el.textContent = COACH[key][lang === 'fr' ? 0 : 1]; el.className = 'on';
     clearTimeout(coachT); coachT = setTimeout(() => { el.className = ''; }, COACH[key][0].length > 60 ? 5200 : 3400);
@@ -646,6 +682,7 @@
     while (rec.length && rec[0][0] < race.clock - REC_KEEP) rec.shift();
   }
   function startReplay() {
+    if (race.duo) return finishRace();
     const p = race.player, tc = p.time;
     if (!rec.length || !(tc > rec[0][0] + 1)) return finishRace();
     const close = !race.solo && race.cars.some((c) => !c.isPlayer && c.finished && Math.abs(c.time - tc) < 0.3 && c.time < tc + 0.3);
@@ -830,7 +867,28 @@
     buzz(40);
   }
 
+  // À deux : classement des deux joueurs, sans pièces ni étoiles (c'est pour le plaisir de la revanche).
+  function finishDuo() {
+    phase = 'result';
+    Sound.engine(false, 0); Sound.draft(0);
+    closeJournal({ fin: 'duo' });
+    const a = race.position(race.player), b = race.position(race.player2), win = a < b ? 1 : 2;
+    pendingCoins = 0;
+    $('resTitle').textContent = `${win === 1 ? '🔴' : '🔵'} ${t('duoWin').replace('{n}', win)}`;
+    $('resTrack').textContent = trackLabel();
+    $('resStars').textContent = '';
+    $('resNote').hidden = true;
+    const who = (c) => (c.pn === 1 ? `🔴 ${t('duoP')} 1` : c.pn === 2 ? `🔵 ${t('duoP')} 2` : c.name);
+    $('resRows').innerHTML = race.ranked.map((c, i) => `<li class="${c.isPlayer ? 'me' : ''}"><b>${i + 1}</b><span>${who(c)}</span><em>${fmt(c.time)}</em></li>`).join('');
+    $('resCoins').textContent = `🪙 ${race.player.coins} – ${race.player2.coins} 🪙`;
+    $('resDouble').hidden = true;
+    $('resNext').textContent = t('duoAgain');
+    show('result');
+    buzz(40);
+  }
+
   function finishRace() {
+    if (race.duo) return finishDuo();
     if (race.solo) return finishSolo();
     const p = race.player, pos = race.position(p), id = currentTrack;
     closeJournal({ fin: 'arrivée', rang: pos, temps: p.time, meilleur_tour: race.bestLap, pieces: race.coinCount, murs: stat.walls, turbos: stat.boosts });
@@ -975,13 +1033,13 @@
           <span class="wnm">${L(def.name)}${hunt.includes(id) ? ' <i class="wtoy">🧸</i>' : ''}${champLine(id)}<span class="wbadges">${badge}</span></span></button>${sel ? `<div class="wmodes">${modes}</div>` : ''}</div>`;
       }).join('')}</div>`;
     };
-    $('trackList').innerHTML = `<div class="seg">${['race', 'chrono'].map((m) => `<button data-mode="${m}" class="${trackMode === m ? 'sel' : ''}">${t(m === 'race' ? 'modeRace' : 'modeChrono')}</button>`).join('')}</div>`
+    $('trackList').innerHTML = `<div class="seg">${['race', 'chrono', 'duo'].map((m) => `<button data-mode="${m}" class="${trackMode === m ? 'sel' : ''}">${t(m === 'race' ? 'modeRace' : m === 'duo' ? 'modeDuo' : 'modeChrono')}</button>`).join('')}</div>`
       + `<div class="wchips">${worlds.map((w, i) => `<button data-world="${i}" class="${i === worldIdx ? 'sel' : ''} ${worldOpen(w) ? '' : 'lock'}" style="background:${grad(w.col)}" aria-label="${L(w.name)}">${w.icon}</button>`).join('')}</div>`
       + `<div class="wrail" id="wrail">${worlds.map(page).join('')}</div>`
       + `<div class="wdots">${worlds.map((w, i) => `<i class="${i === worldIdx ? 'sel' : ''}"></i>`).join('')}</div>`
       + (chrono ? '' : `<div class="seg ccseg">${ccButtons()}</div>`)
       + `<button class="btn primary wgo" data-track="${selTrack}" data-variant="${selVar || ''}">${t('run')}<small>${L(MB.TRACKS.find((d) => d.id === selTrack).name)} · ${MODES.find(([v]) => v === selVar)[1]} ${modeName(selVar)}${chrono ? '' : ' · ' + L(MB.DIFFS[save.diff].label)}</small></button>`
-      + `<p class="small">${chrono ? t('ghostHelp') : t('goal')} ${t('varHelp')}</p>`
+      + `<p class="small">${chrono ? t('ghostHelp') : trackMode === 'duo' ? t('duoHelp') : t('goal')} ${trackMode === 'duo' ? '' : t('varHelp')}</p>`
       + `<button class="btn edbtn" data-go="editor">✏️ ${t('edTitle')}<small>${t('edSub')}</small></button>`;
     show('tracks');
     const rail = $('wrail');
@@ -1186,7 +1244,7 @@
   }
 
   // ---------- Commandes ----------
-  const pad = new MB.TouchPad();
+  const pad = new MB.TouchPad(), pad2 = new MB.TouchPad();   // pad2 : joueur 2, en haut, écran retourné
   let releaseFingers = () => {};
   function bindInput() {
     const hud = $('hud');
@@ -1196,9 +1254,22 @@
       th.hidden = !q;
       if (q) { th.style.transform = `translateX(${q.a}px)`; th.firstChild.style.transform = `translateX(${q.x - q.a}px)`; }
     };
-    releaseFingers = () => { pad.clear(); refresh(); };
+    const refresh2 = () => {
+      input2.steer = pad2.side();
+      const q = pad2.finger(), th = $('thumb2');
+      th.hidden = !q;
+      if (q) { th.style.transform = `translateX(${q.a}px)`; th.firstChild.style.transform = `translateX(${q.x - q.a}px)`; }
+    };
+    releaseFingers = () => { pad.clear(); pad2.clear(); refresh(); refresh2(); };
     refresh();
     hud.addEventListener('pointerdown', (e) => {
+      if (e.target === $('touch2') || e.target === $('itemBtn2')) {   // joueur 2 : sa moitié est retournée, gauche et droite aussi
+        e.preventDefault();
+        if (e.target === $('itemBtn2')) input2.item = true;
+        pad2.down(e.pointerId, window.innerWidth - e.clientX, window.innerWidth);
+        try { e.target.setPointerCapture(e.pointerId); } catch (x) { /* rien */ }
+        return refresh2();
+      }
       if (e.target !== $('touch') && e.target !== $('itemBtn')) return;   // pause et menus gardent leurs appuis
       e.preventDefault();
       if (e.target === $('itemBtn')) input.item = true;        // le bouton d'objet ne vole pas le doigt : il dirige aussi
@@ -1206,11 +1277,14 @@
       try { e.target.setPointerCapture(e.pointerId); } catch (x) { /* rien */ }
       refresh();
     });
-    const up = (e) => { pad.up(e.pointerId); refresh(); };
+    const up = (e) => { pad.up(e.pointerId); pad2.up(e.pointerId); refresh(); refresh2(); };
     hud.addEventListener('pointerup', up);
     hud.addEventListener('pointercancel', up);
     hud.addEventListener('lostpointercapture', up);
-    hud.addEventListener('pointermove', (e) => { pad.move(e.pointerId, e.clientX); refresh(); });
+    hud.addEventListener('pointermove', (e) => {
+      if (pad2.f.has(e.pointerId)) { pad2.move(e.pointerId, window.innerWidth - e.clientX); return refresh2(); }
+      pad.move(e.pointerId, e.clientX); refresh();
+    });
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft') input.keyL = true;
       if (e.key === 'ArrowRight') input.keyR = true;
@@ -1239,14 +1313,15 @@
       if (!paused) {
         const keys = (input.keyR ? 1 : 0) - (input.keyL ? 1 : 0);
         let ctl = { steer: keys || input.steer, item: input.item };
-        if (auto) ctl = MB.botInput(race);
+        let ctl2 = { steer: pad2.side(), item: input2.item };
+        if (auto) { ctl = MB.botInput(race); if (race.duo) ctl2 = MB.botInput(race, { car: race.player2 }); }
         // Ralenti sur la ligne : la fin de course se savoure, puis tout reprend.
         if (race.playerFinished) {
           if (!finFx) { finFx = true; slowT = 1.6; snapJournal('arrivée'); const pos = race.solo ? (ghost.record ? 1 : 4) : race.position(race.player); Sound.song(null); if (pos <= 3) { view.confetti(); Sound.fanfare(pos === 1); } else Sound.play('finish', null, 0); }
           slowT -= dt;
         }
         timeK += ((slowT > 0 ? 0.35 : 1) - timeK) * Math.min(1, dt * 5);
-        race.step(dt * timeK, ctl);
+        race.step(dt * timeK, ctl, ctl2);
         recordFrame();
         coachWatch();
         if (ghost && race.solo) ghostStep();
@@ -1257,7 +1332,7 @@
           if (journal.wantSnap()) snapJournal('course');
           if (race.events.some((e) => e.t === 'spin')) snapJournal('tête-à-queue');
         }
-        if (race.ticked) input.item = false;                   // écran 120 Hz : un appui ne doit pas tomber entre deux pas
+        if (race.ticked) { input.item = false; input2.item = false; }                   // écran 120 Hz : un appui ne doit pas tomber entre deux pas
         handleEvents();
         if (phase === 'race') {
           updateHud();
@@ -1330,6 +1405,7 @@
     menu();
     const m = location.hash.match(/race=(\w+)/);
     if (location.hash.indexOf('chrono') >= 0) trackMode = 'chrono';     // tests : contre-la-montre
+    if (location.hash.indexOf('duo') >= 0) trackMode = 'duo';           // tests : à deux
     const vm = location.hash.match(/v=(\w+)/);                       // tests : variante (nuit, pluie, inverse)
     if (m) { $('daily').hidden = true; $('notifAsk').hidden = true; buildRace(m[1], vm && vm[1]); }
     const ff = location.hash.match(/ff=(\d+)/);                // tests : avance la course sans rendu
