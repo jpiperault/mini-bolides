@@ -315,6 +315,25 @@
     const n = dayNum(key), h = (n * 2654435761) >>> 0;
     return Object.assign({ track: trackIds[h % trackIds.length] }, CHALLENGES[(h >>> 8) % CHALLENGES.length]);
   };
+  // Défi de la semaine : circuit, météo, cylindrée et règle imposés, du lundi au dimanche.
+  // Réussi : grosse prime et un jouet déjà trouvé qui devient doré dans la salle des trophées.
+  MB.WEEK_COINS = 600;
+  const WEEK_RULES = [
+    { kind: 'noboost', text: { fr: 'sans turbo de drift', en: 'without drift boosts' } },
+    { kind: 'clean', text: { fr: 'en touchant 1 mur au plus', en: 'hitting 1 wall at most' } },
+    { kind: 'noitem', text: { fr: 'sans utiliser d\'objet', en: 'without using items' } },
+    { kind: 'coins', text: { fr: 'avec 12 pièces ou plus', en: 'with 12 coins or more' } },
+    { kind: 'lead', text: { fr: 'en tête à chaque tour', en: 'leading every lap' } },
+  ];
+  MB.weekNum = (key) => Math.floor((MB.dayNum(key) + 3) / 7);           // semaines du lundi au dimanche
+  MB.weekDaysLeft = (key) => 7 - ((MB.dayNum(key) + 3) % 7);
+  MB.weeklyChallenge = (key, trackIds, ccOpen) => {
+    const w = MB.weekNum(key), h = MB.hash('semaine' + w);
+    const variant = [null, 'nuit', 'pluie', 'inverse'][(h >>> 4) % 4];
+    const ccs = Object.keys(MB.DIFFS).filter((k) => ccOpen[k]), cc = ccs[Math.min(ccs.length - 1, (h >>> 7) % 3)];
+    return { week: w, track: trackIds[h % trackIds.length], variant, cc, rule: WEEK_RULES[(h >>> 10) % WEEK_RULES.length] };
+  };
+  MB.weeklyMet = (c, r) => r.pos === 1 && (c.rule.kind === 'noboost' ? r.boosts === 0 : c.rule.kind === 'clean' ? r.walls <= 1 : c.rule.kind === 'noitem' ? r.items === 0 : c.rule.kind === 'coins' ? r.coins >= 12 : r.ledAll);
   // Missions du jour : trois par jour (facile, moyenne, difficile), cumulées sur toutes les courses de la journée.
   // {n} est remplacé par l'objectif, {s} par « s » au pluriel. Les trois finies ouvrent le coffre.
   MB.MISSION_COINS = [60, 100, 150];

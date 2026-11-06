@@ -235,4 +235,11 @@ check(MB.DRIFT.L1 < 0.5 && MB.DRIFT.L2 <= 1, 'turbos atteignables dans un virage
   check(ch.length === 1 && ch[0].id === 2 && ch[0].name === MB.RIVALS[2] && ch[0].style.pace > MB.RIVAL_STYLES[2].pace && MB.RIVAL_STYLES[2].pace === 0.975, `champion : ${ch.map((c) => c.name).join()} allure ${ch[0] && ch[0].style.pace.toFixed(3)}`);
   check(MB.LOOKS.deco.length === 7 && MB.RIVAL_DECO.every((d) => MB.LOOKS.deco.some((o) => o.id === d)), 'autocollants : 6 motifs, ceux des rivaux existent');
 }
+{ // défi de la semaine : stable sur la semaine, change le lundi, cylindrée toujours ouverte
+  const ids = MB.TRACKS.map((t) => t.id), open = { facile: 1 };
+  const a = MB.weeklyChallenge('2026-11-02', ids, open), b = MB.weeklyChallenge('2026-11-08', ids, open), c = MB.weeklyChallenge('2026-11-09', ids, open);
+  check(a.week === b.week && c.week === a.week + 1 && JSON.stringify(a) === JSON.stringify(b) && a.cc === 'facile' && MB.weekDaysLeft('2026-11-02') === 7 && MB.weekDaysLeft('2026-11-08') === 1, `défi de la semaine : ${a.track} ${a.variant} ${a.cc} ${a.rule.kind} / lundi suivant ${c.track} ${c.rule.kind}`);
+  const kinds = new Set(); for (let w = 0; w < 60; w++) kinds.add(MB.weeklyChallenge(MB.dayKey(new Date(Date.UTC(2026, 0, 5 + w * 7))), ids, { facile: 1, normal: 1, expert: 1 }).rule.kind);
+  check(kinds.size === 5 && MB.weeklyMet(a, { pos: 1, boosts: 0, walls: 0, items: 0, coins: 20, ledAll: true }) && !MB.weeklyMet(a, { pos: 2, boosts: 0, walls: 0, items: 0, coins: 20, ledAll: true }), `défi de la semaine : ${kinds.size} règles tirées sur 60 semaines`);
+}
 process.exit(failed ? 1 : 0);

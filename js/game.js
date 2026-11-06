@@ -6,7 +6,7 @@
   const S = {
     play: ['Championnat', 'Championship'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
     stars: ['étoiles', 'stars'], locked: ['étoiles requises', 'stars needed'], unlocked: ['Nouvelle coupe débloquée !', 'New cup unlocked!'], cupCcHelp: ['Chaque cylindrée a ses médailles. Choisis-la puis touche une coupe.', 'Each class has its own medals. Pick one, then tap a cup.'], goal: ['3e étoile : gagne avec 20 pièces', '3rd star: win with 20 coins'],
-    chal: ['Défi du jour', 'Daily challenge'], chalDone: ['réussi, reviens demain !', 'done, back tomorrow!'], chalWin: ['Défi réussi', 'Challenge done'], chalFail: ['Défi manqué', 'Challenge failed'],
+    chal: ['Défi du jour', 'Daily challenge'], week: ['Défi de la semaine', 'Weekly challenge'], weekWin: ['gagne', 'win'], weekDone: ['réussi ! Nouveau défi lundi', 'done! New challenge on Monday'], weekWon: ['🗓️ Défi de la semaine réussi !', '🗓️ Weekly challenge done!'], weekFail: ['Défi de la semaine manqué', 'Weekly challenge failed'], golden: ['devient doré !', 'turns golden!'], days: ['jours', 'days'], day: ['jour', 'day'], chalDone: ['réussi, reviens demain !', 'done, back tomorrow!'], chalWin: ['Défi réussi', 'Challenge done'], chalFail: ['Défi manqué', 'Challenge failed'],
     close: ['Fermer', 'Close'], miss: ['Missions du jour', 'Daily missions'], missChest: ['Ouvrir le coffre', 'Open the chest'], missLock: ['Finis les 3 missions pour ouvrir le coffre', 'Finish all 3 missions to open the chest'],
     missOpened: ['Coffre ouvert ! Nouvelles missions demain', 'Chest opened! New missions tomorrow'], missReady: ['Coffre des missions prêt !', 'Mission chest ready!'], missChestT: ['coffre à la clé', 'chest to win'],
     missGo: ['Coffre prêt, viens l\'ouvrir !', 'Chest ready, come and open it!'], missTomorrow: ['à demain pour de nouvelles', 'new ones tomorrow'],
@@ -41,7 +41,7 @@
   // ---------- Sauvegarde ----------
   const KEY = 'minibolides.save.v1';
   const defaults = () => ({ coins: 0, cars: ['bolide'], paints: ['tomate', 'citron', 'menthe', 'myrtille'], car: 'bolide', paint: 'tomate',
-    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, cupCc: null, ccOk: null, ccWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
+    best: {}, medals: {}, stars: {}, cups: {}, owned: [], daily: { last: null, streak: 0 }, chal: null, races: 0, sinceAd: 0, seen: false, ghosts: {}, tuto: {}, looks: ['num:', 'rim:chrome', 'trail:feu', 'deco:'], look: { num: '', rim: 'chrome', trail: 'feu', deco: '' }, troph: {}, tot: { coins: 0, turbos: 0, marbles: 0, wins: 0 }, trophT: {}, toys: {}, toyHint: {}, toyStart: null, toyAt: {}, dupDone: {}, figs: {}, figWins: {}, cupCc: null, weekWon: null, goldToys: {}, ccOk: null, ccWins: {}, scTracks: {}, tracksRaced: {}, sound: true, music: true, vib: true, assist: true, diff: 'facile', sens: 'normal', ups: {}, carPaint: {}, miss: null, notif: null });
   let save = defaults();
   try { save = Object.assign(save, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* stockage indisponible : partie sans sauvegarde */ }
   if (!save.looks.includes('deco:')) save.looks.push('deco:');
@@ -199,7 +199,7 @@
   const buzz = (ms) => { if (save.vib && bridge && bridge.vibrate) bridge.vibrate(ms); };
 
   // ---------- État ----------
-  let view, race = null, phase = 'menu', paused = false, cup = null, chal = null, stat = null, shopFrom = 'home', slowT = 0, finFx = false, lastPos = 6, tickT = 0, trackCache = {}, currentTrack = null, lastT = 0, pendingCoins = 0;
+  let view, race = null, phase = 'menu', paused = false, cup = null, chal = null, week = null, raceCc = 'facile', stat = null, shopFrom = 'home', slowT = 0, finFx = false, lastPos = 6, tickT = 0, trackCache = {}, currentTrack = null, lastT = 0, pendingCoins = 0;
   const input = { steer: 0, item: false, keyL: false, keyR: false };
   const auto = location.hash.indexOf('auto') >= 0;
   // Variantes : 'nuit' (décor de nuit, phares), 'pluie' (gouttes, route mouillée, un peu moins d'adhérence), 'inverse' (sens inverse).
@@ -254,6 +254,8 @@
   }
   const starText = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
   const challenge = () => MB.dailyChallenge(today(), openTracks());
+  const weekly = () => MB.weeklyChallenge(today(), openTracks(), save.ccOk);
+  const weekLine = (w) => `${L(MB.TRACKS.find((d) => d.id === w.track).name)}${w.variant ? ' ' + VARIANTS[w.variant].icon : ''} · ${L(MB.DIFFS[w.cc].label)} · ${t('weekWin')} ${L(w.rule.text)}`;
   const placeSuf = (p) => (lang === 'fr' ? (p === 1 ? 'er' : 'e') : ['st', 'nd', 'rd'][p - 1] || 'th');
   const carSpec = () => MB.CARS.find((c) => c.id === save.car) || MB.CARS[0];
 
@@ -269,7 +271,9 @@
     phase = 'menu'; race = null; cup = null;
     Sound.engine(false, 0); Sound.draft(0); Sound.song('menu'); Sound.rain(false);
     view.showcase(getTrack(MB.TRACKS[0].id), carSpec().shape, paintHex(), save.look);
-    chal = null;
+    chal = null; week = null;
+    const wk = weekly(), wWon = save.weekWon === wk.week, left = MB.weekDaysLeft(today());
+    $('weekBtn').innerHTML = `${t('week')}<small>${wWon ? t('weekDone') : `${weekLine(wk)} · +${MB.WEEK_COINS} 🪙 + 🌟`}</small><em>${wWon ? '✅' : `${left} ${t(left > 1 ? 'days' : 'day')}`}</em>`;
     const c = challenge(), won = save.chal === today();
     $('chalBtn').innerHTML = `${t('chal')}<small>${won ? t('chalDone') : `${L(c.text)} · +${MB.CHALLENGE_COINS} 🪙`}</small>`;
     renderMissBtn();
@@ -415,8 +419,9 @@
     view.clearShowcase();
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
-    const solo = trackMode === 'chrono' && !cup && !chal;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: cup ? cup.diff : save.diff, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined });   // contre-la-montre toujours en 50 cc : records comparables
+    const solo = trackMode === 'chrono' && !cup && !chal && !week;
+    raceCc = cup ? cup.diff : week ? week.cc : save.diff;
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: raceCc, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined });   // contre-la-montre toujours en 50 cc : records comparables
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -433,8 +438,8 @@
     stat = { boosts: 0, walls: 0, l2: 0, sc: 0, marbles: 0, items: 0, lastLapPos: 0, lap1Pos: 0, ledAll: true, maxDrift: 0, driftT: null }; slowT = 0; timeK = 1; finFx = false; lastPos = race.cars.length; tickT = 0;
     phase = 'race'; paused = false;
     show('hud');
-    $('hint').textContent = chal ? `${t('chal')} : ${L(chal.text)}` : t('how');
-    $('hint').hidden = save.seen && !chal;
+    $('hint').textContent = chal ? `${t('chal')} : ${L(chal.text)}` : week ? `${t('week')} : ${t('weekWin')} ${L(week.rule.text)}` : t('how');
+    $('hint').hidden = save.seen && !chal && !week;
     $('ticker').className = '';
     $('itemBtn').className = 'empty'; $('itemBtn').textContent = '';
     updateHud(true);
@@ -697,7 +702,7 @@
   const ccNext = (k) => CC[CC.indexOf(k) + 1];
   function ccAfter(pos) {
     if (pos !== 1) return [];
-    const k = save.diff, n = (save.ccWins[k] = (save.ccWins[k] || 0) + 1), nx = ccNext(k);
+    const k = raceCc, n = (save.ccWins[k] = (save.ccWins[k] || 0) + 1), nx = ccNext(k);
     if (!nx || save.ccOk[nx] || n < MB.DIFFS[nx].unlock) return [];
     save.ccOk[nx] = 1; save.ccNew = nx;
     return [`🔓 ${L(MB.DIFFS[nx].label)} ${t('ccOpen')}`];
@@ -761,7 +766,7 @@
     const tiers = {};
     for (const x of MB.TROPHIES) tiers[x.id] = MB.trophyTier(x, save);
     toyHunt();
-    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys), released: MB.toysReleased(save.toyStart, today()), figs: Object.keys(save.figs).map(Number) }, tIdx);
+    view.showTrophies({ tiers, paliers: MB.TROPHIES.filter((x) => x.tiers).map((x) => x.id), toys: Object.keys(save.toys), released: MB.toysReleased(save.toyStart, today()), figs: Object.keys(save.figs).map(Number), gold: Object.keys(save.goldToys) }, tIdx);
     show('trophies');
     trophyCard();
   }
@@ -840,6 +845,15 @@
       const met = MB.challengeMet(chal, { pos, coins: race.coinCount, boosts: stat.boosts, walls: stat.walls });
       if (met && save.chal !== today()) { save.chal = today(); save.coins += MB.CHALLENGE_COINS; }
       notes.push(met ? `${t('chalWin')} ! +${MB.CHALLENGE_COINS} 🪙` : t('chalFail'));
+    }
+    if (week) {
+      const met = MB.weeklyMet(week, { pos, coins: race.coinCount, boosts: stat.boosts, walls: stat.walls, items: stat.items, ledAll: stat.ledAll });
+      if (met && save.weekWon !== week.week) {
+        save.weekWon = week.week; save.coins += MB.WEEK_COINS;
+        const y = MB.TOYS.find((q) => save.toys[q.id] && !save.goldToys[q.id]);
+        if (y) save.goldToys[y.id] = week.week;
+        notes.push(`${t('weekWon')} +${MB.WEEK_COINS} 🪙${y ? ` · 🌟 ${L(y.name)} ${t('golden')}` : ''}`);
+      } else notes.push(met ? t('weekWon') : `${t('weekFail')} (${L(week.rule.text)})`);
     }
     if (openCups().length > opened) notes.push(t('unlocked'));
     if (openWorlds().length > worldsBefore) notes.push(`${t('worldOpen')} ${openWorlds().slice(worldsBefore).map((w) => w.icon + ' ' + L(w.name)).join(', ')} !`);
@@ -1061,16 +1075,17 @@
     const d = b.dataset;
     if (d.go === 'home') return leave(menu);
     if (d.go === 'cups') return renderCups();
-    if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; return startRace(cup.def.tracks[0]); }
+    if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; week = null; return startRace(cup.def.tracks[0]); }
     if (d.go === 'missions') return renderMissions();
     if (d.go === 'missClose') { $('missions').hidden = true; return; }
     if (d.go === 'chest') return openChest();
     if (d.go === 'notifYes') { $('notifAsk').hidden = true; return setNotif(true); }
     if (d.go === 'notifNo') { $('notifAsk').hidden = true; return setNotif(false); }
     if (d.go === 'notifToggle') { setNotif(!save.notif); return renderSettings(); }
+    if (d.go === 'weekly') { week = weekly(); chal = null; cup = null; return startRace(week.track, week.variant); }
     if (d.go === 'challenge') {
       if (save.chal === today()) return;
-      chal = challenge(); cup = null;
+      chal = challenge(); cup = null; week = null;
       return startRace(chal.track);
     }
     if (d.go === 'dailyTake') return takeDaily(1);
@@ -1093,7 +1108,7 @@
     if (d.go === 'next') return leave(nextAfterResult);
     if (d.go === 'double') return MB.monet.showRewarded('double', (ok) => { if (ok) { save.coins += pendingCoins; persist(); $('resDouble').hidden = true; } });
     if (d.mode) { trackMode = d.mode; return renderTracks(); }
-    if (d.track) { chal = null; return startRace(d.track, d.variant || null); }
+    if (d.track) { chal = null; week = null; return startRace(d.track, d.variant || null); }
     if (d.pick) { if (d.pick !== selTrack) selVar = null; selTrack = d.pick; if (d.pvar !== undefined) selVar = d.pvar || null; return renderTracks(); }
     if (d.world) { worldIdx = +d.world; const rail = $('wrail'); rail.scrollTo({ left: wLeft(worldIdx), behavior: 'smooth' }); document.querySelectorAll('.wchips button').forEach((b, k) => b.classList.toggle('sel', k === worldIdx)); document.querySelectorAll('.wdots i').forEach((b, k) => b.classList.toggle('sel', k === worldIdx)); return; }
     if (d.gstep) { gIdx = (gIdx + +d.gstep + MB.CARS.length) % MB.CARS.length; return renderGarage(); }

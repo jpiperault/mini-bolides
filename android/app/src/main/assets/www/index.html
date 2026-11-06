@@ -158,7 +158,7 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
 .swatch:disabled { opacity: .55; }
 .btn small { display: block; font-family: var(--body); font-size: 12px; font-weight: 600; opacity: .8; }
 .btn.tiny { min-height: 50px; font-size: 14px; margin-top: 10px; }
-.dbtn { display: flex; align-items: center; gap: 10px; text-align: left; font-size: 15px; background: var(--butter); box-shadow: 0 4px 0 var(--butter-d); } .dbtn span { flex: 1; min-width: 0; } .dbtn b { font-size: 20px; }
+.dbtn.wkbtn { background: #cfe3ff; box-shadow: 0 4px 0 #8fb3e6; } .wkbtn em { display: inline-block; margin-top: 3px; font-style: normal; font-size: 11px; font-weight: 800; white-space: nowrap; padding: 3px 7px; border-radius: 9px; background: #fff; } .dbtn { display: flex; align-items: center; gap: 10px; text-align: left; font-size: 15px; background: var(--butter); box-shadow: 0 4px 0 var(--butter-d); } .dbtn span { flex: 1; min-width: 0; } .dbtn b { font-size: 20px; }
 .cup { display: flex; gap: 10px; align-items: center; width: 100%; min-height: 72px; padding: 10px 14px; margin-top: 10px; text-align: left; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 2px var(--line); font-weight: 700; }
 .cup .slots { display: flex; gap: 4px; font-style: normal; } .cup .slots i { display: flex; flex-direction: column; align-items: center; width: 34px; padding: 3px 0; border-radius: 10px; background: #f4efe6; font-style: normal; opacity: .7; } .cup .slots i.got { opacity: 1; } .cup .slots i.cur { box-shadow: inset 0 0 0 2px var(--butter-d); background: var(--butter); opacity: 1; } .cup .slots b { font-size: 18px; line-height: 22px; } .cup .slots small { font-size: 9px; color: var(--muted); }
 .cup .ic { font-size: 30px; } .cup span { flex: 1; min-width: 0; } .cup small { display: block; color: var(--muted); font-weight: 500; } .cup i { font-style: normal; font-size: 26px; } .cup:disabled { opacity: .6; }
@@ -204,6 +204,7 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
   <div class="sheet">
     <button class="btn primary" data-go="cups" data-t="play"></button>
     <button class="btn dbtn" data-go="challenge"><b>🎯</b><span id="chalBtn"></span></button>
+    <button class="btn dbtn wkbtn" data-go="weekly"><b>🗓️</b><span id="weekBtn"></span></button>
     <button class="btn dbtn mbtn" id="missHome" data-go="missions"><b>📋</b><span id="missBtn"></span></button>
     <div class="split"><button class="btn" data-go="tracks" data-t="free"></button><button class="btn" data-go="garage" data-t="garage"></button></div>
     <div class="split" id="homeLow"><button class="btn" id="shopBtn" data-go="shop" data-t="shop"></button><button class="btn" data-go="trophies" data-t="trophies"></button><button class="btn" data-go="settings" data-t="settings"></button></div>

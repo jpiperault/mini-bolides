@@ -614,11 +614,12 @@
       }
       r.toys.forEach((y, i) => {
         // Trouvé : en couleurs ; sorti mais pas trouvé : silhouette ; pas encore sorti : paquet cadeau fermé.
-        const has = st.toys.includes(y.id), state = has ? 'got' : i < st.released ? 'hunt' : 'soon';
+        const has = st.toys.includes(y.id), state = has ? ((st.gold || []).includes(y.id) ? 'gold' : 'got') : i < st.released ? 'hunt' : 'soon';
         if (y.model && y.got === state) return;
         if (y.model) y.g.remove(y.model);
         const m = state === 'soon' ? giftBox() : MB.TOY_MODELS[y.id](); m.scale.setScalar(state === 'soon' ? 1 : 1.15); m.rotation.y = 0.5;
         if (state === 'hunt') silhouette(m);
+        if (state === 'gold') { const gm = R.lam(0xf2c14e, { metalness: 1, roughness: 0.22, emissive: 0x6a4a00, emissiveIntensity: 0.25 }); m.traverse((o) => { if (o.isMesh) o.material = gm; }); }
         this._linear(m);
         y.g.add(m); y.model = m; y.got = state;
       });
