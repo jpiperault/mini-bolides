@@ -1047,11 +1047,18 @@
     let tm = 0;
     rail.onscroll = () => { clearTimeout(tm); tm = setTimeout(() => {
       const i = Math.max(0, Math.min(worlds.length - 1, Math.round(rail.scrollLeft / (rail.children[1].offsetLeft - rail.children[0].offsetLeft))));
-      if (i === worldIdx) return;
-      worldIdx = i;
-      document.querySelectorAll('.wchips button').forEach((b, k) => b.classList.toggle('sel', k === i));
-      document.querySelectorAll('.wdots i').forEach((b, k) => b.classList.toggle('sel', k === i));
+      if (i !== worldIdx) pickWorld(i, false);
     }, 80); };
+  }
+  // Changer de monde choisit aussi son premier circuit : le bouton COURSE lance toujours ce qu'on voit.
+  function pickWorld(i, smooth) {
+    worldIdx = i;
+    const w = MB.WORLDS[i];
+    if (worldOpen(w) && !w.tracks.includes(selTrack)) { selTrack = w.tracks.find((id) => openTracks().includes(id)) || selTrack; selVar = null; renderTracks(); }
+    if (smooth) $('wrail').scrollTo({ left: wLeft(i), behavior: 'smooth' });
+    document.querySelectorAll('.wchips button').forEach((b, k) => b.classList.toggle('sel', k === i));
+    document.querySelectorAll('.wdots i').forEach((b, k) => b.classList.toggle('sel', k === i));
+    const go = document.querySelector('.wgo'); if (go) go.disabled = !worldOpen(w);
   }
 
   // ---------- Atelier de circuits ----------
@@ -1209,7 +1216,7 @@
     if (d.mode) { trackMode = d.mode; return renderTracks(); }
     if (d.track) { chal = null; week = null; return startRace(d.track, d.variant || null); }
     if (d.pick) { if (d.pick !== selTrack) selVar = null; selTrack = d.pick; if (d.pvar !== undefined) selVar = d.pvar || null; return renderTracks(); }
-    if (d.world) { worldIdx = +d.world; const rail = $('wrail'); rail.scrollTo({ left: wLeft(worldIdx), behavior: 'smooth' }); document.querySelectorAll('.wchips button').forEach((b, k) => b.classList.toggle('sel', k === worldIdx)); document.querySelectorAll('.wdots i').forEach((b, k) => b.classList.toggle('sel', k === worldIdx)); return; }
+    if (d.world) { pickWorld(+d.world, true); return; }
     if (d.gstep) { gIdx = (gIdx + +d.gstep + MB.CARS.length) % MB.CARS.length; return renderGarage(); }
     if (d.gtab) { gTab = d.gtab; return renderGarage(); }
     if (d.look !== undefined) {
