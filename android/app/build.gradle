@@ -10,8 +10,8 @@ android {
         applicationId 'com.minibolides.game'
         minSdk 26
         targetSdk 36
-        versionCode 79
-        versionName '0.9.48'
+        versionCode 80
+        versionName '0.9.49'
     }
 
     buildTypes {

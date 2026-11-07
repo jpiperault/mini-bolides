@@ -371,7 +371,7 @@
   // skill = fraction de la vitesse max des rivaux ; le rattrapage reste doux pour que gagner ait du sens.
   // Allure des rivaux par circuit : mesurée au banc (avance du 1er rival sur le pilote automatique), pour que
   // chaque circuit soit aussi disputé. >1 = rivaux plus rapides.
-  MB.TRACK_PACE = { bol: 0.89, tartine: 1.06, minuit: 1.15, dune: 0.984, sentier: 1, chateau: 0.95, banquise: 0.88, glacier: 0.986, ville: 1.06, doudou: 0.86, coffre: 1, bain: 0.91, grenier: 1.05 };
+  MB.TRACK_PACE = { bol: 0.89, tartine: 1.06, minuit: 1.15, dune: 0.984, sentier: 1, chateau: 0.95, banquise: 0.88, glacier: 0.986, ville: 1.08, doudou: 0.86, coffre: 1, bain: 0.91, grenier: 1.05 };
 
   MB.DIFFS = {
     facile: { label: { fr: '50 cc', en: '50cc' }, cc: 1, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },

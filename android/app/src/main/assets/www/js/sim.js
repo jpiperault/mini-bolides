@@ -23,6 +23,8 @@
     return Math.hypot(along - a, lat);
   };
 
+  const PIN_CURV = 1 / 18, PIN_K = 0.92, PIN_SLOPE = 0.25, AI_PIN_BRAKE = 4, PIN_BACK = 8, PIN_EXIT = 0.4, AI_PIN_TURN = 1.7;   // épingles : voir _cornerV
+
   class Race {
     constructor(opts) {
       const def = opts.def || MB.TRACKS.find((t) => t.id === opts.trackId);   // def : variante (sens inverse, pluie)
@@ -196,6 +198,8 @@
         if (c.scWant === q && (to <= 55 || into < q.door)) { c.aiLane = q.side * 7; c.aiLaneT = 0.3; }
         else if (c.scWant === q && into >= q.door && into < 60) c.scWant = null;   // entrée manquée
       }
+      // Dans une épingle, pas de grand écart de file : on reste entre le milieu et la corde.
+      if (c.pinSide && !c.scWant) c.aiLane = clamp(c.aiLane, c.pinSide > 0 ? -1 : -3, c.pinSide > 0 ? 3 : 1);
       const j = c.scWant ? (c.idx + Math.round(look * 0.45)) % t.count : i;   // vers une entrée, il vise plus près pour serrer le bord
       const tx = t.px[j] - t.tz[j] * c.aiLane, tz = t.pz[j] + t.tx[j] * c.aiLane;
       const want = Math.atan2(tz - c.z, tx - c.x);
@@ -221,7 +225,20 @@
       const t = this.track, n = Math.round(16 * this.cc * this.cc);
       let maxCurv = 0;
       for (let k = 0; k < n; k++) { const m = t.curv[(c.idx + k) % t.count]; if (m > maxCurv) maxCurv = m; }
-      return Math.max((c.spec.turn * grip) / Math.max(maxCurv, 1e-3), c.spec.vmax * 0.74 / this.cc);
+      const v = Math.max((c.spec.turn * grip) / Math.max(maxCurv, 1e-3), c.spec.vmax * 0.74 / this.cc);
+      if (c.isPlayer) return v;
+      // Épingles (rayon < 18 m) : le plancher ci-dessus y envoyait les rivaux trop vite, et ils ne freinaient
+      // qu'au dernier moment (Minuit : 9 % du temps au mur extérieur). Ils les voient venir de plus loin
+      // et ralentissent selon la distance qui reste.
+      let pin = Infinity;
+      const far = Math.round(26 * this.cc);
+      for (let k = -PIN_BACK; k < far; k++) {                // un peu derrière aussi : on ne réaccélère pas en plein braquage
+        const m = t.curv[(c.idx + k + t.count) % t.count];
+        if (m > PIN_CURV) pin = Math.min(pin, (c.spec.turn * (MB.AI_PIN_TURN || AI_PIN_TURN)) / m * PIN_K + Math.max(0, k) * t.ds * PIN_SLOPE + Math.max(0, -k) * t.ds * PIN_EXIT);
+      }
+      c.pinSide = 0;
+      if (pin < Infinity) for (let k = 0; k < far; k++) { const m = (c.idx + k) % t.count; if (t.curv[m] > PIN_CURV) { const q = (m + 1) % t.count; c.pinSide = Math.sign(t.tx[m] * t.tz[q] - t.tz[m] * t.tx[q]); break; } }
+      return Math.min(v, pin);
     }
 
     _drive(c, ctl) {
@@ -271,12 +288,12 @@
       if (c.spin > 0) { c.spin -= DT; target *= 0.35; }
       target = Math.min(target, s.vmax * 1.48);                 // turbos cumulés : ça pousse, ça ne s'emballe pas
       const low = c.v < target * 0.8 ? 1.7 : 1;                 // après un choc on repart franchement au lieu de se traîner
-      const rate = target > c.v ? (c.boost > 0 ? 3.2 : 0.8 * low) * s.accel : c.boost > 0 ? 2.2 : 1.9;
+      const rate = target > c.v ? (c.boost > 0 ? 3.2 : 0.8 * low) * s.accel : c.boost > 0 ? 2.2 : !isP && ctl && ctl.ai && c.pinSide ? AI_PIN_BRAKE : 1.9;   // un rival freine franchement avant une épingle
       c.v += (target - c.v) * rate * DT;
       if (c.v < target && c.v < 7) c.v += 14 * DT * s.accel;
 
       c.dk += clamp((c.drifting ? 1 : 0) - c.dk, -2.5 * DT, 2.5 * DT);   // le drift prend et lâche progressivement
-      const turn = s.turn * this.grip * Math.min(1, c.v / 12) * (ctl && ctl.ai ? 1.25 : 1 + 0.15 * c.dk) * (isP ? this.sens : 1) * (c.y > 0 ? 0.4 : 1);
+      const turn = s.turn * this.grip * Math.min(1, c.v / 12) * (ctl && ctl.ai ? (c.pinSide ? MB.AI_PIN_TURN || AI_PIN_TURN : 1.25) : 1 + 0.15 * c.dk) * (isP ? this.sens : 1) * (c.y > 0 ? 0.4 : 1);
       c.h += c.steer * turn * DT;
 
       const dir = this._dirAt(c, 0);
