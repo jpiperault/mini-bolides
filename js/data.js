@@ -369,6 +369,10 @@
   // Cylindrées (clés historiques facile/normal/expert gardées pour les sauvegardes) : cc = vitesse de toutes les voitures,
   // unlock = victoires à remporter dans la cylindrée précédente pour ouvrir celle-ci.
   // skill = fraction de la vitesse max des rivaux ; le rattrapage reste doux pour que gagner ait du sens.
+  // Allure des rivaux par circuit : mesurée au banc (avance du 1er rival sur le pilote automatique), pour que
+  // chaque circuit soit aussi disputé. >1 = rivaux plus rapides.
+  MB.TRACK_PACE = { bol: 0.89, tartine: 1.06, minuit: 1.15, dune: 0.984, sentier: 1, chateau: 0.95, banquise: 0.88, glacier: 0.986, ville: 1.06, doudou: 0.86, coffre: 1, bain: 0.91, grenier: 1.05 };
+
   MB.DIFFS = {
     facile: { label: { fr: '50 cc', en: '50cc' }, cc: 1, skill: 0.86, catchUp: 0.08, slowDown: 0.11, duel: 0.05, gain: 1, sc: 0.2, plot: 0.35 },
     normal: { label: { fr: '100 cc', en: '100cc' }, cc: 1.15, unlock: 3, skill: 0.99, catchUp: 0.1, slowDown: 0.06, duel: 0.12, gain: 1.25, sc: 0.35, plot: 0.2 },

@@ -47,8 +47,8 @@
   // Pièces de la maison : pas de ciel, le haut du mur et le plafond (la bande basse est cachée par le lointain).
   const INDOOR = { cuisine: 1, chambre: 1, bain: 1 };
   function indoor(g, k, kind, night) {
-    const wall = { cuisine: ['#efdcbf', '#f2e3cb'], chambre: ['#efd2e2', '#f3dbe8'], bain: ['#e4f2f6', '#eef8fb'] }[kind];
-    const ceil = { cuisine: ['#d9c3a0', '#f3e8d6'], chambre: ['#b9c9ef', '#e4ecfb'], bain: ['#d2e4ea', '#f4fafc'] }[kind];
+    const wall = { cuisine: ['#efdcbf', '#f2e3cb'], chambre: ['#efd2e2', '#f3dbe8'], bain: ['#8fc6d8', '#a9d4e2'] }[kind];
+    const ceil = { cuisine: ['#d9c3a0', '#f3e8d6'], chambre: ['#b9c9ef', '#e4ecfb'], bain: ['#9cc2cf', '#cfe3ea'] }[kind];
     g.fillStyle = k.vgrad(0, 190, ceil); g.fillRect(0, 0, W, 190);
     g.fillStyle = k.vgrad(190, H, wall); g.fillRect(0, 190, W, H - 190);
     g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(0, 196, W, 6);
@@ -79,10 +79,11 @@
       }
     } else {
       // Faïence jusqu'au plafond, frise, plafonnier rond et buée.
-      for (let y = 210; y < H; y += 40) for (let x = 0; x < W; x += 40) { g.fillStyle = (x / 40 + y / 40) % 9 === 0 ? '#9fd3e6' : '#f8fdff'; g.fillRect(x + 2, y + 2, 36, 36); }
-      g.fillStyle = '#5aa9c9'; g.fillRect(0, 196, W, 16); g.fillStyle = '#ffffff'; for (let x = 6; x < W; x += 24) g.fillRect(x, 201, 10, 6);
+      g.fillStyle = '#5f97ab'; g.fillRect(0, 210, W, H - 210);   // joints
+      for (let y = 210; y < H; y += 40) for (let x = 0; x < W; x += 40) { const n = (x / 40 + y / 40) % 9; g.fillStyle = n === 0 ? '#2f8fb8' : n === 4 ? '#ffd23f' : (x / 40 + y / 40) % 2 ? '#a9d8e8' : '#c4e6f0'; g.fillRect(x + 2, y + 2, 36, 36); }
+      g.fillStyle = '#1f6f94'; g.fillRect(0, 196, W, 16); g.fillStyle = '#ffffff'; for (let x = 6; x < W; x += 24) g.fillRect(x, 201, 10, 6);
       for (let x = 400; x < W; x += 1024) { k.circ(x, 60, 70, '#ffffff'); k.circ(x, 60, 56, '#fff9e6'); lamps.push([x, 60]); }
-      g.fillStyle = 'rgba(255,255,255,.35)'; for (let i = 0; i < 26; i++) { g.beginPath(); g.ellipse(k.rnd() * W, 140 + k.rnd() * 200, 120 + k.rnd() * 160, 26, 0, 0, 7); g.fill(); }   // buée
+      g.fillStyle = 'rgba(255,255,255,.22)'; for (let i = 0; i < 26; i++) { g.beginPath(); g.ellipse(k.rnd() * W, 140 + k.rnd() * 200, 120 + k.rnd() * 160, 26, 0, 0, 7); g.fill(); }   // buée
       for (let i = 0; i < 40; i++) { const x = k.rnd() * W, y = 220 + k.rnd() * 260, r = 5 + k.rnd() * 12; g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, r, 0, 7); g.stroke(); k.circ(x - r * 0.35, y - r * 0.35, r * 0.25, 'rgba(255,255,255,.9)'); }   // bulles qui montent
     }
     if (night) nightOver(g, () => { for (const [x, y] of lamps) { const gr = g.createRadialGradient(x, y, 4, x, y, 150); gr.addColorStop(0, 'rgba(255,230,160,.85)'); gr.addColorStop(1, 'rgba(255,230,160,0)'); g.fillStyle = gr; g.fillRect(x - 150, y - 150, 300, 300); } });
@@ -98,11 +99,21 @@
       const k = kit(g, seed + 5);
       if (INDOOR[kind]) return indoor(g, k, kind, night);
       if (kind === 'sousbois') {
-        // Voûte des feuilles : vert sombre en haut, trouées de lumière, rayons de soleil en biais.
-        g.fillStyle = k.vgrad(0, H, ['#16301a', '#2c5229', '#5f8a4a', '#a9c48a']); g.fillRect(0, 0, W, H);
-        k.thrice((o) => { for (let i = 0; i < 260; i++) { const x = (i * 97.3) % W + o, y = ((i * 61.7) % 300) - 20, r = 22 + ((i * 13) % 40); k.circ(x, y, r, ['#173219', '#21431f', '#2b5428', '#1b3a1c'][i % 4]); } });
-        for (let i = 0; i < 70; i++) k.circ(k.rnd() * W, 40 + k.rnd() * 220, 4 + k.rnd() * 9, `rgba(255,248,200,${0.5 + k.rnd() * 0.4})`);
-        for (let x = 60; x < W; x += 170 + k.rnd() * 160) { const w = 30 + k.rnd() * 50; g.fillStyle = 'rgba(255,244,190,.13)'; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + w, 0); g.lineTo(x + w + 140, H); g.lineTo(x + 140, H); g.fill(); }
+        // Voûte des feuilles : ciel clair qui perce entre des grappes de feuillage pendantes et quelques branches.
+        g.fillStyle = k.vgrad(0, H, ['#e9f2c4', '#cfe2a4', '#a9c48a']); g.fillRect(0, 0, W, H);
+        for (let i = 0; i < 6; i++) { const x = k.rnd() * W; g.fillStyle = 'rgba(255,250,215,.35)'; g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 70, 0); g.lineTo(x + 230, H); g.lineTo(x + 140, H); g.fill(); }   // rayons
+        k.thrice((o) => {
+          g.strokeStyle = '#3d2c1c'; g.lineCap = 'round';
+          for (let x = 80; x < W; x += 340) { g.lineWidth = 16; g.beginPath(); g.moveTo(x + o, -10); g.quadraticCurveTo(x + o + 90, 90, x + o + 220, 120); g.stroke(); g.lineWidth = 8; g.beginPath(); g.moveTo(x + o + 120, 80); g.quadraticCurveTo(x + o + 140, 140, x + o + 110, 190); g.stroke(); }
+          for (let x = 0; x < W; x += 120) {                       // grappes : denses en haut, qui pendent en lobes irréguliers
+            const cx = x + o + ((x * 37) % 60), drop = 70 + ((x * 53) % 150);
+            for (let n = 0; n < 34; n++) {
+              const t = n / 34, y = -20 + t * drop + ((n * 29) % 20), r = 46 - t * 26 + ((n * 7) % 10), dx = ((n * 71) % 130) - 65;
+              k.circ(cx + dx * (1 - t * 0.5), y, r, ['#1d3d1d', '#29512a', '#356634', '#447a3c'][(n + x) % 4]);
+            }
+          }
+        });
+        for (let i = 0; i < 90; i++) k.circ(k.rnd() * W, k.rnd() * 160, 2 + k.rnd() * 5, `rgba(150,200,90,${0.4 + k.rnd() * 0.4})`);   // feuilles éclairées
         if (night) nightOver(g);
         return;
       }
@@ -235,8 +246,8 @@
       }
       if (kind === 'bain') {
         // Mur carrelé bleu et blanc, miroir, lavabo, baignoire géante avec rideau de douche à poissons.
-        g.fillStyle = '#eef8fb'; g.fillRect(0, 140, W, base - 140);
-        for (let y = 140; y < base; y += 40) for (let x = 0; x < W; x += 40) { g.fillStyle = (x / 40 + y / 40) % 7 === 0 ? '#7fc4dd' : '#f8fdff'; g.fillRect(x + 2, y + 2, 36, 36); }
+        g.fillStyle = '#5f97ab'; g.fillRect(0, 140, W, base - 140);
+        for (let y = 140; y < base; y += 40) for (let x = 0; x < W; x += 40) { const n = (x / 40 + y / 40) % 7; g.fillStyle = n === 0 ? '#2f8fb8' : (x / 40 + y / 40) % 2 ? '#a9d8e8' : '#c4e6f0'; g.fillRect(x + 2, y + 2, 36, 36); }
         g.fillStyle = '#5aa9c9'; g.fillRect(0, 300, W, 14);
         for (let x = 30; x < W; x += 680) {
           k.rr(x, 160, 170, 120, 14, '#cfd8de'); g.fillStyle = k.vgrad(168, 272, ['#d8f1fb', '#a9d6ea']); k.rr(x + 8, 168, 154, 104, 10); g.fill();

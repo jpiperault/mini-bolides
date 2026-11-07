@@ -28,7 +28,8 @@
       const def = opts.def || MB.TRACKS.find((t) => t.id === opts.trackId);   // def : variante (sens inverse, pluie)
       this.track = opts.track || MB.buildTrack(def);
       const d = MB.DIFFS[opts.diff || 'facile'];
-      this.diff = Object.assign({}, d, { skill: d.skill * (1 + 0.035 * (opts.power || 0)) });  // les rivaux progressent un peu avec toi
+      const pace = (MB.TRACK_PACE && MB.TRACK_PACE[this.track.def.id]) || 1;   // allure des rivaux propre au circuit (même défi partout)
+      this.diff = Object.assign({}, d, { skill: d.skill * pace * (1 + 0.035 * (opts.power || 0)) });  // les rivaux progressent un peu avec toi
       this.laps = opts.laps || MB.CONFIG.laps;
       this.cc = opts.cc || d.cc || 1;                          // cylindrée : vitesse de toutes les voitures (50 cc ×0,9, 150 cc ×1,12)
       this.assist = opts.assist !== false;
