@@ -14,9 +14,25 @@ android {
         versionName '0.9.49'
     }
 
+    // Clé d'envoi Play Store : android/keystore.properties + .jks (copie dans /root/keys, jamais dans git)
+    def ksFile = rootProject.file('keystore.properties')
+    def ks = new Properties()
+    if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
+    signingConfigs {
+        release {
+            if (ksFile.exists()) {
+                storeFile rootProject.file(ks['storeFile'])
+                storePassword ks['storePassword']
+                keyAlias ks['keyAlias']
+                keyPassword ks['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (ksFile.exists()) signingConfig signingConfigs.release
         }
     }
     compileOptions {

@@ -2,6 +2,10 @@
 (function (MB) {
   // demo : pubs et achats simulés, sans SDK ni paiement. À passer à false avant toute mise en ligne sur Play.
   MB.FEATURES = { premium: true, ads: true, demo: true };
+  // Version Play (APK/AAB non debuggable) : gratuite, sans pub ni achat tant qu'AdMob et Play Billing ne sont pas branchés
+  // (AndroidBridge.java). Les versions de test du store privé gardent la démo ci-dessus.
+  MB.PLAY_FEATURES = { premium: false, ads: false, demo: false };
+  try { if (typeof window !== 'undefined' && window.AndroidBridge && window.AndroidBridge.journalOn && !window.AndroidBridge.journalOn()) MB.FEATURES = MB.PLAY_FEATURES; } catch (e) { /* hors Android */ }
 
   // Boutique : confort et cosmétique uniquement, jamais de pièces ni d'évolutions contre de l'argent réel.
   MB.OFFERS = [
