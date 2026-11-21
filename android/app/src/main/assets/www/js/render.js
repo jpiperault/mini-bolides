@@ -948,6 +948,19 @@
   const lowQuality = () => { try { return localStorage.getItem(QUALITY_KEY) === '1'; } catch (e) { return false; } };
   const rememberLow = () => { try { localStorage.setItem(QUALITY_KEY, '1'); } catch (e) { /* stockage indisponible */ } };
 
+  const _rv = new T.Vector3();
+  // Sols en photo : matière (js/tex), répétitions sur le plan de 1800, teinte (× gain) pour retrouver la couleur du monde, rugosité, relief, reflets.
+  const REEL_GROUND = {
+    bois: { set: 'bois', rep: 26, tint: 0xe8cfae, rough: 0.8, ns: 1.2, env: 0.3 },
+    nuit: { set: 'bois', rep: 26, tint: 0x8a7468, rough: 0.8, ns: 1.2, env: 0.3 },
+    sable: { set: 'sable', rep: 22, tint: 0xf6dcae, gain: 1.15, rough: 1, ns: 1.4, env: 0.12 },
+    neige: { set: 'neige', rep: 20, tint: 0xeef4ff, gain: 1.05, rough: 0.9, ns: 1.1, env: 0.3 },
+    mousse: { set: 'mousse', rep: 22, tint: 0xa4a878, rough: 1, ns: 1.5, env: 0.1 },
+    plancher: { set: 'plancher', rep: 18, tint: 0xc0b4a8, rough: 0.9, ns: 1.3, env: 0.25 },
+    ville: { set: 'tapis', rep: 12, rough: 0.9, ns: 0.6, env: 0.15 },      // tapis de jeu imprimé : on garde le dessin des rues
+    tapis: { set: 'tapis', rep: 9, rough: 0.95, ns: 0.9, env: 0.1 },
+    vichy: { set: 'tapis', rep: 14, rough: 0.8, ns: 0.35, env: 0.2 },
+  };
   class View {
     constructor(el) {
       this.r = new T.WebGLRenderer({ canvas: el, antialias: true, powerPreference: 'high-performance' });
@@ -987,6 +1000,7 @@
       this.frames = 0; this.fpsT = 0;
       this.fps = fps;
       if (fps >= 50) return;
+      if (this.postOn) { MB.REEL.dropPost(Math.round(fps) + ' images/s'); return; }   // d'abord l'objectif photo : sans recompilation, sans perte de netteté
       if (this.pixelRatio > 1) { this.pixelRatio = Math.max(1, this.pixelRatio - 0.35); this.r.setPixelRatio(this.pixelRatio); this.resize(); return; }
       if (this.shadows) {                                     // dernier recours, mémorisé pour les prochains lancements
         this.shadows = false;                                 // recompiler fige l'image : on attend la prochaine course
@@ -1034,7 +1048,7 @@
       this.scene.traverse((o) => {
         if (o.geometry) o.geometry.dispose();
         const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
-        for (const m of ms) { if (m.map && m.map !== this.blob && m.map !== this.puff) m.map.dispose(); m.dispose(); }
+        for (const m of ms) { for (const k of ['map', 'normalMap', 'roughnessMap', 'bumpMap']) if (m[k] && m[k] !== this.blob && m[k] !== this.puff) m[k].dispose(); m.dispose(); }
       });
       if (this.scene.background && this.scene.background.dispose) this.scene.background.dispose();
       if (lam.env) { lam.env.dispose(); lam.env = null; }
@@ -1047,6 +1061,7 @@
       this.pads = [];
       const mood = variantMood(MOODS[track.def.mood], track.variant), s = (this.scene = new T.Scene());
       this.mood = mood;
+      this.r.shadowMap.type = MB.REEL.B ? T.PCFSoftShadowMap : T.PCFShadowMap;
       // Mur de cuisine flou en arrière-plan, avec la lueur d'une fenêtre.
       s.background = canvas(512, 512, (g, W, H) => {
         const night = !!mood.night, sky = g.createLinearGradient(0, 0, 0, H), b = mood.back || (night ? ['#0b1024', '#1b2346', '#2a2f55'] : ['#efe3d0', '#fff3df', '#e9d3b4']);
@@ -1065,14 +1080,17 @@
       });
       s.fog = new T.Fog(mood.sky, mood.fog[0], mood.fog[1]);
       lam.env = this._env(mood);
-      s.add(new T.HemisphereLight(mood.hemi[0], mood.hemi[1], mood.hemi[2] * 0.75));
-      const sun = new T.DirectionalLight(mood.sun[0], mood.sun[1] * 2.6); s.add(sun, sun.target);
+      s.add(new T.HemisphereLight(mood.hemi[0], mood.hemi[1], mood.hemi[2] * (MB.REEL.B ? 0.5 : 0.75)));
+      const sun = new T.DirectionalLight(mood.sun[0], mood.sun[1] * (MB.REEL.B ? 3.4 : 2.6)); s.add(sun, sun.target);
       sun.castShadow = this.shadows; sun.shadow.mapSize.set(1024, 1024); sun.shadow.bias = -0.0006; sun.shadow.radius = 3;
       Object.assign(sun.shadow.camera, { left: -55, right: 55, top: 55, bottom: -55, near: 1, far: 320 });
+      if (MB.REEL.B) { sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -44, right: 44, top: 44, bottom: -44 }); sun.shadow.normalBias = 0.05; }
       this.sun = sun;
 
       const gt = groundTexture(mood.ground); gt.repeat.set(9, 9);
       const wet = mood.ground === 'eau', ground = new T.Mesh(new T.PlaneGeometry(1800, 1800), new T.MeshStandardMaterial({ map: gt, roughness: wet ? 0.3 : mood.ground === 'mousse' ? 0.95 : 0.45, envMap: lam.env, envMapIntensity: wet ? 0.25 : mood.ground === 'mousse' ? 0.15 : 0.55 }));
+      if (MB.REEL.C) this._reelGround(ground.material, gt, mood);
+      this._ground = ground.material; this._gt = gt;
       ground.rotation.x = -Math.PI / 2; s.add(ground);
 
       // Horizon : deux couronnes de silhouettes que le brouillard estompe (lointaine puis proche).
@@ -1091,11 +1109,13 @@
       const w = track.width / 2;
       const road = roadTexture(mood.road);
       // Pluie : route mouillée, plus sombre et brillante (le ciel s'y reflète).
-      s.add(ribbon(track, -w, w, 0.14, 0.14, 12, new T.MeshStandardMaterial(mood.rain ? { map: road, color: 0xaab2bd, roughness: 0.28, metalness: 0.15, envMap: lam.env, envMapIntensity: 1.4 } : { map: road, roughness: 0.82 })));
+      const roadMat = new T.MeshStandardMaterial(mood.rain ? { map: road, color: 0xaab2bd, roughness: 0.28, metalness: 0.15, envMap: lam.env, envMapIntensity: 1.4 } : { map: road, roughness: 0.82 });
+      s.add(ribbon(track, -w, w, 0.14, 0.14, 12, roadMat));
       const kc = mood.kerb || ['#e5352b', '#ffffff'], kerb = stripeTexture(kc[0], kc[1]);
-      const wallMat = new T.MeshLambertMaterial({ map: kerb, side: T.DoubleSide }), gapL = track.wallGap[-1], gapR = track.wallGap[1];
-      s.add(ribbon(track, -w - 1.5, -w, 0.2, 0.2, 7, new T.MeshLambertMaterial({ map: kerb }), gapL));
-      s.add(ribbon(track, w, w + 1.5, 0.2, 0.2, 7, new T.MeshLambertMaterial({ map: kerb }), gapR));
+      const plast = MB.REEL.C ? () => this._reelPlastic(kerb) : null;
+      const wallMat = plast ? plast() : new T.MeshLambertMaterial({ map: kerb, side: T.DoubleSide }), gapL = track.wallGap[-1], gapR = track.wallGap[1];
+      s.add(ribbon(track, -w - 1.5, -w, 0.2, 0.2, 7, plast ? plast() : new T.MeshLambertMaterial({ map: kerb }), gapL));
+      s.add(ribbon(track, w, w + 1.5, 0.2, 0.2, 7, plast ? plast() : new T.MeshLambertMaterial({ map: kerb }), gapR));
       s.add(wallStrip(track, -w - 1.5, wallMat, gapL));
       s.add(wallStrip(track, w + 1.5, wallMat, gapR));
       // Bas-côté : une bande douce entre le mur et le sol, au lieu d'une coupure nette.
@@ -1113,6 +1133,8 @@
 
       // Raccourcis : même route et mêmes bordures que le circuit, posée juste sous lui pour que la bifurcation se fonde.
       const branchRoad = new T.MeshStandardMaterial({ map: road, roughness: 0.82, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2 });
+      this._roadMats = mood.rain ? null : [roadMat, branchRoad]; this._roadTex = road;
+      if (MB.REEL.C && !mood.rain) this._reelRoad(this._roadMats, road, mood);
       for (const p of track.shortcuts) {
         const hw = p.width / 2;
         s.add(ribbon(p, -hw, hw, 0.13, 0.13, 12, branchRoad));
@@ -1220,6 +1242,9 @@
       this.carMeshes = []; this.boxes = []; this.coins = []; this.syrups = []; this.toyGs = [];
       this._fx();
       this._weather(mood);
+      if (MB.REEL.B) this._reelEnv(track, mood);
+      // Photos pas encore chargées (vitrine des menus) : on les pose dès qu'elles arrivent.
+      if (MB.REEL.photo && !MB.REEL.has(mood.ground)) MB.REEL.load(mood.ground).then(() => { if (this.scene !== s || !MB.REEL.photo) return; this._reelGround(this._ground, this._gt, mood); if (this._roadMats) this._reelRoad(this._roadMats, this._roadTex, mood); });
     }
 
     // Salle de bain : la piste court sur le rebord émaillé de la baignoire, l'eau et sa mousse de chaque côté.
@@ -1384,6 +1409,7 @@
         }
         const sh = new T.Mesh(new T.PlaneGeometry(7.4, 4.4), new T.MeshBasicMaterial({ map: this.blob, transparent: true, depthWrite: false }));
         sh.rotation.x = -Math.PI / 2; sh.position.y = 0.24;
+        if (MB.REEL.B) { const ct = new T.Mesh(new T.PlaneGeometry(5.3, 2.5), new T.MeshBasicMaterial({ map: this.blob, transparent: true, depthWrite: false, opacity: 0.85 })); ct.rotation.x = -Math.PI / 2; ct.position.y = 0.05; ct.userData.contact = true; m.add(ct); }
         this.scene.add(m, sh);
         this.carMeshes.push({ m, sh, c });
       }
@@ -1692,6 +1718,14 @@
       for (const tx of this.pads || []) tx.offset.y -= dt * 1.6;      // les flèches de la dalle turbo avancent
       if (this.life) this.life.update(dt, this.t, P, this.race.cars, this.lite);
       this._adapt(dt);
+      if (MB.REEL.close) this._reelCam(P);
+      if (MB.REEL.skip) return;
+      this.postOn = MB.REEL.D && !duo;
+      if (this.postOn) {
+        this._draw(P.x, P.z);
+        if (this.onSnap) { const cb = this.onSnap; this.onSnap = null; cb(this.snapshot()); }
+        return;
+      }
       if (duo) {
         const w = window.innerWidth, h = window.innerHeight, hh = Math.floor(h / 2);
         this.r.setScissorTest(true);
@@ -1730,7 +1764,7 @@
       if (this.life) this.life.update(dt, (this.t += dt), { x: px, z: pz }, this.race.cars, this.lite);
       this.windM.visible = false;
       this._sun(px, pz);
-      this.r.render(this.scene, this.cam);
+      this._draw(close ? t.px[0] : this.rpX, close ? t.pz[0] : this.rpZ);
     }
 
     // Bulle de texte au-dessus d'une voiture (rival dépassé), 1,8 s.
@@ -1803,6 +1837,90 @@
           tampon: [this.r.domElement.width, this.r.domElement.height],
         };
       } catch (e) { return null; }
+    }
+
+    // ---------- Rendu réaliste ----------
+    // Image finale : à travers l'objectif photo (mise au point sur x, z) s'il est actif, sinon rendu direct.
+    _draw(x, z) {
+      if (!MB.REEL.D) return this.r.render(this.scene, this.cam);
+      if (!this.post) this.post = new MB.REEL.Post(this.r);
+      this.post.render(this.scene, this.cam, this.cam.position.distanceTo(_rv.set(x, 1, z)));
+      if (!this.post.checked) { this.post.checked = true; const e = this.r.getContext().getError(); if (e) MB.REEL.dropPost('erreur WebGL ' + e); }   // téléphone qui refuse la cible de rendu : retour au rendu direct
+    }
+
+    // Sol : photo de la matière du monde (couleur, relief, rugosité), ou relief tiré du dessin si la photo manque.
+    _reelGround(mat, gt, mood) {
+      const G = REEL_GROUND[mood.ground], I = G && MB.REEL.photo && MB.REEL.img[G.set];
+      const mk = (img, srgb) => { const t = new T.Texture(img); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 8; if (srgb) t.encoding = T.sRGBEncoding; t.repeat.set(G.rep, G.rep); t.needsUpdate = true; return t; };
+      if (mat.bumpMap) { mat.bumpMap.dispose(); mat.bumpMap = null; }
+      if (I && I.d) {
+        gt.dispose();
+        mat.map = mk(I.d, true); mat.normalMap = mk(I.n); mat.roughnessMap = mk(I.r);
+        mat.color.setHex(G.tint).convertSRGBToLinear().multiplyScalar(G.gain || 1); mat.userData.lin = true;
+        mat.roughness = G.rough; mat.normalScale.set(G.ns, G.ns); mat.envMapIntensity = G.env;
+      } else if (I && I.n) {                                     // tissu : le dessin du jeu, avec le relief fin d'une vraie trame
+        mat.normalMap = mk(I.n); mat.normalMap.repeat.copy(gt.repeat); mat.normalScale.set(G.ns, G.ns); mat.roughness = G.rough; mat.envMapIntensity = G.env;
+        const k = G.rep.toFixed(1);
+        mat.onBeforeCompile = (sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_maps>', T.ShaderChunk.normal_fragment_maps.split('texture2D( normalMap, vUv )').join('texture2D( normalMap, vUv * ' + k + ' )')); };
+        mat.customProgramCacheKey = () => 'trame' + k;
+      } else if (mood.ground !== 'eau') {
+        mat.bumpMap = MB.REEL.bumpFrom(gt, 1.8); mat.bumpScale = 0.25; mat.roughness = Math.max(mat.roughness, 0.42); mat.envMapIntensity = Math.min(mat.envMapIntensity, 0.4);
+      }
+      mat.needsUpdate = true;
+    }
+
+    // Route : photo d'asphalte teintée à la couleur du monde, gomme sur la trajectoire, peinture un peu usée.
+    _reelRoad(mats, road, mood) {
+      const I = MB.REEL.photo && MB.REEL.img.route, mk = (c, srgb) => { const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 8; if (srgb) t.encoding = T.sRGBEncoding; return t; };
+      if (mats[0].bumpMap) mats[0].bumpMap.dispose();
+      for (const q of mats) q.bumpMap = null;
+      if (I && I.d) {
+        const W = 1024, H = 1024, c = MB.REEL.tile(MB.REEL.tint(I.d, mood.road), W, H, 4, 2), g = c.getContext('2d');
+        const tr = g.createLinearGradient(0, 0, W, 0);          // gomme sombre sur la trajectoire
+        tr.addColorStop(0.2, 'rgba(0,0,0,0)'); tr.addColorStop(0.36, 'rgba(0,0,0,.32)'); tr.addColorStop(0.5, 'rgba(0,0,0,.08)'); tr.addColorStop(0.64, 'rgba(0,0,0,.32)'); tr.addColorStop(0.8, 'rgba(0,0,0,0)');
+        g.fillStyle = tr; g.fillRect(0, 0, W, H);
+        // Peinture routière un peu usée : le grain de l'asphalte ressort à travers.
+        const line = (x, y, w, h) => { g.fillStyle = 'rgba(238,236,228,.86)'; g.fillRect(x, y, w, h); for (let i = 0; i < w * h / 26; i++) { g.fillStyle = `rgba(40,40,44,${Math.random() * 0.5})`; g.fillRect(x + Math.random() * w, y + Math.random() * h, 1.5 + Math.random() * 2, 1.5 + Math.random() * 3); } };
+        line(32, 0, 24, H); line(W - 56, 0, 24, H); line(W / 2 - 12, 0, 24, H * 0.45);
+        const rc = MB.REEL.tile(I.r, 512, 512, 4, 2), rg = rc.getContext('2d');
+        rg.fillStyle = 'rgba(90,90,90,.55)'; rg.fillRect(512 * 0.3, 0, 512 * 0.14, 512); rg.fillRect(512 * 0.56, 0, 512 * 0.14, 512);   // la gomme lustre la trajectoire
+        const o = { map: mk(c, true), normalMap: mk(MB.REEL.tile(I.n, W, H, 4, 2)), roughnessMap: mk(rc), roughness: 1, envMap: lam.env, envMapIntensity: 0.22 };
+        road.dispose();
+        for (const q of mats) { Object.assign(q, o); q.normalScale.set(1.6, 1.6); }
+      } else {
+        const b = mk(MB.REEL.grain(512, 26000, 40, 215, 1.3)); b.repeat.set(4, 2);
+        for (const q of mats) Object.assign(q, { bumpMap: b, bumpScale: 0.06, roughness: 0.74, envMap: lam.env, envMapIntensity: 0.22 });
+      }
+      for (const q of mats) q.needsUpdate = true;
+    }
+
+    // Vibreurs et murs en plastique moulé : brillant, avec un léger grain.
+    _reelPlastic(kerb) {
+      if (!this._plG) { this._plG = new T.CanvasTexture(MB.REEL.grain(256, 5000, 96, 160, 1.6)); this._plG.wrapS = this._plG.wrapT = T.RepeatWrapping; }
+      return new T.MeshPhysicalMaterial({ map: kerb, roughness: 0.42, clearcoat: 0.4, clearcoatRoughness: 0.25, bumpMap: this._plG, bumpScale: 0.02, envMap: lam.env, envMapIntensity: 0.4, side: T.DoubleSide });
+    }
+
+    // Les carrosseries reflètent le vrai décor : on photographie la scène depuis la grille de départ.
+    _reelEnv(track, mood) {
+      const old = lam.env, s = this.scene;
+      this._sun(track.px[0], track.pz[0]);
+      const env = MB.REEL.captureEnv(this.r, s, track.px[0], 7, track.pz[0], !!mood.night);
+      s.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((q) => { if (q.envMap === old) { q.envMap = env; q.needsUpdate = true; } }); });
+      lam.env = env; if (old) old.dispose();
+    }
+
+    _reelCam(P) {
+      const k = MB.REEL.close, ch = Math.cos(P.h), sh = Math.sin(P.h);
+      if (k === 'mat') {                                         // matières : vue par-dessus la voiture vers le vibreur et la table
+        this.cam.position.set(P.x - ch * 5 + sh * 8, 3.6, P.z - sh * 5 - ch * 8);
+        this.cam.lookAt(P.x + ch * 1 - sh * 5, 0.3, P.z + sh * 1 + ch * 5);
+      } else {
+        const a = P.h + (k === 'rear' ? 2.5 : 0.62);
+        this.cam.position.set(P.x + Math.cos(a) * 8.2, 2.1, P.z + Math.sin(a) * 8.2);
+        this.cam.lookAt(P.x, 1.0, P.z);
+      }
+      if (this.cam.fov !== 34) { this.cam.fov = 34; this.cam.updateProjectionMatrix(); }
+      for (const e of this.carMeshes) if (!e.c.isPlayer) { e.m.visible = false; e.sh.visible = false; }   // gros plan : la voiture du joueur seule
     }
 
     _sun(x, z) {
@@ -1940,10 +2058,14 @@
       this.cam.fov = 40; this.cam.updateProjectionMatrix();
       this.cam.position.set(o.x + Math.cos(a) * 15, 5, o.z + Math.sin(a) * 15);
       this.cam.lookAt(o.x, -1.6, o.z);                        // la voiture reste au-dessus du panneau de menu
-      this.r.render(this.scene, this.cam);
+      this._draw(o.x, o.z);
     }
 
     clearShowcase() { this.shop = null; this.shopKey = null; }
+    // Photos des matières du monde : à attendre avant world() pour éviter de les voir arriver.
+    preload(track) { return MB.REEL.load(variantMood(MOODS[track.def.mood], track.variant).ground); }
+    // Réglage « Rendu réaliste » changé : la vitrine des menus se reconstruit.
+    regfx() { this.track = null; this.clearShowcase(); }
   }
 
   MB.View = View;

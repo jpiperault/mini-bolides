@@ -22,7 +22,7 @@
     pos: ['Arrivée', 'Result'], coins: ['pièces', 'coins'], best: ['Meilleur tour', 'Best lap'], cup: ['Classement', 'Standings'],
     you: ['Toi', 'You'], choose: ['Choisis un circuit', 'Pick a track'], buy: ['Acheter', 'Buy'], use: ['Choisir', 'Select'], used: ['En piste', 'Selected'],
     diff: ['Cylindrée', 'Engine class'], ccOpen: ['débloqué ! Choisis-le au-dessus du bouton COURSE', 'unlocked! Pick it above the RACE button'], newTag: ['NOUVEAU', 'NEW'], ccHelp: ['Plus de cylindrée : tout le monde va plus vite (100 cc +15 %, 150 cc +32 %) et les rivaux sont plus forts. Gagne 3 courses pour ouvrir la suivante. Le contre-la-montre se court toujours en 50 cc.', 'Bigger engines: everyone is faster (100cc +15%, 150cc +32%) and rivals are tougher. Win 3 races to unlock the next class. Time trial is always 50cc.'], report: ['📸 Signaler un souci', '📸 Report a problem'], loading: ['Préparation du circuit…', 'Getting the track ready…'], skip: ['Touche l\'écran pour passer', 'Tap to skip'], modeRace: ['🏁 Course', '🏁 Race'], modeChrono: ['⏱ Contre-la-montre', '⏱ Time trial'], modeDuo: ['👥 À deux', '👥 Two players'], duoWin: ['Joueur {n} gagne !', 'Player {n} wins!'], duoP: ['Joueur', 'Player'], duoAgain: ['Revanche !', 'Rematch!'], duoHelp: ['À deux sur le même téléphone, posé à plat entre vous : chacun dirige avec son pouce sur sa moitié d\'écran.', 'Two players, one phone laid flat between you: each steers with a thumb on their half of the screen.'],
-    record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : modes ouverts dès une étoile en Normal. Chaque mode rapporte ses étoiles.', '🌙 🌧️ 🔄: modes open with one star in Normal. Each mode earns its own stars.'], tagline: ['COURSE DE PETITES VOITURES', 'TOY CAR RACING'], worldOpen: ['Nouveau monde :', 'New world:'], worldNeed: ['Encore', 'Still'], worldNeed2: ['étoiles pour ouvrir ce monde. Chaque mode de chaque circuit en rapporte.', 'stars to open this world. Every mode of every track earns them.'], pickTrack: ['Choisis un circuit', 'Pick a track'], run: ['COURIR', 'RACE'], normal: ['Normal', 'Normal'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], assist: ['Volant magique', 'Magic wheel'],
+    record: ['Nouveau record !', 'New record!'], ghostHelp: ['Bats ton fantôme : ton meilleur tour lancé (dès le 2e tour).', 'Beat your ghost: your best flying lap (from lap 2).'], varHelp: ['🌙 🌧️ 🔄 : modes ouverts dès une étoile en Normal. Chaque mode rapporte ses étoiles.', '🌙 🌧️ 🔄: modes open with one star in Normal. Each mode earns its own stars.'], tagline: ['COURSE DE PETITES VOITURES', 'TOY CAR RACING'], worldOpen: ['Nouveau monde :', 'New world:'], worldNeed: ['Encore', 'Still'], worldNeed2: ['étoiles pour ouvrir ce monde. Chaque mode de chaque circuit en rapporte.', 'stars to open this world. Every mode of every track earns them.'], pickTrack: ['Choisis un circuit', 'Pick a track'], run: ['COURIR', 'RACE'], normal: ['Normal', 'Normal'], lapTimes: ['Tours', 'Laps'], sound: ['Son', 'Sound'], music: ['Musique', 'Music'], vib: ['Vibrations', 'Vibration'], gfx: ['Rendu réaliste', 'Realistic rendering'], gfxHelp: ['Reflets, matières photo, flou d\'objectif. Se coupe seul si le téléphone peine.', 'Reflections, photo materials, lens blur. Turns itself off if the phone struggles.'], assist: ['Volant magique', 'Magic wheel'],
     assistHelp: ['Sans doigt posé, la voiture se recale seule.', 'With no finger down, the car straightens itself.'],
     back: ['Retour', 'Back'], how: ['Pose le pouce où tu veux et glisse à gauche ou à droite pour tourner. Braque fort pour drifter, relâche pour le turbo !', 'Put your thumb anywhere and slide left or right to steer. Steer hard to drift, release for turbo!'],
     won: ['Coupe gagnée !', 'Cup won!'], podium: ['Sur le podium !', 'On the podium!'], tryagain: ['Presque ! Encore une ?', 'So close! One more?'],
@@ -389,6 +389,7 @@
     try { bridge.sendJournal(JSON.stringify(j.end(outcome))); } catch (e) { /* un journal perdu ne doit jamais gêner la partie */ }
   }
   // Bandeau de diagnostic des versions de test : sans lui, un envoi raté ne se voit pas sur le téléphone
+  MB.REEL.note = (text) => { if (journal) journal.error(text); };
   window.mbJournal = (text) => {
     let el = $('journalNote');
     if (!el) { el = document.createElement('div'); el.id = 'journalNote'; el.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:99;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.8);color:#fff;font:13px sans-serif;text-align:center;pointer-events:none'; document.body.appendChild(el); }
@@ -412,7 +413,8 @@
   // et image de chauffe ; le compte à rebours part ensuite sans à-coup.
   function startRace(trackId, variant) {
     $('loading').hidden = false;
-    requestAnimationFrame(() => requestAnimationFrame(() => { buildRace(trackId, variant); $('loading').hidden = true; }));
+    const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { buildRace(trackId, variant); $('loading').hidden = true; }));
+    view.preload(getTrack(trackId, cup || chal ? null : variant || null)).then(go, go);   // photos des matières du monde, avant de construire
   }
   function buildRace(trackId, variant) {
     const t0 = performance.now();
@@ -1156,6 +1158,7 @@
       <button class="row" data-toggle="assist"><span>${t('assist')}<br><small>${t('assistHelp')}</small></span><i>${save.assist ? 'ON' : 'OFF'}</i></button>
       <button class="row" data-toggle="sound"><span>${t('sound')}</span><i>${save.sound ? 'ON' : 'OFF'}</i></button>
       <button class="row" data-toggle="music"><span>${t('music')}</span><i>${save.music ? 'ON' : 'OFF'}</i></button>
+      <button class="row" data-go="gfxToggle"><span>${t('gfx')}<br><small>${t('gfxHelp')}</small></span><i>${MB.REEL.pref() ? 'ON' : 'OFF'}</i></button>
       <button class="row" data-toggle="vib"><span>${t('vib')}</span><i>${save.vib ? 'ON' : 'OFF'}</i></button>
       ${bridge && bridge.remind ? `<button class="row" data-go="notifToggle"><span>${t('notif')}<br><small>${save.notif && !bridge.notifAllowed() ? t('notifBlocked') : t('notifHelp')}</small></span><i>${save.notif ? 'ON' : 'OFF'}</i></button>` : ''}
       ${MB.FEATURES.demo ? `<button class="btn tiny" data-go="demoReset">${t('demoReset')}</button>` : ''}
@@ -1206,6 +1209,7 @@
     if (d.go === 'tracks') return renderTracks();
     if (d.go === 'garage') { gIdx = Math.max(0, MB.CARS.findIndex((c) => c.id === save.car)); gTab = 'car'; return renderGarage(); }
     if (d.go === 'settings') return renderSettings();
+    if (d.go === 'gfxToggle') { MB.REEL.setPref(!MB.REEL.pref()); view.regfx(); return renderSettings(); }
     if (d.go === 'pause') return setPaused(true);
     if (d.go === 'resume') return setPaused(false);
     if (d.go === 'skipReplay') return endReplay();
@@ -1307,7 +1311,9 @@
     document.addEventListener('pointerdown', () => { Sound.init(); Sound.wake(); }, true);
   }
 
+  let stillN = 0;
   function loop(now) {
+    if (MB.REEL.still) { stillN++; MB.REEL.skip = stillN < MB.REEL.still; if (stillN > MB.REEL.still + 1) { console.log('MAQ pret'); document.title = 'pret'; return; } }
     requestAnimationFrame(loop);
     const tLoop = performance.now();                           // journal : temps de calcul et de dessin de chaque image
     if (Sound.tunes) Sound.tunes.tick();
@@ -1315,7 +1321,7 @@
     const gap = Math.max(0, (now - lastT) / 1000 || 0), raw = Math.min(gap, 0.1);   // gap : vrai temps entre deux images, pour le journal
     lastT = now;
     frameDt = raw > 0.05 ? raw : frameDt + (raw - frameDt) * 0.25;    // gomme le tremblement de l'horloge, pas les vrais à-coups
-    const dt = frameDt;
+    const dt = MB.REEL.still ? 1 / 30 : frameDt;
     if (phase === 'race' && race) {
       if (!paused) {
         const keys = (input.keyR ? 1 : 0) - (input.keyL ? 1 : 0);
@@ -1384,7 +1390,7 @@
     document.documentElement.lang = lang;
   }
 
-  function boot() {
+  async function boot() {
     applyTexts();
     view = new MB.View($('gl'));
     document.addEventListener('click', onClick);
@@ -1414,11 +1420,12 @@
     if (location.hash.indexOf('chrono') >= 0) trackMode = 'chrono';     // tests : contre-la-montre
     if (location.hash.indexOf('duo') >= 0) trackMode = 'duo';           // tests : à deux
     const vm = location.hash.match(/v=(\w+)/);                       // tests : variante (nuit, pluie, inverse)
-    if (m) { $('daily').hidden = true; $('notifAsk').hidden = true; buildRace(m[1], vm && vm[1]); }
+    if (m) { $('daily').hidden = true; $('notifAsk').hidden = true; await view.preload(getTrack(m[1], vm && vm[1])); buildRace(m[1], vm && vm[1]); }
     const ff = location.hash.match(/ff=(\d+)/);                // tests : avance la course sans rendu
-    if (ff && race) { for (let i = 0; i < +ff[1] * 60; i++) race.step(1 / 60, MB.botInput(race)); }
+    if (ff && race) { MB.REEL.reseed(777); for (let i = 0; i < +ff[1] * 60; i++) race.step(1 / 60, MB.botInput(race)); }
     const sc = location.hash.match(/screen=(\w+)/);
     if (sc) MB.debug.go(sc[1]);
+    MB.REEL.reseed(4242);
     requestAnimationFrame(loop);
   }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(boot); else boot();

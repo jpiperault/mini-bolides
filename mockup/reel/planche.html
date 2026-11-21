@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mini Bolides — maquette rendu réaliste</title>
+<style>
+  :root { --bg: #fff8ec; --ink: #2b2230; --soft: #6d6272; --line: #e6d9c4; --tag0: #8a7f8f; --tag1: #d1432b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 20px 16px 40px; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 34px 0 4px; }
+  p { margin: 0 0 12px; color: var(--soft); max-width: 78ch; }
+  .row { display: grid; gap: 12px; }
+  .two { grid-template-columns: repeat(2, 1fr); }
+  .three { grid-template-columns: repeat(3, 1fr); }
+  .tall { max-width: 760px; }
+  figure { margin: 0; }
+  img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); }
+  figcaption { margin-top: 6px; font-size: 13px; color: var(--soft); }
+  figcaption b { display: inline-block; padding: 1px 8px; border-radius: 20px; color: #fff; background: var(--tag0); font-size: 12px; margin-right: 6px; }
+  figcaption b.n { background: var(--tag1); }
+  @media (max-width: 700px) { .three { grid-template-columns: 1fr; } }
+</style>
+<main>
+  <h1>Mini Bolides — maquette « rendu réaliste »</h1>
+  <p>Circuit Le Tour du Bol (Cuisine), voiture rouge. En gros plan les rivaux sont masqués. Images calculées sur le serveur, sans téléphone : la fluidité reste à mesurer sur l'appareil.</p>
+
+  <h2>1. Vue de course</h2>
+  <p>Tous les lots ensemble : voitures, lumière et reflets, matières photo, objectif.</p>
+  <div class="row two tall">
+    <figure><img src="f_race0.png" alt=""><figcaption><b>Avant</b>v0.9.49</figcaption></figure>
+    <figure><img src="f_race1.png" alt=""><figcaption><b class="n">Après</b>lots A + B + C + D</figcaption></figure>
+  </div>
+
+  <h2>2. La voiture de près</h2>
+  <p>Peinture vernie, vitres transparentes avec sièges et volant, phares sous glace, plaque, pneus sculptés, jantes creusées avec disque de frein. Les carrosseries reflètent la vraie cuisine.</p>
+  <div class="row two">
+    <figure><img src="f_car0.png" alt=""><figcaption><b>Avant</b></figcaption></figure>
+    <figure><img src="f_car1.png" alt=""><figcaption><b class="n">Après</b>vue avant</figcaption></figure>
+    <figure><img src="f_car2.png" alt=""><figcaption><b class="n">Après</b>vue arrière</figcaption></figure>
+  </div>
+
+  <h2>3. Matières : le choix à faire</h2>
+  <p>Table, route et vibreurs. À gauche les aplats actuels (avec la nouvelle lumière), au milieu le relief dessiné par le code, à droite les photos libres de droits (bois et asphalte, environ 3,5 Mo pour ce monde avant allègement).</p>
+  <div class="row three">
+    <figure><img src="f_matA.png" alt=""><figcaption><b>Aplats actuels</b></figcaption></figure>
+    <figure><img src="f_matB.png" alt=""><figcaption><b class="n">Par le code</b>aucun poids ajouté</figcaption></figure>
+    <figure><img src="f_matC.png" alt=""><figcaption><b class="n">Photos CC0</b>Poly Haven</figcaption></figure>
+  </div>
+
+  <h2>4. Objectif photo</h2>
+  <p>Le lointain devient flou comme sur une photo de maquette, les lumières ont un léger halo, les bords de l'image s'assombrissent.</p>
+  <div class="row two tall">
+    <figure><img src="f_race2.png" alt=""><figcaption><b>Sans</b>lots A + B + C</figcaption></figure>
+    <figure><img src="f_race1.png" alt=""><figcaption><b class="n">Avec</b>lot D en plus</figcaption></figure>
+  </div>
+</main>
+</html>

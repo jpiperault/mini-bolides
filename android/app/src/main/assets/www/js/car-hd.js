@@ -126,7 +126,7 @@
   }
 
   function paintTexture(sp, hex, xs, deco) {
-    const W = 512, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const RA = MB.REEL && MB.REEL.A, W = RA ? 1024 : 512, H = RA ? 512 : 256, c = document.createElement('canvas'); c.width = W; c.height = H;
     const g = c.getContext('2d'), col = '#' + hex.toString(16).padStart(6, '0');
     g.fillStyle = col; g.fillRect(0, 0, W, H);
     const U = (x) => { let i = 0; while (i < N && xs[i] < x) i++; return (i / N) * W; };
@@ -136,21 +136,50 @@
     g.fillStyle = '#17181d'; g.fillRect(0, V(0), W, V(0.24));   // bas de caisse
     const [ga, gb] = sp.glass, ctrl = 7;                         // indices des points de contrôle dans la section
     const belt = 4 / ctrl, upper = 5.45 / ctrl;
-    g.fillStyle = dark;
-    // vitres latérales, avec montant central
     const mid = (ga + gb) / 2 - 0.05;
-    g.beginPath();
-    g.moveTo(U(ga + 0.28), V(belt + 0.015)); g.lineTo(U(mid - 0.05), V(belt + 0.015)); g.lineTo(U(mid - 0.05), V(upper)); g.lineTo(U(ga + 0.58), V(upper)); g.closePath(); g.fill();
-    g.beginPath();
-    g.moveTo(U(mid + 0.05), V(belt + 0.015)); g.lineTo(U(gb - 0.02), V(belt + 0.015)); g.lineTo(U(gb - 0.4), V(upper)); g.lineTo(U(mid + 0.05), V(upper)); g.closePath(); g.fill();
-    // pare-brise et lunette, sur le dessus
-    g.fillRect(U(gb - 0.42), V(upper + 0.02), U(gb + 0.12) - U(gb - 0.42), H);
-    g.fillRect(U(ga + 0.02), V(upper + 0.02), U(ga + 0.56) - U(ga + 0.02), H);
-    // lignes d'ouvrants et prise d'air
-    g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(U(mid - 0.72), V(0.26)); g.lineTo(U(mid - 0.72), V(belt)); g.moveTo(U(mid + 0.56), V(0.26)); g.lineTo(U(mid + 0.56), V(belt)); g.stroke();
-    const tex = new T.CanvasTexture(c);
-    tex.flipY = false; tex.encoding = T.sRGBEncoding; tex.anisotropy = 4;
+    // vitres latérales (avec montant central), pare-brise et lunette sur le dessus
+    const panes = (x) => {
+      x.beginPath();
+      x.moveTo(U(ga + 0.28), V(belt + 0.015)); x.lineTo(U(mid - 0.05), V(belt + 0.015)); x.lineTo(U(mid - 0.05), V(upper)); x.lineTo(U(ga + 0.58), V(upper)); x.closePath();
+      x.moveTo(U(mid + 0.05), V(belt + 0.015)); x.lineTo(U(gb - 0.02), V(belt + 0.015)); x.lineTo(U(gb - 0.4), V(upper)); x.lineTo(U(mid + 0.05), V(upper)); x.closePath();
+      x.rect(U(gb - 0.42), V(upper + 0.02), U(gb + 0.12) - U(gb - 0.42), H);
+      x.rect(U(ga + 0.02), V(upper + 0.02), U(ga + 0.56) - U(ga + 0.02), H);
+    };
+    if (!RA) {
+      g.fillStyle = dark; panes(g); g.fill();
+      g.strokeStyle = 'rgba(0,0,0,.45)'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(U(mid - 0.72), V(0.26)); g.lineTo(U(mid - 0.72), V(belt)); g.moveTo(U(mid + 0.56), V(0.26)); g.lineTo(U(mid + 0.56), V(belt)); g.stroke();
+      const tex = new T.CanvasTexture(c);
+      tex.flipY = false; tex.encoding = T.sRGBEncoding; tex.anisotropy = 4;
+      return tex;
+    }
+    // Maquette « miniature métal » : ouvrants gravés, joints de vitre en caoutchouc, vitres réellement percées.
+    const bc = document.createElement('canvas'); bc.width = W; bc.height = H;
+    const bg = bc.getContext('2d'); bg.fillStyle = '#fff'; bg.fillRect(0, 0, W, H);
+    const shut = (x) => {
+      x.beginPath();
+      const d0 = U(mid - 0.78), d1 = U(mid + 0.6), s0 = V(0.27);
+      x.moveTo(d0, V(belt)); x.lineTo(d0, s0 + 14); x.quadraticCurveTo(d0, s0, d0 + 14, s0); x.lineTo(d1 - 14, s0); x.quadraticCurveTo(d1, s0, d1, s0 + 14); x.lineTo(d1, V(belt));   // portière
+      x.moveTo(U(gb + 0.3), V(0.7)); x.lineTo(U(gb + 0.3), H);                    // capot
+      x.moveTo(U(gb + 0.3), V(0.7)); x.lineTo(U(sp.x[1] - 0.45), V(0.74));
+      x.moveTo(U(ga - 0.12), V(0.7)); x.lineTo(U(ga - 0.12), H);                  // coffre
+      x.moveTo(U(ga - 0.12), V(0.7)); x.lineTo(U(sp.x[0] + 0.3), V(0.72));
+      x.moveTo(U(ga - 0.5) + 9, V(0.47)); x.arc(U(ga - 0.5), V(0.47), 9, 0, 7);   // trappe à essence
+    };
+    g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 2.2; g.lineCap = 'round'; shut(g); g.stroke();
+    bg.strokeStyle = '#000'; bg.lineWidth = 4; bg.lineCap = 'round'; bg.filter = 'blur(1px)'; shut(bg); bg.stroke(); bg.filter = 'none';
+    g.strokeStyle = '#0b0c0f'; g.lineWidth = 9; g.lineJoin = 'round'; panes(g); g.stroke();   // joints
+    bg.strokeStyle = '#555'; bg.lineWidth = 9; bg.lineJoin = 'round'; panes(bg); bg.stroke();
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000'; panes(g); g.fill(); g.globalCompositeOperation = 'source-over';
+    const gc = document.createElement('canvas'); gc.width = W / 2; gc.height = H / 2;
+    const gg = gc.getContext('2d'); gg.scale(0.5, 0.5);
+    gg.fillStyle = 'rgba(30,48,56,.6)'; panes(gg); gg.fill();
+    gg.globalCompositeOperation = 'source-atop';                                  // bandeau pare-soleil en haut du pare-brise
+    const sun = gg.createLinearGradient(U(gb - 0.42), 0, U(gb - 0.2), 0); sun.addColorStop(0, 'rgba(8,14,18,.75)'); sun.addColorStop(1, 'rgba(8,14,18,0)');
+    gg.fillStyle = sun; gg.fillRect(U(gb - 0.42), V(upper + 0.02), U(gb - 0.2) - U(gb - 0.42), H);
+    const mk = (cv, srgb) => { const t = new T.CanvasTexture(cv); t.flipY = false; if (srgb) t.encoding = T.sRGBEncoding; t.anisotropy = 8; return t; };
+    const tex = mk(c, true);
+    tex.userData = { glass: mk(gc, true), bump: mk(bc, false) };
     return tex;
   }
 
@@ -191,11 +220,26 @@
     g.setAttribute('color', new T.BufferAttribute(col, 3));
     g.setIndex(idx);
     g.computeVertexNormals();
-    const mat = new T.MeshStandardMaterial({ map: paintTexture(sp, hex, xs), metalness: 0.45, roughness: 0.24, vertexColors: true, envMap: env, envMapIntensity: 1.1, side: T.DoubleSide });
+    const RA = MB.REEL && MB.REEL.A, tex0 = paintTexture(sp, hex, xs);
+    const mat = RA
+      ? new T.MeshPhysicalMaterial({ map: tex0, bumpMap: tex0.userData.bump, bumpScale: 0.012, metalness: 0.3, roughness: 0.42, clearcoat: 1, clearcoatRoughness: 0.03, vertexColors: true, envMap: env, envMapIntensity: 0.7, alphaTest: 0.5, color: 0xb4b4b4 })
+      : new T.MeshStandardMaterial({ map: tex0, metalness: 0.45, roughness: 0.24, vertexColors: true, envMap: env, envMapIntensity: 1.1, side: T.DoubleSide });
     mat.userData.lin = true;
     const m = new T.Mesh(g, mat);
     m.castShadow = true;
-    m.repaint = (deco) => { const old = mat.map; mat.map = paintTexture(sp, hex, xs, deco); mat.needsUpdate = true; old.dispose(); };
+    let inner = null, glass = null;
+    if (RA) {                                                    // envers sombre de la tôle + vitres teintées sur la même forme
+      inner = new T.Mesh(g, new T.MeshStandardMaterial({ map: tex0, color: 0x050506, roughness: 0.9, side: T.BackSide, alphaTest: 0.5 }));
+      inner.material.userData.lin = true;
+      glass = new T.Mesh(g, new T.MeshStandardMaterial({ map: tex0.userData.glass, transparent: true, depthWrite: false, roughness: 0.02, metalness: 0, envMap: env, envMapIntensity: 2.2 }));
+      glass.material.userData.lin = true; glass.renderOrder = 2;
+      m.add(inner, glass);
+    }
+    m.repaint = (deco) => {
+      const old = mat.map; mat.map = paintTexture(sp, hex, xs, deco); mat.needsUpdate = true;
+      if (RA) { mat.bumpMap = mat.map.userData.bump; inner.material.map = mat.map; glass.material.map = mat.map.userData.glass; old.userData.glass.dispose(); old.userData.bump.dispose(); }
+      old.dispose();
+    };
     return { mesh: m, at: (x) => { const i = xs.findIndex((v) => v >= x); return { belt: belt[i], roof: roof[i], w: width[i] }; } };
   }
 
@@ -212,13 +256,15 @@
     return m;
   }
 
+  const mid2 = (sp) => (sp.glass[0] + sp.glass[1]) / 2 - 0.05;
   const wheelGeo = {};
   function wheelGeometry(r, side) {
-    const key = r + ':' + side;
+    const key = r + ':' + side + (MB.REEL && MB.REEL.A ? 'A' : '');
     if (wheelGeo[key]) return wheelGeo[key];
     const W = 0.27, R = r * 0.62;
     const prof = [[0, -W], [r * 0.66, -W], [r * 0.93, -W], [r, -W * 0.6], [r, W * 0.6], [r * 0.93, W], [r * 0.66, W], [r * 0.62, W * 0.5]];
     const tyre = new T.LatheGeometry(prof.map((p) => new T.Vector2(p[0], p[1])), 22); tyre.rotateX(Math.PI / 2);
+    if (side < 0) tyre.rotateX(Math.PI);                         // flanc fermé côté voiture : sinon il cachait la jante sur tout un côté
     const s = new T.Shape();
     for (let i = 0; i < 5; i++) {
       const a = (i / 5) * Math.PI * 2;
@@ -231,13 +277,41 @@
     const rim = new T.TorusGeometry(R, 0.026, 6, 22); rim.translate(0, 0, side * (W - 0.04));
     const disc = new T.CircleGeometry(R * 0.96, 18); disc.translate(0, 0, side * (W - 0.14));
     if (side < 0) disc.rotateY(Math.PI);
+    if (MB.REEL && MB.REEL.A) {                                  // jante creusée : moyeu, écrous, disque de frein derrière les branches
+      disc.translate(0, 0, side * -0.09);
+      const parts = [spokes, rim], cyl = (rr, d, x, y, z) => { const c = new T.CylinderGeometry(rr, rr, d, 10); c.rotateX(Math.PI / 2); c.translate(x, y, z); return c; };
+      parts.push(cyl(R * 0.2, 0.07, 0, 0, side * (W - 0.035)));
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2 + 0.63; parts.push(cyl(0.022, 0.05, Math.cos(a) * R * 0.3, Math.sin(a) * R * 0.3, side * (W - 0.03))); }
+      const lip = new T.TorusGeometry(R * 1.03, 0.02, 6, 26); lip.translate(0, 0, side * (W - 0.01)); parts.push(lip);
+      const barrel = new T.CylinderGeometry(R * 1.02, R * 1.02, 0.2, 24, 1, true); barrel.rotateX(Math.PI / 2); barrel.translate(0, 0, side * (W - 0.12));
+      const brake = new T.RingGeometry(R * 0.32, R * 0.84, 28); brake.translate(0, 0, side * (W - 0.17)); if (side < 0) brake.rotateY(Math.PI);
+      const cal = new T.BoxGeometry(R * 0.5, R * 0.36, 0.07); cal.translate(R * 0.6, R * 0.2, side * (W - 0.15));
+      return (wheelGeo[key] = { tyre, metal: merge(parts), disc, barrel, brake, cal });
+    }
     return (wheelGeo[key] = { tyre, metal: merge([spokes, rim]), disc });
+  }
+
+  // Pneu : sculptures en relief sur la bande de roulement, marquage moulé sur le flanc.
+  let tyreTex = null;
+  function tyreTextures() {
+    if (tyreTex) return tyreTex;
+    const W = 512, H = 256, mk = (draw, srgb) => { const c = document.createElement('canvas'); c.width = W; c.height = H; draw(c.getContext('2d')); const t = new T.CanvasTexture(c); t.wrapS = T.RepeatWrapping; if (srgb) t.encoding = T.sRGBEncoding; t.anisotropy = 4; return t; };
+    const v = (k) => (k / 7) * H, text = (x, col) => { x.fillStyle = col; for (const y of [v(1.55), v(5.45)]) { x.fillRect(0, y - 9, W, 2.5); x.fillRect(0, y + 7, W, 2.5); for (let i = 0; i < 24; i++) x.fillRect(i * (W / 24) + 4, y - 3, i % 4 ? 9 : 15, 6); } };
+    const map = mk((x) => { x.fillStyle = '#1b1b1f'; x.fillRect(0, 0, W, H); x.fillStyle = '#121215'; x.fillRect(0, v(2.5), W, v(4.5) - v(2.5)); text(x, '#3a3a40'); }, true);
+    const bump = mk((x) => {
+      x.fillStyle = '#999'; x.fillRect(0, 0, W, H); text(x, '#fff');
+      x.fillStyle = '#000';
+      for (const y of [v(3.25), v(3.75)]) x.fillRect(0, y - 3, W, 6);                                   // rainures
+      for (let i = 0; i < 64; i++) { x.save(); x.translate(i * 8, 0); x.scale(0.5, 1); x.beginPath(); x.moveTo(0, v(2.3)); x.lineTo(5, v(2.3)); x.lineTo(11, v(3.2)); x.lineTo(6, v(3.2)); x.fill(); x.beginPath(); x.moveTo(6, v(3.8)); x.lineTo(11, v(3.8)); x.lineTo(5, v(4.7)); x.lineTo(0, v(4.7)); x.fill(); x.restore(); }
+    }, false);
+    return (tyreTex = { map, bump });
   }
 
   function wheel(r, side, mats) {
     const g = wheelGeometry(r, side), w = new T.Group(), tyre = new T.Mesh(g.tyre, mats.tyre), spin = new T.Group();
     tyre.castShadow = true;
     spin.add(new T.Mesh(g.metal, mats.metal), new T.Mesh(g.disc, mats.disc));
+    if (g.barrel) { spin.add(new T.Mesh(g.barrel, mats.barrel), new T.Mesh(g.brake, mats.brake)); w.add(new T.Mesh(g.cal, mats.cal)); }
     w.add(tyre, spin);
     return w;
   }
@@ -252,9 +326,21 @@
     const red = new T.MeshStandardMaterial({ color: 0xc10f12, emissive: 0xff1a12, emissiveIntensity: 1.1, roughness: 0.25 });
     const lamp = new T.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff2c4, emissiveIntensity: 0.9, metalness: 0.2, roughness: 0.15, envMap: env });
     const rear = b.at(x0 + 0.14), front = b.at(x1 - 0.14), sph = new T.SphereGeometry(1, 16, 10);
+    const RA = MB.REEL && MB.REEL.A;
+    const chromeA = RA && new T.MeshStandardMaterial({ color: 0xe6e9ee, metalness: 1, roughness: 0.1, envMap: env, envMapIntensity: 1.4 });
+    const lensA = RA && new T.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, depthWrite: false, roughness: 0.02, envMap: env, envMapIntensity: 3.5 });
+    if (RA) {
+      Object.assign(red, { color: new T.Color(0x9c0b0e), emissiveIntensity: 0.5, roughness: 0.1, envMap: env, envMapIntensity: 1.6 });
+      paint.metalness = 0.3; paint.roughness = 0.4; paint.envMapIntensity = 1.0;
+    }
     for (const s of [-1, 1]) {
       const tl = new T.Mesh(sph, red); tl.scale.set(0.07, 0.085, 0.27); tl.position.set(x0 + 0.1, rear.belt - 0.13, s * rear.w * 0.56); body.add(tl);
-      const hl = new T.Mesh(sph, lamp); hl.scale.set(0.2, 0.065, 0.24); hl.position.set(x1 - 0.26, front.belt - 0.03, s * front.w * 0.62); hl.rotation.y = s * -0.35; body.add(hl);
+      const hl = new T.Mesh(sph, RA ? chromeA : lamp); hl.scale.set(0.2, 0.065, 0.24); hl.position.set(x1 - 0.26, front.belt - 0.03, s * front.w * 0.62); hl.rotation.y = s * -0.35; body.add(hl);
+      if (RA) {                                                  // phare : cuvelage chromé, deux ampoules, glace transparente
+        for (const k of [-0.09, 0.08]) { const bu = new T.Mesh(sph, lamp); bu.scale.set(0.05, 0.045, 0.06); bu.position.set(hl.position.x + 0.12 + (k > 0 ? s * -0.0 : 0), hl.position.y + 0.02, hl.position.z + k); body.add(bu); }
+        const le = new T.Mesh(sph, lensA); le.scale.set(0.225, 0.08, 0.265); le.position.copy(hl.position); le.position.x += 0.012; le.rotation.y = hl.rotation.y; le.renderOrder = 2; body.add(le);
+        const at = b.at(mid2(sp) + 0.25), hd = new T.Mesh(new T.BoxGeometry(0.26, 0.035, 0.035), chromeA); hd.position.set(mid2(sp) + 0.25, at.belt - 0.09, s * (at.w + 0.0)); body.add(hd);   // poignée
+      }
       const mir = new T.Mesh(sph, paint), gx = sp.glass[1] - 0.3; mir.scale.set(0.09, 0.07, 0.13);
       const ga = b.at(gx); mir.position.set(gx, ga.belt + 0.05, s * (ga.w + 0.1)); body.add(mir);
       const ex = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.22, 12), new T.MeshStandardMaterial({ color: 0xb8bcc4, metalness: 0.95, roughness: 0.25, envMap: env }));
@@ -264,6 +350,29 @@
     plate.position.set(x0 + 0.015, rear.belt - 0.3, 0); body.add(plate);
     const grille = new T.Mesh(new T.BoxGeometry(0.06, 0.15, front.w * 1.1), dark); grille.position.set(x1 - 0.1, sp.bottom + 0.19, 0); body.add(grille);
     const splitter = new T.Mesh(new T.BoxGeometry(0.42, 0.05, front.w * 1.6), dark); splitter.position.set(x1 - 0.32, sp.bottom + 0.02, 0); body.add(splitter);
+    if (RA) {
+      const pt = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 36; const x = c.getContext('2d'); x.fillStyle = '#f4f3ec'; x.fillRect(0, 0, 128, 36); x.fillStyle = '#1d3f9a'; x.fillRect(0, 0, 12, 36); x.fillStyle = '#16171b'; x.font = '700 24px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('MB-042', 70, 19); const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t; })();
+      const pm = new T.MeshStandardMaterial({ map: pt, roughness: 0.45 }), pg = new T.PlaneGeometry(0.5, 0.14);
+      const pr = new T.Mesh(pg, pm); pr.rotation.y = -Math.PI / 2; pr.position.set(x0 - 0.002, rear.belt - 0.3, 0); body.add(pr);
+      const pf = new T.Mesh(pg, pm); pf.rotation.y = Math.PI / 2; pf.position.set(x1 - 0.045, sp.bottom + 0.19, 0); body.add(pf);
+      const gt = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 32; const x = c.getContext('2d'); x.fillStyle = '#0a0a0c'; x.fillRect(0, 0, 64, 32); x.fillStyle = '#8d9299'; for (let i = 0; i < 4; i++) x.fillRect(0, 3 + i * 8, 64, 2.5); const t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t; })();
+      grille.material = new T.MeshStandardMaterial({ map: gt, roughness: 0.4, metalness: 0.6, envMap: env });
+      // Habitacle : baquet sombre, planche de bord, deux sièges avec appuie-tête, volant.
+      const [ga, gb] = sp.glass, cx = (ga + gb) / 2, cab = b.at(cx), fl = cab.belt - 0.34, len = gb - ga - 0.5;
+      const trim = new T.MeshStandardMaterial({ color: 0x1a1b20, roughness: 0.85 }), seatM = new T.MeshStandardMaterial({ color: 0x8f7755, roughness: 0.62 });
+      const tub = new T.Mesh(new T.BoxGeometry(len, 0.06, cab.w * 1.7), trim); tub.position.set(cx + 0.05, fl, 0); body.add(tub);
+      const dash = new T.Mesh(new T.BoxGeometry(0.34, 0.26, cab.w * 1.66), trim); dash.position.set(gb - 0.42, cab.belt - 0.1, 0); body.add(dash);
+      const shelf = new T.Mesh(new T.BoxGeometry(0.5, 0.05, cab.w * 1.6), trim); shelf.position.set(ga + 0.5, cab.belt - 0.03, 0); body.add(shelf);
+      const round = (w, h, d) => { const q = new T.SphereGeometry(0.5, 12, 8); q.scale(w, h, d); return q; };
+      for (const s of [-1, 1]) {
+        const z = s * cab.w * 0.43, sx = cx - 0.12;
+        const cu = new T.Mesh(round(0.52, 0.2, 0.5), seatM); cu.position.set(sx + 0.16, fl + 0.12, z); body.add(cu);
+        const bk = new T.Mesh(round(0.2, 0.62, 0.5), seatM); bk.position.set(sx - 0.12, fl + 0.38, z); bk.rotation.z = 0.22; body.add(bk);
+        const hr = new T.Mesh(round(0.14, 0.18, 0.3), seatM); hr.position.set(sx - 0.2, Math.min(fl + 0.74, cab.roof - 0.14), z); body.add(hr);
+      }
+      const sw = new T.Mesh(new T.TorusGeometry(0.15, 0.025, 6, 18), trim); sw.rotation.y = Math.PI / 2; sw.rotation.z = 0; sw.position.set(gb - 0.62, cab.belt + 0.0, cab.w * 0.43); sw.rotateX(0.35); body.add(sw);
+      const mirG = new T.Mesh(new T.BoxGeometry(0.02, 0.07, 0.2), chromeA); mirG.position.set(gb - 0.5, cab.roof - 0.1, 0); body.add(mirG);
+    }
     if (sp.spoiler === 'lip') {
       const lipM = new T.Mesh(new T.BoxGeometry(0.24, 0.05, 1.4), paint); lipM.position.set(x0 + 0.26, rear.belt + 0.09, 0); lipM.rotation.z = 0.2; body.add(lipM);
     } else if (sp.spoiler === 'roof') {
@@ -306,6 +415,14 @@
       metal: new T.MeshStandardMaterial({ color: 0xcfd3da, metalness: 0.9, roughness: 0.28, envMap: env, envMapIntensity: 1.3 }),
       disc: new T.MeshStandardMaterial({ color: 0x24252b, metalness: 0.4, roughness: 0.6 }),
     };
+    if (RA) {
+      const tt = tyreTextures();
+      Object.assign(wheelMats.tyre, { map: tt.map, bumpMap: tt.bump, bumpScale: 0.012, roughness: 0.8 }); wheelMats.tyre.color.setHex(0xffffff);
+      Object.assign(wheelMats.metal, { metalness: 0.55, roughness: 0.3, envMapIntensity: 1.4 }); wheelMats.metal.color.setHex(0xe2e6ec);   // alliage peint : reste clair côté ombre
+      wheelMats.barrel = new T.MeshStandardMaterial({ color: 0x55585f, metalness: 0.9, roughness: 0.4, envMap: env, side: T.BackSide });
+      wheelMats.brake = new T.MeshStandardMaterial({ color: 0x9a9da3, metalness: 1, roughness: 0.34, envMap: env });
+      wheelMats.cal = new T.MeshStandardMaterial({ color: 0xd8a51d, roughness: 0.4, envMap: env });
+    }
     for (const a of [1, 0]) for (const s of [1, -1]) {
       const r = sp.wheels ? sp.wheels[a] : R, w = wheel(r, s, wheelMats); w.position.set(sp.axle[a], r, s * zw); g.add(w);
       g.wheels.push(w); w.front = a === 1; w.k = 0.62 * r / R;    // une grande roue tourne moins vite
