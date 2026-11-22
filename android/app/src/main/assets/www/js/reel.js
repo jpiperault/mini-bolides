@@ -28,23 +28,29 @@
   R.GROUND = { bois: 'bois', nuit: 'bois', sable: 'sable', neige: 'neige', mousse: 'mousse', plancher: 'plancher', ville: 'tapis', tapis: 'tapis', vichy: 'tapis' };
   const sets = {};
   R.set = (n) => sets[n] || (sets[n] = new Promise((ok) => {
-    const s = document.createElement('script'), done = () => { clearTimeout(to); if (!R.img[n]) delete sets[n]; ok(R.img[n] || null); }, to = setTimeout(done, 6000);
+    const s = document.createElement('script'), done = () => { if (!R.img[n]) delete sets[n]; ok(R.img[n] || null); };
     s.src = 'js/tex/' + n + '.js'; s.onerror = done;
     s.onload = () => {
       const src = (MB.TEX || {})[n], o = {};
       if (!src) return done();
-      Promise.all(Object.keys(src).map((k) => new Promise((r) => { const i = new Image(); i.onload = () => { o[k] = i; r(); }; i.onerror = r; i.src = src[k]; }))).then(() => { R.img[n] = o; delete MB.TEX[n]; done(); });
+      if (src.fog) o.fog = src.fog;
+      Promise.all(Object.keys(src).filter((k) => k !== 'fog').map((k) => new Promise((r) => { const i = new Image(); i.onload = () => { o[k] = i; r(); }; i.onerror = r; i.src = src[k]; }))).then(() => { R.img[n] = o; delete MB.TEX[n]; done(); });
     };
     document.head.appendChild(s);
   }));
   // Matières d'un monde : la route et son sol. On ne garde en mémoire que le sol du dernier monde visité.
-  R.load = (ground) => {
+  // Fonds : panorama photo du lieu (clé = décor lointain du monde).
+  R.PANO = { cuisine: 'cuisine', dunes: 'plage', monts: 'neige', sousbois: 'foret', skyline: 'ville', chambre: 'chambre', bain: 'bain', grenier: 'grenier' };
+  R.pano = (far) => (R.PANO[far] ? 'pano_' + R.PANO[far] : null);
+  // wait : délai au-delà duquel on n'attend plus (la course démarre, les photos se posent en arrivant).
+  R.load = (ground, far, wait) => {
     if (!R.photo) return Promise.resolve();
-    const g = R.GROUND[ground];
-    for (const k of Object.keys(R.img)) if (k !== 'route' && k !== g) { delete R.img[k]; delete sets[k]; }
-    return Promise.all([R.set('route'), g ? R.set(g) : null]);
+    const g = R.GROUND[ground], p = R.pano(far);
+    for (const k of Object.keys(R.img)) if (k !== 'route' && k !== g && k !== p) { delete R.img[k]; delete sets[k]; }
+    const all = Promise.all([R.set('route'), g ? R.set(g) : null, p ? R.set(p) : null]);
+    return wait ? Promise.race([all, new Promise((r) => setTimeout(r, R.still ? 180000 : wait))]) : all;
   };
-  R.has = (ground) => !!R.img.route && (!R.GROUND[ground] || !!R.img[R.GROUND[ground]]);
+  R.has = (ground, far) => !!R.img.route && (!R.GROUND[ground] || !!R.img[R.GROUND[ground]]) && (!R.pano(far) || !!R.img[R.pano(far)]);
   const tex = (c, srgb) => { const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 8; if (srgb) t.encoding = T.sRGBEncoding; return t; };
   const cv = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
   // Image répétée nx × ny fois dans un canevas w × h.
@@ -58,8 +64,9 @@
     const d = g.getImageData(0, 0, c.width, c.height), p = d.data, col = new T.Color(hex);
     let mean = 0; for (let i = 0; i < p.length; i += 64) mean += p[i + 1];
     mean /= p.length / 64;
+    const soft = 0.62 - 0.3 * Math.min(1, Math.max(0, (col.r * 0.3 + col.g * 0.59 + col.b * 0.11 - 0.25) / 0.35));   // route claire (sable, neige) : grain plus discret
     const kr = (col.r * 255 * 0.78) / mean, kg = (col.g * 255 * 0.78) / mean, kb = (col.b * 255 * 0.78) / mean;
-    for (let i = 0; i < p.length; i += 4) { const l = mean + (p[i + 1] - mean) * 0.6; p[i] = l * kr; p[i + 1] = l * kg; p[i + 2] = l * kb; }   // grain adouci : il ressort trop sur une route claire
+    for (let i = 0; i < p.length; i += 4) { const l = mean + (p[i + 1] - mean) * soft; p[i] = l * kr; p[i + 1] = l * kg; p[i + 2] = l * kb; }   // grain adouci : il ressort trop sur une route claire
     g.putImageData(d, 0, 0);
     return c;
   };

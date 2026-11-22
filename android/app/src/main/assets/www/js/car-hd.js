@@ -125,9 +125,12 @@
     g.restore();
   }
 
+  // Peinture vernie sous forte lumière : une teinte vive pâlit (le rouge tire sur l'orangé). On la pose plus dense et plus saturée.
+  const _hsl = { h: 0, s: 0, l: 0 }, _dc = new T.Color();
+  function deep(hex) { _dc.setHex(hex).getHSL(_hsl); return _dc.setHSL(_hsl.h, Math.min(1, _hsl.s * 1.18), _hsl.l * (1 - 0.2 * _hsl.s)).getHex(); }
   function paintTexture(sp, hex, xs, deco) {
     const RA = MB.REEL && MB.REEL.A, W = RA ? 1024 : 512, H = RA ? 512 : 256, c = document.createElement('canvas'); c.width = W; c.height = H;
-    const g = c.getContext('2d'), col = '#' + hex.toString(16).padStart(6, '0');
+    const g = c.getContext('2d'), col = '#' + (MB.REEL && MB.REEL.A ? deep(hex) : hex).toString(16).padStart(6, '0');
     g.fillStyle = col; g.fillRect(0, 0, W, H);
     const U = (x) => { let i = 0; while (i < N && xs[i] < x) i++; return (i / N) * W; };
     const V = (v) => v * H;
