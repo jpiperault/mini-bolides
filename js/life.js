@@ -107,36 +107,44 @@
         k++;
       }
       this.dbg.promeneur = figs.find((f) => f.walker);
+      this.dbg.figs = figs;
       if (!figs.length) return;
 
-      // Jouet articulé : bassin, buste, tête et cheveux moulés, bras à mains en pince, jambes et chaussures.
-      // Une partie rigide = un maillage instancié ; le visage est fusionné en couleurs par sommet.
-      const HY = 4.55, HR = 0.64, fp = [];
+      // Figurine de maquette aux proportions humaines : jambes et bras galbés, buste épaulé, tête ovale avec nez,
+      // oreilles et cheveux, mains pleines. Une partie rigide = un maillage instancié ; le visage porte ses couleurs par sommet.
+      const turn = (pts, sz = 1, seg = 16) => new T.LatheGeometry(pts.map(([r, y]) => new T.Vector2(r, y)), seg).scale(1, 1, sz);
+      const ball = (r, sx, sy, sz, x, y, z, w = 14, h = 10) => new T.SphereGeometry(r, w, h).scale(sx, sy, sz).translate(x, y, z);
+      const HY = 4.78, fp = [];
       for (const k of [-1, 1]) {
-        fp.push(tint(new T.SphereGeometry(HR * 0.1, 8, 6).translate(k * HR * 0.32, HY + HR * 0.12, HR * 0.93), 0x1d1b22));
-        fp.push(tint(new T.SphereGeometry(HR * 0.15, 8, 5).scale(1, 1, 0.35).translate(k * HR * 0.55, HY - HR * 0.18, HR * 0.78), 0xff8f8f));
+        fp.push(tint(ball(0.036, 1.15, 1, 0.7, k * 0.14, HY + 0.02, 0.345, 8, 6), 0x2a2228));
+        fp.push(tint(new T.BoxGeometry(0.13, 0.028, 0.03).rotateZ(-k * 0.12).translate(k * 0.14, HY + 0.115, 0.345), 0x3a2a20));
       }
-      fp.push(tint(new T.TorusGeometry(HR * 0.24, HR * 0.045, 4, 8, Math.PI).rotateZ(Math.PI).translate(0, HY - HR * 0.2, HR * 0.94), 0x7a2a2a));
-      const hand = new T.TorusGeometry(0.2, 0.1, 6, 10, Math.PI * 1.5).rotateZ(Math.PI * 0.75).rotateX(Math.PI / 2).translate(0, -1.38, 0.05);
-      const N = figs.length, mk = (geo, mat, count, shadow) => { const m = new T.InstancedMesh(geo, mat, count); m.castShadow = !!shadow; m.frustumCulled = false; m.material.userData.lin = true; this.s.add(m); return m; };
+      fp.push(tint(ball(0.08, 1.25, 0.26, 0.4, 0, HY - 0.185, 0.335, 10, 6), 0x9a4a45));
+      const head = merge([
+        ball(0.4, 0.86, 1.05, 0.95, 0, HY, 0, 20, 16), ball(0.24, 0.92, 0.8, 0.9, 0, HY - 0.26, 0.12, 14, 10),          // crâne, mâchoire
+        ball(0.07, 0.8, 1.25, 1, 0, HY - 0.07, 0.375, 8, 6), ball(0.09, 0.5, 1, 0.7, -0.345, HY - 0.03, 0), ball(0.09, 0.5, 1, 0.7, 0.345, HY - 0.03, 0),   // nez, oreilles
+        new T.CylinderGeometry(0.16, 0.19, 0.34, 12).translate(0, 4.32, 0),
+      ]);
+      const N = figs.length, mk = (geo, mat, count, shadow) => { const m = new T.InstancedMesh(geo, mat, count); m.castShadow = !!shadow; m.frustumCulled = false; m.material.userData.lin = true; m.material.side = T.DoubleSide; this.s.add(m); return m; };
       const P = {
-        hips: mk(rb(1.42, 0.5, 0.76, 0.2, 2).translate(0, 2.05, 0), lam(0xffffff, { roughness: 0.4 }), N),
-        torso: mk(rb(1.44, 1.6, 0.8, 0.32, 2).translate(0, 3.05, 0), lam(0xffffff, { roughness: 0.4 }), N, true),
-        head: mk(merge([new T.SphereGeometry(HR, 18, 12).translate(0, HY, 0), new T.CylinderGeometry(0.22, 0.26, 0.3, 10).translate(0, 3.95, 0)]), lam(0xffffff, { roughness: 0.5 }), N, true),
-        hair: mk(new T.SphereGeometry(0.69, 18, 7, 0, Math.PI * 2, 0, 1.55).rotateX(-0.35).translate(0, HY + 0.06, -0.04), lam(0xffffff, { roughness: 0.35 }), N),
-        face: mk(merge(fp), lam(0xffffff, { roughness: 0.3, vertexColors: true }), N),
-        arm: mk(rb(0.42, 1.3, 0.48, 0.19, 2).translate(0, -0.55, 0), lam(0xffffff, { roughness: 0.4 }), N * 2),
-        hand: mk(hand, lam(0xffffff, { roughness: 0.5 }), N * 2),
-        leg: mk(rb(0.62, 1.7, 0.68, 0.2, 2).translate(0, -0.85, 0), lam(0xffffff, { roughness: 0.4 }), N * 2, true),
-        shoe: mk(rb(0.66, 0.34, 1, 0.15, 1).translate(0, -1.78, 0.16), lam(0x2b2d35, { roughness: 0.4 }), N * 2),
+        hips: mk(turn([[0, 2.1], [0.36, 2.14], [0.55, 2.4], [0.55, 2.75], [0.5, 2.95]], 0.66), lam(0xffffff, { roughness: 0.75 }), N),
+        torso: mk(turn([[0.5, 2.85], [0.47, 3.1], [0.55, 3.6], [0.62, 3.88], [0.6, 4.02], [0.5, 4.13], [0.34, 4.2], [0.18, 4.245], [0, 4.25]], 0.6), lam(0xffffff, { roughness: 0.7 }), N, true),
+        head: mk(head, lam(0xffffff, { roughness: 0.6 }), N, true),
+        hair: mk(new T.SphereGeometry(0.43, 18, 10, 0, Math.PI * 2, 0, 1.9).scale(0.93, 1.08, 1.04).rotateX(-0.72).translate(0, HY + 0.03, -0.03), lam(0xffffff, { roughness: 0.5 }), N),
+        face: mk(merge(fp), lam(0xffffff, { roughness: 0.5, vertexColors: true }), N),
+        arm: mk(turn([[0, -1.52], [0.12, -1.5], [0.14, -0.9], [0.17, -0.75], [0.2, -0.25], [0.23, 0], [0.19, 0.14], [0.1, 0.21], [0, 0.23]], 1, 12), lam(0xffffff, { roughness: 0.7 }), N * 2),
+        hand: mk(ball(0.15, 0.75, 1.25, 0.95, 0, -1.62, 0.02, 10, 8), lam(0xffffff, { roughness: 0.6 }), N * 2),
+        leg: mk(turn([[0, -2.18], [0.2, -2.15], [0.22, -1.9], [0.27, -1.2], [0.24, -1.0], [0.33, -0.3], [0.34, 0], [0.25, 0.15], [0, 0.2]], 1, 12), lam(0xffffff, { roughness: 0.75 }), N * 2, true),
+        shoe: mk(rb(0.42, 0.26, 0.95, 0.12, 2).translate(0, -2.2, 0.2), lam(0x2b2d35, { roughness: 0.5 }), N * 2),
       };
       P.shoe.material.color.convertSRGBToLinear();                     // seule pièce sans couleur par figurine
-      const shirts = [0xe5352b, 0x2f8fd8, 0xf7c52d, 0x25b98a, 0xf0639a, 0xff8a1e, 0x8a5cd6], skins = [0xffd7b0, 0xe8b48a, 0xb07a52, 0x7a4e32, 0xffe3c8];
-      const hairs = [0x5a3a1f, 0x1b1b22, 0xe0a030, 0xc9502a, 0x7a4e32], pants = [0x3b4a6b, 0x2f62d9, 0x4a3b2b, 0x25806a, 0xe5352b];
+      const shirts = [0xc8473c, 0x3b78b8, 0xe0b040, 0x3a9a78, 0xdcdad2, 0x56607a, 0x7d5aa8], skins = [0xf2c9a4, 0xe0ac86, 0xa9734e, 0x74492f, 0xf7d9bf];
+      const hairs = [0x4a3020, 0x1b1b22, 0xc99a45, 0xa8502c, 0x6b6660], pants = [0x3b4a6b, 0x2c3a52, 0x5a4a3a, 0x6b6f76, 0x2e2e34];
       figs.forEach((f, q) => {
         const sd = t.def.seed;                                         // pas premiers avec chaque liste : voisins tous différents
         f.col = { torso: lin(shirts[(q * 3 + sd) % 7]), head: lin(skins[(q * 3 + sd) % 5]), hair: lin(hairs[(q * 2 + sd) % 5]), hips: lin(pants[(q * 3 + sd) % 5]) };
         f.col.arm = f.col.torso; f.col.hand = f.col.head; f.col.leg = f.col.hips;
+        f.sc = 0.96 + (((q * 37 + sd) % 7) / 7) * 0.13;                // tailles un peu différentes
       });
       const ONE = ['hips', 'torso', 'head', 'hair', 'face'], TWO = ['arm', 'hand', 'leg', 'shoe'];
       // Seules les figurines dans le champ sont dessinées, rangées en tête des maillages instanciés.
@@ -169,6 +177,7 @@
       };
 
       const FR = new T.Frustum(), PM = new T.Matrix4(), SP = new T.Sphere();
+      const allFigs = MB.REEL && MB.REEL.close === 'fig';             // vue de contrôle : la caméra est déplacée après ce tri
       const M = new T.Matrix4(), A = new T.Matrix4(), B = new T.Matrix4(), E = new T.Euler(), S = new T.Vector3(1.05, 1.05, 1.05), Q = new T.Quaternion(), V = new T.Vector3();
       const limb = (mesh, idx, x, y, rx, rz) => { A.makeTranslation(x, y, 0); B.makeRotationFromEuler(E.set(rx, 0, rz)); A.multiply(B); A.premultiply(M); mesh.setMatrixAt(idx, A); };
       this.add((dt, time, P0, cars) => {
@@ -187,7 +196,7 @@
           }
         }
         live.length = 0; let key = 0;                            // aucun tableau ni texte créé à chaque image
-        for (let i = 0; i < figs.length; i++) { const f = figs[i]; if (near(f.x, f.z, P0, 260) && FR.intersectsSphere(SP.set(V.set(f.x, 3, f.z), 4))) { live.push(f); key += 2 ** i; } }
+        for (let i = 0; i < figs.length; i++) { const f = figs[i]; if (allFigs || (near(f.x, f.z, P0, 260) && FR.intersectsSphere(SP.set(V.set(f.x, 3, f.z), 4)))) { live.push(f); key += 2 ** i; } }
         if (key !== shown) { shown = key; paint(live); }
         live.forEach((f, q) => {
           const look = near(f.x, f.z, P0, 70) && f.mode !== 'walk', want = look || f.cheer ? Math.atan2(P0.x - f.x, P0.z - f.z) : f.yaw0;
@@ -195,15 +204,15 @@
           const cheer = f.cheer > 0, walk = f.mode === 'walk' && !cheer, u = time * 9 + f.ph;
           const hop = cheer ? Math.abs(Math.sin(u)) * 1.4 * Math.min(1, f.cheer) : walk ? Math.abs(Math.sin(f.step)) * 0.12 : 0;
           E.set(0, f.yaw, cheer ? Math.sin(time * 15 + f.ph) * 0.08 : walk ? Math.sin(f.step) * 0.05 : Math.sin(time * 1.4 + f.ph) * 0.03, 'YXZ');
-          M.compose(V.set(f.x, f.y + hop, f.z), Q.setFromEuler(E), S);
+          M.compose(V.set(f.x, f.y + hop, f.z), Q.setFromEuler(E), S.setScalar(f.sc));
           for (const k of ONE) P[k].setMatrixAt(q, M);
           for (const [i, k] of [[0, -1], [1, 1]]) {
             let rz = k * 0.1, rx = 0, leg = 0;
             if (cheer) { rz = k * (2.5 + Math.sin(time * 14 + f.ph + k) * 0.25); leg = -0.6 * Math.max(0, Math.sin(u + k * 1.6)); }
             else if (walk) { rx = Math.sin(f.step) * 0.55 * k; leg = -Math.sin(f.step) * 0.5 * k; }
             else if (look && f.wave && k > 0) { rz = 2.4 + Math.sin(time * 10 + f.ph) * 0.4; rx = -0.2; }
-            limb(P.arm, q * 2 + i, k * 0.9, 3.65, rx, rz); limb(P.hand, q * 2 + i, k * 0.9, 3.65, rx, rz);
-            limb(P.leg, q * 2 + i, k * 0.35, 1.95, leg, 0); limb(P.shoe, q * 2 + i, k * 0.35, 1.95, leg, 0);
+            limb(P.arm, q * 2 + i, k * 0.72, 3.98, rx, rz); limb(P.hand, q * 2 + i, k * 0.72, 3.98, rx, rz);
+            limb(P.leg, q * 2 + i, k * 0.27, 2.35, leg, 0); limb(P.shoe, q * 2 + i, k * 0.27, 2.35, leg, 0);
           }
         });
         for (const k in P) P[k].instanceMatrix.needsUpdate = true;

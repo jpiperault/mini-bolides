@@ -950,9 +950,10 @@
 
   const _rv = new T.Vector3();
   // Sols en photo : matière (js/tex), répétitions sur le plan de 1800, teinte (× gain) pour retrouver la couleur du monde, rugosité, relief, reflets.
+  const PANO_YAW = {}, PANO_GAIN = { dunes: 0.9, monts: 0.95 };            // la plage et la neige sont déjà très claires                                       // orientation du panorama par décor (radians)
   const REEL_GROUND = {
-    bois: { set: 'bois', rep: 26, tint: 0xe8cfae, rough: 0.8, ns: 1.2, env: 0.3 },
-    nuit: { set: 'bois', rep: 26, tint: 0x8a7468, rough: 0.8, ns: 1.2, env: 0.3 },
+    bois: { set: 'bois', rep: 16, tint: 0xfff2e0, gain: 1.1, rough: 0.62, ns: 0.8, env: 0.35 },
+    nuit: { set: 'bois', rep: 16, tint: 0x9a8a84, rough: 0.62, ns: 0.8, env: 0.35 },
     sable: { set: 'sable', rep: 22, tint: 0xf6dcae, gain: 1.15, rough: 1, ns: 1.4, env: 0.12 },
     neige: { set: 'neige', rep: 20, tint: 0xeef4ff, gain: 1.05, rough: 0.9, ns: 1.1, env: 0.3 },
     mousse: { set: 'mousse', rep: 22, tint: 0xa4a878, rough: 1, ns: 1.5, env: 0.1 },
@@ -1098,7 +1099,8 @@
       for (let i = 0; i < track.count; i++) far = Math.max(far, Math.hypot(track.px[i], track.pz[i]));
       this.horizon = Math.min(Math.max(far + 260, 420), 540);
       // Arrière-plan peint sur trois plans (ciel, lointain, second plan) ; #decor=1 garde les anciennes silhouettes unies.
-      if (MB.backdrop && !/decor=1/.test(location.hash)) MB.backdrop(s, mood, track, this.horizon);
+      if (this._reelPano(s, mood)) { /* panorama photo du lieu */ }
+      else if (MB.backdrop && !/decor=1/.test(location.hash)) { const n0 = s.children.length; MB.backdrop(s, mood, track, this.horizon); this._rings = s.children.slice(n0); }
       else if (mood.hills) mood.hills.slice(1).forEach((col, k) => {
         const tex = hillsTexture(mood.hills[0], col, k === 1, track.def.seed), r = this.horizon + (k ? 0 : 110), H = k ? 120 : 170;
         tex.repeat.set(k ? 4 : 3, 1);
@@ -1244,7 +1246,12 @@
       this._weather(mood);
       if (MB.REEL.B) this._reelEnv(track, mood);
       // Photos pas encore chargées (vitrine des menus) : on les pose dès qu'elles arrivent.
-      if (MB.REEL.photo && !MB.REEL.has(mood.ground)) MB.REEL.load(mood.ground).then(() => { if (this.scene !== s || !MB.REEL.photo) return; this._reelGround(this._ground, this._gt, mood); if (this._roadMats) this._reelRoad(this._roadMats, this._roadTex, mood); });
+      const pk = mood.hills && mood.hills[0];
+      if (MB.REEL.photo && !MB.REEL.has(mood.ground, pk)) MB.REEL.load(mood.ground, pk).then(() => {
+        if (this.scene !== s || !MB.REEL.photo) return;
+        this._reelGround(this._ground, this._gt, mood); if (this._roadMats) this._reelRoad(this._roadMats, this._roadTex, mood);
+        if (!this._pano && this._reelPano(s, mood, true)) { if (this._rings) for (const m of this._rings) m.visible = false; if (MB.REEL.B) this._reelEnv(track, mood); }
+      });
     }
 
     // Salle de bain : la piste court sur le rebord émaillé de la baignoire, l'eau et sa mousse de chaque côté.
@@ -1722,7 +1729,7 @@
       if (MB.REEL.skip) return;
       this.postOn = MB.REEL.D && !duo;
       if (this.postOn) {
-        this._draw(P.x, P.z);
+        if (this._focus) this._draw(this._focus.x, this._focus.z); else this._draw(P.x, P.z);
         if (this.onSnap) { const cb = this.onSnap; this.onSnap = null; cb(this.snapshot()); }
         return;
       }
@@ -1869,6 +1876,26 @@
       mat.needsUpdate = true;
     }
 
+    // Fond : panorama photo du lieu sur une grande coupole, comme la pièce floue derrière une maquette photographiée de près.
+    // Le brouillard prend la couleur de l'horizon de la photo pour que le sol s'y fonde. late : posé après coup (couleurs déjà converties).
+    _reelPano(s, mood, late) {
+      const I = MB.REEL.photo && MB.REEL.img[MB.REEL.pano(mood.hills && mood.hills[0])];
+      this._pano = null; if (!late) this._rings = null;
+      if (!I || !I.d) return false;
+      const t = new T.Texture(I.d); t.encoding = T.sRGBEncoding; t.anisotropy = 4; t.wrapS = T.RepeatWrapping; t.needsUpdate = true;
+      const r = this.horizon + 200, geo = new T.SphereGeometry(r, 72, 22, 0, Math.PI * 2, 0, Math.PI * 0.62); geo.scale(-1, 1, 1);
+      // Nuit et pluie : la même pièce, lumières éteintes ou temps gris (la ville est déjà photographiée de nuit).
+      const city = mood.hills[0] === 'skyline', k = mood.rain ? [0.6, 0.64, 0.7] : mood.night && !city ? [0.07, 0.085, 0.17] : city ? [0.8, 0.8, 0.95] : [PANO_GAIN[mood.hills[0]] || 1.1, 0, 0];
+      if (!k[1]) k[1] = k[2] = k[0];
+      const mat = new T.MeshBasicMaterial({ map: t, side: T.DoubleSide, depthWrite: false, fog: false, transparent: true, color: new T.Color(k[0], k[1], k[2]) });
+      mat.userData.lin = true;
+      const m = new T.Mesh(geo, mat); m.position.y = 5; m.rotation.y = (PANO_YAW[mood.hills[0]] || 0); m.renderOrder = -1; m.frustumCulled = false; s.add(m);
+      const fog = new T.Color(I.fog || '#888888').convertSRGBToLinear(); fog.r *= k[0]; fog.g *= k[1]; fog.b *= k[2];
+      if (late) s.fog.color.copy(fog); else s.fog.color.copy(fog).convertLinearToSRGB();     // world() repasse le brouillard en linéaire à la fin
+      this._pano = m;
+      return true;
+    }
+
     // Route : photo d'asphalte teintée à la couleur du monde, gomme sur la trajectoire, peinture un peu usée.
     _reelRoad(mats, road, mood) {
       const I = MB.REEL.photo && MB.REEL.img.route, mk = (c, srgb) => { const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 8; if (srgb) t.encoding = T.sRGBEncoding; return t; };
@@ -1911,7 +1938,19 @@
 
     _reelCam(P) {
       const k = MB.REEL.close, ch = Math.cos(P.h), sh = Math.sin(P.h);
-      if (k === 'mat') {                                         // matières : vue par-dessus la voiture vers le vibreur et la table
+      const fg = this.life && this.life.dbg.figs && this.life.dbg.figs[0];
+      if (k === 'fig' && fg) {                                   // spectateurs de près, vus de face
+        let ux = Math.sin(fg.yaw0), uz = Math.cos(fg.yaw0);
+        if (MB.trackDistance(this.track, fg.x - ux * 6, fg.z - uz * 6) < MB.trackDistance(this.track, fg.x + ux * 6, fg.z + uz * 6)) { ux = -ux; uz = -uz; }   // toujours côté piste
+        this.cam.position.set(fg.x + ux * 11 - uz * 2.5, fg.y + 4.2, fg.z + uz * 11 + ux * 2.5);
+        this.cam.lookAt(fg.x, fg.y + 3.1, fg.z);
+        this._focus = fg;
+      } else if (k === 'wide') {                                 // décor : vue large au-dessus de la voiture
+        this.cam.position.set(P.x - ch * 16, 7.5, P.z - sh * 16);
+        this.cam.lookAt(P.x + ch * 30, 6, P.z + sh * 30);
+        if (this.cam.fov !== 60) { this.cam.fov = 60; this.cam.updateProjectionMatrix(); }
+        return;
+      } else if (k === 'mat') {                                         // matières : vue par-dessus la voiture vers le vibreur et la table
         this.cam.position.set(P.x - ch * 5 + sh * 8, 3.6, P.z - sh * 5 - ch * 8);
         this.cam.lookAt(P.x + ch * 1 - sh * 5, 0.3, P.z + sh * 1 + ch * 5);
       } else {
@@ -2063,7 +2102,7 @@
 
     clearShowcase() { this.shop = null; this.shopKey = null; }
     // Photos des matières du monde : à attendre avant world() pour éviter de les voir arriver.
-    preload(track) { return MB.REEL.load(variantMood(MOODS[track.def.mood], track.variant).ground); }
+    preload(track) { const m = variantMood(MOODS[track.def.mood], track.variant); return MB.REEL.load(m.ground, m.hills && m.hills[0], 6000); }
     // Réglage « Rendu réaliste » changé : la vitrine des menus se reconstruit.
     regfx() { this.track = null; this.clearShowcase(); }
   }
