@@ -4,7 +4,10 @@
   const lang = (navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en';
   const L = (o) => (typeof o === 'string' ? o : o[lang]);
   const S = {
-    play: ['Championnat', 'Championship'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
+    play: ['Championnat', 'Championship'], jouer: ['JOUER', 'PLAY'], today: ["Aujourd'hui", 'Today'], otherMode: ['Autre mode', 'Other mode'], modesT: ['Choisis un mode', 'Pick a mode'], tabHome: ['Accueil', 'Home'], tabTracks: ['Circuits', 'Tracks'],
+    weekShort: ['Semaine', 'Week'], dayShort: ['j', 'd'], chalShort: ['Défi du jour', 'Daily'], doneShort: ['Réussi', 'Done'], missShort: ['Missions', 'Missions'], missChestGo: ['Ouvre le coffre !', 'Open the chest!'], missBye: ['À demain !', 'See you tomorrow!'],
+    raceN: ['course', 'race'], ofN: ['sur', 'of'], swipeCar: ['glisse pour changer', 'swipe to change'], mCup: ['Championnat', 'Championship'], mCupD: ['Des coupes de 3 courses, aux points', 'Cups of 3 races, on points'], mRaceD: ['Un circuit au choix contre 5 rivaux', 'Any track against 5 rivals'],
+    mChronoD: ['Seul contre ton fantôme', 'Alone against your ghost'], mDuoD: ['Écran partagé, sur le même téléphone', 'Split screen, on the same phone'], chalAgain: ['Déjà réussi aujourd\'hui. Reviens demain !', 'Already done today. Come back tomorrow!'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
     stars: ['étoiles', 'stars'], locked: ['étoiles requises', 'stars needed'], unlocked: ['Nouvelle coupe débloquée !', 'New cup unlocked!'], cupCcHelp: ['Chaque cylindrée a ses médailles. Choisis-la puis touche une coupe.', 'Each class has its own medals. Pick one, then tap a cup.'], goal: ['3e étoile : gagne avec 20 pièces', '3rd star: win with 20 coins'],
     chal: ['Défi du jour', 'Daily challenge'], edTitle: ['Atelier', 'Workshop'], edSub: ['dessine ton propre circuit', 'draw your own track'], edSlot: ['Circuit', 'Track'], edHelp: ['Touche pour ajouter un point, glisse pour le déplacer. Touche un point pour le choisir.', 'Tap to add a point, drag to move it. Tap a point to select it.'], edOk: ['Circuit prêt !', 'Track ready!'], edCross: ['Deux bouts de route se touchent : écarte-les.', 'Two parts of the road touch: move them apart.'], edTight: ['Virage trop serré : arrondis-le.', 'Corner too tight: round it off.'], edFull: ['18 points maximum', '18 points max'], edDecor: ['Décor', 'Scenery'], edDel: ['🗑 Retirer le point', '🗑 Remove point'], edReset: ['↺ Recommencer', '↺ Start over'], edGo: ['🏁 Essayer', '🏁 Try it'], week: ['Défi de la semaine', 'Weekly challenge'], weekWin: ['gagne', 'win'], weekDone: ['réussi ! Nouveau défi lundi', 'done! New challenge on Monday'], weekWon: ['🗓️ Défi de la semaine réussi !', '🗓️ Weekly challenge done!'], weekFail: ['Défi de la semaine manqué', 'Weekly challenge failed'], golden: ['devient doré !', 'turns golden!'], days: ['jours', 'days'], day: ['jour', 'day'], chalDone: ['réussi, reviens demain !', 'done, back tomorrow!'], chalWin: ['Défi réussi', 'Challenge done'], chalFail: ['Défi manqué', 'Challenge failed'],
     close: ['Fermer', 'Close'], miss: ['Missions du jour', 'Daily missions'], missChest: ['Ouvrir le coffre', 'Open the chest'], missLock: ['Finis les 3 missions pour ouvrir le coffre', 'Finish all 3 missions to open the chest'],
@@ -270,6 +273,10 @@
     document.querySelectorAll('.screen').forEach((s) => { s.hidden = s.id !== id; });
     $('pause').hidden = true;
     $('coinbar').hidden = !['home', 'garage', 'tracks', 'cups', 'shop'].includes(id);
+    const tabbed = ['home', 'garage', 'tracks', 'cups', 'shop', 'trophies'].includes(id), cur = id === 'cups' ? 'tracks' : id;
+    $('tabs').hidden = !tabbed; $('modes').hidden = true; $('brief').hidden = true;
+    document.body.classList.toggle('tabbed', tabbed); document.body.classList.toggle('athome', id === 'home');
+    document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === cur));
     $('coinval').textContent = save.coins;
   }
   function menu() {
@@ -279,17 +286,66 @@
     Sound.engine(false, 0); Sound.draft(0); Sound.song('menu'); Sound.rain(false);
     view.showcase(getTrack(MB.TRACKS[0].id), carSpec().shape, paintHex(), save.look);
     chal = null; week = null;
-    const wk = weekly(), wWon = save.weekWon === wk.week, left = MB.weekDaysLeft(today());
-    $('weekBtn').innerHTML = `${t('week')}<small>${wWon ? t('weekDone') : `${weekLine(wk)} · +${MB.WEEK_COINS} 🪙 + 🌟`}</small><em>${wWon ? '✅' : `${left} ${t(left > 1 ? 'days' : 'day')}`}</em>`;
+    const wk = weekly(), wWon = save.weekWon === wk.week, left = MB.weekDaysLeft(today()), coin = '<i class="dot"></i>';
+    $('weekBtn').className = 'hcard' + (wWon ? ' done' : '');
+    $('weekBtn').innerHTML = `<em>${t('weekShort')} · ${wWon ? '✓' : `${left} ${t('dayShort')}`}</em><strong>${L(MB.TRACKS.find((d) => d.id === wk.track).name)}${wk.variant ? ' ' + VARIANTS[wk.variant].icon : ''}</strong><small>${wWon ? t('doneShort') : `${coin}+${MB.WEEK_COINS} 🌟`}</small>`;
     const c = challenge(), won = save.chal === today();
-    $('chalBtn').innerHTML = `${t('chal')}<small>${won ? t('chalDone') : `${L(c.text)} · +${MB.CHALLENGE_COINS} 🪙`}</small>`;
+    $('chalBtn').className = 'hcard' + (won ? ' done' : '');
+    $('chalBtn').innerHTML = `<em>${t('chalShort')}</em><strong>${L(c.text)}</strong><small>${won ? '✓ ' + t('doneShort') : `${coin}+${MB.CHALLENGE_COINS}`}</small>`;
     renderMissBtn();
     planReminder();
     $('shopBtn').hidden = !MB.FEATURES.premium;
-    $('homeLow').className = MB.FEATURES.premium ? 'split' : '';
+    const np = nextPlay(), nn = np.def.tracks.length;
+    $('playSub').textContent = `${L(np.def.name)} · ${np.i || save.cupRun ? `${t('raceN')} ${np.i + 1} ${t('ofN')} ${nn}` : L(MB.DIFFS[np.diff].label)}`;
+    homeCar(0);
     show('home');
     if (save.daily.last !== today()) renderDaily();
     else if (save.notif === null && save.races >= 2 && bridge && bridge.remind) $('notifAsk').hidden = false;   // proposé une fois, après deux courses
+  }
+
+  // Bouton JOUER : la coupe en cours (elle survit à un retour au menu), sinon la prochaine coupe à gagner dans la cylindrée choisie.
+  function nextPlay() {
+    const r = save.cupRun, open = openCups();
+    if (r) {
+      const def = open.find((c) => c.id === r.id);
+      if (def && save.ccOk[r.diff] && r.i < def.tracks.length) return { def, diff: r.diff, i: r.i, pts: r.pts.slice() };
+      save.cupRun = null;
+    }
+    return { def: open.find((c) => cupMedal(c.id, save.diff) < 3) || open[0], diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] };
+  }
+  const keepCup = () => { save.cupRun = cup ? { id: cup.def.id, diff: cup.diff, i: cup.i, pts: cup.pts.slice() } : null; persist(); };
+  // Accueil : on passe d'une voiture possédée à l'autre sans ouvrir le garage.
+  function homeCar(step) {
+    const own = MB.CARS.filter((c) => save.cars.includes(c.id));
+    if (step && own.length > 1) {
+      save.car = own[(own.findIndex((c) => c.id === save.car) + step + own.length) % own.length].id; persist();
+      view.showcase(getTrack(MB.TRACKS[0].id), carSpec().shape, paintHex(), save.look);
+    }
+    $('hCarName').textContent = L(carSpec().name);
+    $('hCarSub').textContent = L(carSpec().tag) + (own.length > 1 ? ` · ${t('swipeCar')}` : '');
+    document.querySelectorAll('.harrow').forEach((b) => { b.hidden = own.length < 2; });
+  }
+  function renderModes() {
+    const row = (m, ic, name, desc) => `<button class="row" data-hmode="${m}"><b>${ic}</b><span>${name}<small>${desc}</small></span></button>`;
+    $('modeList').innerHTML = row('cups', '🏆', t('mCup'), t('mCupD')) + row('race', '🏁', t('free'), t('mRaceD')) + row('chrono', '⏱', t('modeChrono').replace(/^\S+\s/, ''), t('mChronoD')) + row('duo', '👥', t('modeDuo').replace(/^\S+\s/, ''), t('mDuoD'));
+    $('modes').hidden = false;
+  }
+  // Défi du jour ou de la semaine : la carte de l'accueil est petite, la règle complète s'affiche avant de partir.
+  let briefKind = null;
+  function renderBrief(kind) {
+    briefKind = kind;
+    if (kind === 'week') {
+      const w = weekly(), wWon = save.weekWon === w.week, left = MB.weekDaysLeft(today());
+      $('briefT').textContent = `🗓️ ${t('week')}`; $('briefTxt').textContent = weekLine(w);
+      $('briefSub').textContent = wWon ? `✅ ${t('week')} ${t('weekDone')}` : `+${MB.WEEK_COINS} 🪙 + 🌟 · ${left} ${t(left > 1 ? 'days' : 'day')}`;
+      $('briefGo').hidden = false;
+    } else {
+      const c = challenge(), won = save.chal === today();
+      $('briefT').textContent = `🎯 ${t('chal')}`; $('briefTxt').textContent = `${L(MB.TRACKS.find((d) => d.id === c.track).name)} · ${L(c.text)}`;
+      $('briefSub').textContent = won ? `✅ ${t('chalAgain')}` : `+${MB.CHALLENGE_COINS} 🪙`;
+      $('briefGo').hidden = won;
+    }
+    $('brief').hidden = false;
   }
 
   // ---------- Missions du jour ----------
@@ -317,8 +373,9 @@
   }
   function renderMissBtn() {
     const ms = missions(), n = missDone(), ready = n === 3 && !ms.chest;
-    $('missBtn').innerHTML = `${t('miss')} · ${n}/3<small>${ms.chest ? t('missTomorrow') : ready ? t('missGo') : `${missText(ms.list.find((m) => m.p < m.n))} · ${t('missChestT')}`}</small>`;
-    $('missHome').classList.toggle('ready', ready);
+const cur = ms.list.find((m) => m.p < m.n);
+    $('missHome').className = 'hcard' + (ready ? ' ready' : ms.chest ? ' done' : '');
+    $('missHome').innerHTML = `<em>${t('missShort')} ${n}/3</em><strong>${ms.chest ? t('missBye') : ready ? '🎁 ' + t('missChestGo') : missText(cur)}</strong>${cur ? `<div class="bar"><i style="width:${Math.round((cur.p / cur.n) * 100)}%"></i></div>` : `<small>${ms.chest ? '✓ ' + t('doneShort') : ''}</small>`}`;
   }
   function renderMissions() {
     const ms = missions(), ready = missDone() === 3 && !ms.chest;
@@ -946,7 +1003,7 @@
 
   function nextAfterResult() {
     if (!cup) return startRace(currentTrack, currentVariant);
-    if (cup.i < cup.def.tracks.length - 1) { cup.i++; return startRace(cup.def.tracks[cup.i]); }
+    if (cup.i < cup.def.tracks.length - 1) { cup.i++; keepCup(); return startRace(cup.def.tracks[cup.i]); }
     const names = MB.RIVALS.slice(0, 5).concat(t('you'));
     const table = names.map((n, i) => ({ n, pts: cup.pts[i], me: i === 5 })).sort((a, b) => b.pts - a.pts);
     const rank = table.findIndex((r) => r.me), def = cup.def;
@@ -961,7 +1018,7 @@
     $('cupTrophy').textContent = ['🏆', '🥈', '🥉'][rank] || '🍪';
     $('cupRows').innerHTML = table.map((r, i) => `<li class="${r.me ? 'me' : ''}"><b>${i + 1}</b><span>${r.n}</span><em>${r.pts} pts</em></li>`).join('');
     $('cupCoins').textContent = prize ? `${t('cupPlus')} : +${prize} ${t('coins')}` : '';
-    cup = null;
+    cup = null; keepCup();
     show('cupEnd');
   }
 
@@ -1178,7 +1235,7 @@
     const d = b.dataset;
     if (d.go === 'home') return leave(menu);
     if (d.go === 'cups') return renderCups();
-    if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; week = null; return startRace(cup.def.tracks[0]); }
+    if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; week = null; keepCup(); return startRace(cup.def.tracks[0]); }
     if (d.go === 'missions') return renderMissions();
     if (d.go === 'missClose') { $('missions').hidden = true; return; }
     if (d.go === 'chest') return openChest();
@@ -1191,12 +1248,21 @@
     if (d.ed === 'del') { editor.remove(); return; }
     if (d.ed === 'reset') { editor.set(MB.EDIT_DEFAULT); return; }
     if (d.ed === 'go') { if (!editor.check.ok) return; edSave(); chal = null; week = null; cup = null; return startRace('perso' + (save.edSlot || 0), null); }
-    if (d.go === 'weekly') { week = weekly(); chal = null; cup = null; return startRace(week.track, week.variant); }
-    if (d.go === 'challenge') {
+    if (d.go === 'weekly') return renderBrief('week');
+    if (d.go === 'challenge') return renderBrief('chal');
+    if (d.go === 'briefClose') { $('brief').hidden = true; return; }
+    if (d.go === 'briefGo') {
+      $('brief').hidden = true;
+      if (briefKind === 'week') { week = weekly(); chal = null; cup = null; return startRace(week.track, week.variant); }
       if (save.chal === today()) return;
       chal = challenge(); cup = null; week = null;
       return startRace(chal.track);
     }
+    if (d.go === 'play') { cup = nextPlay(); chal = null; week = null; keepCup(); return startRace(cup.def.tracks[cup.i]); }
+    if (d.go === 'modes') return renderModes();
+    if (d.go === 'modesClose') { $('modes').hidden = true; return; }
+    if (d.hmode) { $('modes').hidden = true; if (d.hmode === 'cups') return renderCups(); trackMode = d.hmode; return renderTracks(); }
+    if (d.hstep) return homeCar(+d.hstep);
     if (d.go === 'dailyTake') return takeDaily(1);
     if (d.go === 'dailyDouble') return MB.monet.showRewarded('daily', (ok) => takeDaily(ok ? 2 : 1));
     if (d.go === 'adClose') { if (adDone) adDone(true); return; }
@@ -1379,6 +1445,8 @@
     if (!$('confirm').hidden) { $('confirm').hidden = true; confirmDone = null; return true; }
     if (!$('daily').hidden) { $('daily').hidden = true; return true; }
     if (!$('missions').hidden) { $('missions').hidden = true; return true; }
+    if (!$('modes').hidden) { $('modes').hidden = true; return true; }
+    if (!$('brief').hidden) { $('brief').hidden = true; return true; }
     if (!$('notifAsk').hidden) { $('notifAsk').hidden = true; setNotif(false); return true; }
     if (phase === 'result') { menu(); return true; }
     if (!$('home').hidden) return false;
@@ -1401,6 +1469,11 @@
     drag.addEventListener('pointermove', (e) => { if (dragX !== null) { view.spinGarage(e.clientX - dragX); dragX = e.clientX; } });
     drag.addEventListener('pointerup', () => { dragX = null; });
     drag.addEventListener('pointercancel', () => { dragX = null; });
+    // Accueil : un glissement horizontal sur la voiture passe à la suivante.
+    let hX = null;
+    $('hDrag').addEventListener('pointerdown', (e) => { hX = e.target.closest('button') ? null : e.clientX; });
+    document.addEventListener('pointerup', (e) => { if (hX === null) return; const dx = e.clientX - hX; hX = null; if (!$('home').hidden && Math.abs(dx) > 40) homeCar(dx < 0 ? 1 : -1); });
+    document.addEventListener('pointercancel', () => { hX = null; });
     // Salle des trophées : on glisse pour passer d'un trophée à l'autre.
     const tDrag = $('tDrag');
     let tX = null;

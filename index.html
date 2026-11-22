@@ -23,17 +23,53 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
   max-height: 78vh; overflow-y: auto; touch-action: pan-y; }
 h1, h2 { font-family: var(--display); margin: 0; letter-spacing: -.01em; }
 h2 { font-size: 22px; font-weight: 800; }
-/* Écusson à cheval sur le bord de la feuille de boutons : la voiture au-dessus reste libre. */
-#home { --lg: min(34vw, 17vh, 150px); }
-.logo { position: relative; z-index: 2; display: block; flex: none; width: var(--lg); height: var(--lg); margin: auto auto calc(var(--lg) * -0.5); filter: drop-shadow(0 6px 10px rgba(43, 34, 48, .35)); }
-#home .sheet { margin-top: 0; padding-top: calc(var(--lg) * 0.5 + 16px); }
+/* Accueil : la voiture au centre, les trois rendez-vous du jour, un seul gros bouton, puis la barre d'onglets commune aux menus. */
+:root { --tabh: calc(58px + var(--bot)); }
+body.tabbed .screen { bottom: var(--tabh); } body.tabbed .screen .sheet { padding-bottom: 14px; }
+#tabs { box-sizing: border-box; position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabh); z-index: 4; display: flex; padding: 6px 6px var(--bot); background: var(--cream); box-shadow: 0 -1px 0 var(--line), 0 -6px 18px rgba(43, 34, 48, .12); }
+#tabs button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font: 800 9.5px var(--display); color: var(--muted); border-radius: 14px; }
+#tabs svg { width: 25px; height: 25px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#tabs button.on { color: var(--tomato); } #tabs button:active { background: rgba(43, 34, 48, .07); }
+#home::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(43, 34, 48, .5) 0, rgba(43, 34, 48, 0) 17%, rgba(43, 34, 48, 0) 46%, rgba(43, 34, 48, .7) 80%, rgba(43, 34, 48, .88) 100%); }
+#home > * { position: relative; }
+.htop { height: 48px; margin: var(--top) 16px 0; display: flex; align-items: center; flex: none; }
+.hbrand { font: 800 min(17px, 4.4vw) var(--display); color: var(--cream); letter-spacing: .5px; text-shadow: 0 2px 6px rgba(0, 0, 0, .45); } .hbrand i { color: var(--butter); font-style: normal; }
+#home .hset { position: fixed; right: 14px; top: var(--top); width: 48px; height: 48px; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 var(--line); display: grid; place-items: center; z-index: 4; }
+.hset svg { width: 22px; height: 22px; stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+body.athome #coinbar { right: 72px; }
+#hDrag { flex: 1; min-height: 0; touch-action: none; display: flex; flex-direction: column; justify-content: flex-end; }
+.harrow { position: absolute; top: 46%; width: 44px; height: 44px; margin-top: -22px; border-radius: 50%; background: rgba(255, 246, 230, .9); font: 800 20px/1 var(--display); padding-bottom: 3px; box-shadow: 0 3px 8px rgba(43, 34, 48, .25); }
+.harrow.l { left: 12px; } .harrow.r { right: 12px; }
+.hcar { text-align: center; color: var(--cream); text-shadow: 0 2px 8px rgba(0, 0, 0, .6); padding: 0 16px 14px; pointer-events: none; }
+.hcar b { display: block; font: 800 19px var(--display); } .hcar span { font-size: 13.5px; font-weight: 600; opacity: .92; }
+.hlow { flex: none; padding: 0 16px 16px; }
+.hlow h3 { margin: 0 0 8px; font: 800 11px var(--display); letter-spacing: 1.5px; color: rgba(255, 246, 230, .88); text-transform: uppercase; }
+.hcards { display: flex; gap: 10px; }
+.hcard { flex: 1; min-width: 0; min-height: 104px; padding: 10px 10px 9px; border-radius: 16px; background: rgba(255, 246, 230, .97); display: flex; flex-direction: column; text-align: left; box-shadow: 0 4px 0 rgba(43, 34, 48, .25); }
+.hcard:active { transform: translateY(3px); }
+.hcard em { white-space: nowrap; overflow: hidden; font: 800 8.5px var(--display); font-style: normal; color: var(--tomato); letter-spacing: .3px; text-transform: uppercase; }
+.hcard strong { font: 700 13px/1.2 var(--body); margin-top: 4px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.hcard small { font: 800 11px var(--display); color: var(--muted); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.hcard .dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffe58a, #e0a51a); box-shadow: inset 0 0 0 1.5px #b9830d; }
+.hcard .bar { height: 6px; border-radius: 3px; background: rgba(43, 34, 48, .14); overflow: hidden; } .hcard .bar i { display: block; height: 100%; background: var(--mint); }
+.hcard.done { opacity: .8; } .hcard.done em, .hcard.done small { color: #14875f; }
+.hcard.ready { background: var(--butter); animation: mpulse 1.4s ease-in-out infinite; }
+.hplay { position: relative; margin-top: 16px; }
+.hgo { width: 100%; min-height: 78px; padding: 0 20px; border-radius: 22px; background: var(--tomato); box-shadow: 0 6px 0 var(--tomato-d); color: #fff; display: flex; align-items: center; gap: 14px; text-align: left; }
+.hgo:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--tomato-d); }
+.hgo .tri { flex: none; width: 0; height: 0; border-left: 22px solid #fff; border-top: 14px solid transparent; border-bottom: 14px solid transparent; }
+.hgo span { min-width: 0; } .hgo b { display: block; font: 800 22px var(--display); } .hgo small { display: block; font-size: 13.5px; font-weight: 600; opacity: .94; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hmode { position: absolute; right: 10px; top: 9px; height: 34px; padding: 0 12px; border-radius: 17px; background: rgba(255, 255, 255, .24); color: #fff; font: 800 10px var(--display); }
+.hmode:active { background: rgba(255, 255, 255, .4); }
+#modeList .row b { font-size: 26px; width: 34px; text-align: center; } #modeList .row span { flex: 1; font-family: var(--display); font-weight: 800; font-size: 15px; } #modeList .row small { display: block; font-family: var(--body); font-weight: 600; font-size: 12.5px; color: var(--muted); }
+#briefSub { text-align: center; }
+@media (max-height: 640px) { .hcard { min-height: 88px; } .hgo { min-height: 66px; } .hplay { margin-top: 12px; } .hcar { padding-bottom: 8px; } }
 .btn { display: block; width: 100%; min-height: 58px; padding: 12px 16px; margin-top: 12px; border-radius: 18px; font-family: var(--display); font-weight: 800; font-size: 17px;
   background: #fff; box-shadow: inset 0 0 0 2px var(--line), 0 4px 0 var(--line); transition: transform .08s; }
 .btn:active { transform: translateY(3px); }
 .btn.primary { background: var(--tomato); color: #fff; box-shadow: 0 5px 0 var(--tomato-d); font-size: 20px; min-height: 66px; }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .split .btn { font-size: 14px; padding: 10px 6px; }
-#homeLow.split { grid-template-columns: 1fr 1fr 1fr; }   /* boutique, trophées, réglages sur une ligne : la place des missions */
 .iconbtn { position: fixed; left: 14px; top: var(--top); width: 48px; height: 48px; border-radius: 16px; background: var(--cream); box-shadow: 0 3px 0 var(--line); font-size: 20px; font-weight: 700; }
 #coinbar { position: fixed; right: 14px; top: var(--top); height: 48px; padding: 0 16px; border-radius: 16px; display: flex; align-items: center; gap: 6px; background: var(--cream);
   box-shadow: 0 3px 0 var(--line); font-family: var(--display); font-weight: 800; font-size: 15px; z-index: 4; font-variant-numeric: tabular-nums; }
@@ -199,27 +235,25 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
 <body>
 <canvas id="gl"></canvas>
 <div id="coinbar" hidden>🪙 <span id="coinval">0</span></div>
+<nav id="tabs" hidden>
+  <button data-go="home" data-tab="home"><svg viewBox="0 0 24 24"><path d="M3.5 11.5 12 4l8.5 7.5"/><path d="M6 10v9.5h12V10"/></svg><span data-t="tabHome"></span></button>
+  <button data-go="tracks" data-tab="tracks"><svg viewBox="0 0 24 24"><path d="M5 20V5"/><path d="M5 5h13l-2.5 4 2.5 4H5"/></svg><span data-t="tabTracks"></span></button>
+  <button data-go="garage" data-tab="garage"><svg viewBox="0 0 24 24"><path d="M3 15.5c0-2 1-3 3.2-3.4l3-.5c1.4-2 2.8-2.8 5-2.8 2.4 0 3.8 1 4.9 2.9l1 .3c.7.3.9.9.9 1.7v1.8H3z"/><circle cx="7.5" cy="16" r="2"/><circle cx="16.5" cy="16" r="2"/></svg><span data-t="garage"></span></button>
+  <button data-go="trophies" data-tab="trophies"><svg viewBox="0 0 24 24"><path d="M7.5 4h9v5a4.5 4.5 0 0 1-9 0z"/><path d="M7.5 6H4.5c0 2.6 1.2 4 3.3 4.3M16.5 6h3c0 2.6-1.2 4-3.3 4.3M12 13.5V17M8.5 20h7M9.5 17h5v3h-5z"/></svg><span data-t="trophies"></span></button>
+  <button data-go="shop" data-tab="shop" id="shopBtn"><svg viewBox="0 0 24 24"><path d="M5 9h14l-1 11H6z"/><path d="M9 9V7.5a3 3 0 0 1 6 0V9"/></svg><span data-t="shop"></span></button>
+</nav>
 
 <section class="screen" id="home" hidden>
-  <svg class="logo" viewBox="0 0 300 300" role="img" aria-label="Mini Bolides">
-    <defs><path id="lgT" d="M45 150 A105 105 0 0 1 255 150"/><path id="lgB" d="M36 150 A114 114 0 0 0 264 150"/><clipPath id="lgK"><circle cx="150" cy="150" r="84"/></clipPath>
-      <pattern id="lgC" x="60" y="186" width="30" height="24" patternUnits="userSpaceOnUse"><rect width="30" height="24" fill="#fff6e6"/><rect width="15" height="12" fill="#2b2230"/><rect x="15" y="12" width="15" height="12" fill="#2b2230"/></pattern></defs>
-    <circle cx="150" cy="150" r="140" fill="#2b2230"/><circle cx="150" cy="150" r="131" fill="none" stroke="#fff6e6" stroke-width="2.5"/><circle cx="150" cy="150" r="86" fill="none" stroke="#fff6e6" stroke-width="2.5"/>
-    <text font-family="Unbounded" font-weight="800" font-size="27" letter-spacing="5" fill="#fff6e6"><textPath href="#lgT" startOffset="50%" text-anchor="middle">MINI BOLIDES</textPath></text>
-    <text font-family="Saira" font-weight="600" font-size="14.5" letter-spacing="2.6" fill="#ffd23f"><textPath href="#lgB" startOffset="50%" text-anchor="middle" dominant-baseline="hanging" data-t="tagline"></textPath></text>
-    <circle cx="32" cy="150" r="4" fill="#e5352b"/><circle cx="268" cy="150" r="4" fill="#e5352b"/>
-    <g clip-path="url(#lgK)"><rect x="60" y="60" width="180" height="180" fill="#e5352b"/><rect x="60" y="186" width="180" height="24" fill="url(#lgC)"/><rect x="60" y="210" width="180" height="40" fill="#b8241c"/></g>
-    <g transform="translate(80 118) scale(1.18)"><path d="M6 43 C6 35 12 32 22 31 L40 29 C47 21 55 17 67 17 L77 17 C86 17 92 23 96 29 L109 32 C115 34 117 38 117 43 L117 45 L6 45 Z" fill="#fff6e6"/>
-      <path d="M47 29 C52 23 57 21 64 21 L66 21 L66 29 Z M70 21 L77 21 C82 21 86 24 89 29 L70 29 Z" fill="#2b2230"/><rect x="24" y="35" width="14" height="3" rx="1.5" fill="#2b2230" opacity=".5"/>
-      <circle cx="31" cy="45" r="10.5" fill="#2b2230"/><circle cx="31" cy="45" r="4.2" fill="#ffd23f"/><circle cx="94" cy="45" r="10.5" fill="#2b2230"/><circle cx="94" cy="45" r="4.2" fill="#ffd23f"/></g>
-  </svg>
-  <div class="sheet">
-    <button class="btn primary" data-go="cups" data-t="play"></button>
-    <button class="btn dbtn" data-go="challenge"><b>🎯</b><span id="chalBtn"></span></button>
-    <button class="btn dbtn wkbtn" data-go="weekly"><b>🗓️</b><span id="weekBtn"></span></button>
-    <button class="btn dbtn mbtn" id="missHome" data-go="missions"><b>📋</b><span id="missBtn"></span></button>
-    <div class="split"><button class="btn" data-go="tracks" data-t="free"></button><button class="btn" data-go="garage" data-t="garage"></button></div>
-    <div class="split" id="homeLow"><button class="btn" id="shopBtn" data-go="shop" data-t="shop"></button><button class="btn" data-go="trophies" data-t="trophies"></button><button class="btn" data-go="settings" data-t="settings"></button></div>
+  <div class="htop"><div class="hbrand">MINI <i>BOLIDES</i></div></div>
+  <button class="hset" data-go="settings" aria-label="Réglages"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button>
+  <div id="hDrag">
+    <button class="harrow l" data-hstep="-1" aria-label="Voiture précédente">‹</button><button class="harrow r" data-hstep="1" aria-label="Voiture suivante">›</button>
+    <div class="hcar"><b id="hCarName"></b><span id="hCarSub"></span></div>
+  </div>
+  <div class="hlow">
+    <h3 data-t="today"></h3>
+    <div class="hcards"><button class="hcard" id="chalBtn" data-go="challenge"></button><button class="hcard" id="weekBtn" data-go="weekly"></button><button class="hcard" id="missHome" data-go="missions"></button></div>
+    <div class="hplay"><button class="hgo" data-go="play"><i class="tri"></i><span><b data-t="jouer"></b><small id="playSub"></small></span></button><button class="hmode" data-go="modes"><span data-t="otherMode"></span> ▾</button></div>
   </div>
 </section>
 
@@ -232,13 +266,11 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
     <button class="btn primary" id="edGo" data-ed="go" data-t="edGo"></button></div>
 </section>
 <section class="screen" id="tracks" hidden>
-  <button class="iconbtn" data-go="home" aria-label="Retour">←</button>
   <div class="sheet"><h2 data-t="choose"></h2><div id="trackList"></div></div>
 </section>
 
 <section class="screen" id="trophies" hidden>
   <div id="tDrag"></div>
-  <button class="iconbtn" data-go="home" aria-label="Retour">←</button>
   <div class="tcount"><span data-t="trophies"></span> · <b id="trophyCount"></b></div>
   <div class="sheet tsheet">
     <div class="tcard"><button data-tstep="-1" aria-label="Trophée précédent">‹</button><div><h2 id="tName"></h2><p id="tDesc"></p><div class="tbar" id="tBar" hidden><i></i></div><p class="tstate" id="tState"></p></div><button data-tstep="1" aria-label="Trophée suivant">›</button></div>
@@ -252,13 +284,11 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
 </section>
 
 <section class="screen" id="shop" hidden>
-  <button class="iconbtn" data-go="shopback" aria-label="Retour">←</button>
   <div class="sheet"><h2 data-t="shop"></h2><div id="shopList"></div></div>
 </section>
 
 <section class="screen" id="garage" hidden>
   <div id="gDrag"></div>
-  <button class="iconbtn" data-go="home" aria-label="Retour">←</button>
   <div class="gnav">
     <button data-gstep="-1" aria-label="Voiture précédente">‹</button>
     <div><h2 id="gName"></h2><small id="gCount"></small></div>
@@ -347,6 +377,19 @@ dd { display: flex; } dd u { flex: none; border-radius: 0; } dd u.plus { backgro
   <div class="sheet"><h2 data-t="miss"></h2><div id="missList"></div>
     <button class="btn primary" id="missChestBtn" data-go="chest"></button><p class="reward" id="missChestMsg"></p>
     <button class="btn" data-go="missClose" data-t="close"></button>
+  </div>
+</div>
+
+<div class="modal" id="modes" hidden>
+  <div class="sheet"><h2 data-t="modesT"></h2><div id="modeList"></div>
+    <button class="btn" data-go="modesClose" data-t="close"></button>
+  </div>
+</div>
+
+<div class="modal" id="brief" hidden>
+  <div class="sheet"><h2 id="briefT"></h2><p class="reward" id="briefTxt"></p><p class="small" id="briefSub"></p>
+    <button class="btn primary" id="briefGo" data-go="briefGo" data-t="run"></button>
+    <button class="btn" data-go="briefClose" data-t="close"></button>
   </div>
 </div>
 

@@ -10,8 +10,8 @@ android {
         applicationId 'com.minibolides.game'
         minSdk 26
         targetSdk 36
-        versionCode 83
-        versionName '0.11.0'
+        versionCode 84
+        versionName '0.12.0'
     }
 
     // Clé d'envoi Play Store : android/keystore.properties + .jks (copie dans /root/keys, jamais dans git)
