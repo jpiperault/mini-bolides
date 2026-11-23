@@ -23,6 +23,7 @@
     return Math.hypot(along - a, lat);
   };
 
+  const NET_DELAY = 0.1, NET_EXTRA = 0.25;   // course en réseau : retard d'affichage des voitures distantes, prolongation sans nouvelles
   const PIN_CURV = 1 / 18, PIN_K = 0.92, PIN_SLOPE = 0.25, AI_PIN_BRAKE = 4, PIN_BACK = 8, PIN_EXIT = 0.4, AI_PIN_TURN = 1.7;   // épingles : voir _cornerV
 
   class Race {
@@ -50,7 +51,12 @@
       this.playerFinished = false;
       this.alpha = 0;
       this.solo = !!opts.solo;
-      this.duo = !!opts.duo && !opts.solo;                     // deux joueurs sur le même écran                                 // contre-la-montre : seul en piste, sans boîtes
+      this.duo = !!opts.duo && !opts.solo;
+      // Course en réseau (en ligne ou en Wi-Fi) : opts.net = { me, host, grid: [{ id, kind: 'human'|'ai', car, name, hex, look }] }.
+      // Les voitures des autres téléphones (et, chez les invités, les rivaux calculés par l'hôte) sont « distantes » :
+      // leur position arrive par le réseau (netPush). Pas de chocs entre voitures de joueurs, pas de boîtes à objets.
+      this.net = opts.net || null;
+      this.hold = !!this.net;                                  // en réseau, le compte à rebours attend le signal de l'hôte                     // deux joueurs sur le même écran                                 // contre-la-montre : seul en piste, sans boîtes
       this.toys = (opts.toys || []).map((y) => ({ id: y.id, dup: !!y.dup, x: y.x, z: y.z, taken: false }));   // jouets cachés (nouveaux ou doublons)
       this._grid(opts);
       this._pickups();
@@ -59,12 +65,14 @@
 
     _grid(opts) {
       const t = this.track, playerCar = opts.carSpec || MB.CARS.find((c) => c.id === opts.carId) || MB.CARS[0];
-      const n = opts.solo ? 1 : opts.carCount || MB.CONFIG.carCount;
+      const net = this.net, n = net ? net.grid.length : opts.solo ? 1 : opts.carCount || MB.CONFIG.carCount;
       const rivals = MB.RIVAL_CARS.map((id) => MB.CARS.find((c) => c.id === id));
       for (let g = 0; g < n; g++) {
         // Le joueur part dernier : doubler, c'est le plaisir du jeu. À deux, le joueur 2 part juste devant lui.
-        const isPlayer = g === n - 1 || (this.duo && g === n - 2), pn = g === n - 1 ? 1 : isPlayer ? 2 : 0;
-        const base = pn === 1 ? playerCar : pn === 2 ? opts.carSpec2 || playerCar : rivals[g % rivals.length], k = this.cc;
+        // En réseau, l'ordre de la grille vient de l'hôte (le même sur tous les téléphones).
+        const e = net && net.grid[g], remote = !!e && e.id !== net.me && (e.kind === 'human' || !net.host);
+        const isPlayer = net ? e.id === net.me : g === n - 1 || (this.duo && g === n - 2), pn = net ? (isPlayer ? 1 : 0) : g === n - 1 ? 1 : isPlayer ? 2 : 0;
+        const base = pn === 1 ? playerCar : pn === 2 ? opts.carSpec2 || playerCar : e ? MB.CARS.find((c) => c.id === e.car) || rivals[g % rivals.length] : rivals[g % rivals.length], k = this.cc;
         // Plus vite, on braque aussi un peu plus vite : en 150 cc le virage reste jouable, simplement plus exigeant.
         const spec = k === 1 ? base : Object.assign({}, base, { vmax: base.vmax * k, accel: base.accel * (1 + (k - 1) * 0.8), turn: base.turn * (1 + (k - 1) * 0.6) });
         const back = 8 + g * 6;
@@ -78,6 +86,7 @@
           aiLane: lat * 0.6, aiLaneT: 0, onWall: false, y: 0, vy: 0, ry: 0, sc: null, sci: 0, dk: 0, fix: 0, ff: 0,
           style: isPlayer ? null : MB.RIVAL_STYLES[g % MB.RIVAL_STYLES.length],
         };
+        if (e) { c.netId = e.id; c.remote = remote; c.human = e.kind === 'human'; if (e.name) c.name = e.name; c.hex = e.hex; c.look = e.look; c.nb = []; }
         // Champion du circuit : un peu plus vif, et il ferme la porte.
         if (!isPlayer && opts.champ === g) { c.champ = true; c.style = Object.assign({}, c.style, { pace: c.style.pace * MB.CHAMP_PACE, block: true }); }
         this.cars.push(c);
@@ -96,7 +105,7 @@
       // Rangées de boîtes : jamais sur la grille ni juste après la ligne (le départ a été déplacé sur la portion la plus droite).
       const CLEAR_AHEAD = 45, CLEAR_BEHIND = 25;
       const rows = [];
-      for (const s of this.solo ? [] : [0.2, 0.36, 0.52, 0.8]) {
+      for (const s of this.solo || this.net ? [] : [0.2, 0.36, 0.52, 0.8]) {
         let i = t.at(s % 1);
         if (i < CLEAR_AHEAD || i > t.count - CLEAR_BEHIND) i = CLEAR_AHEAD;
         while (rows.some((r) => Math.abs(r - i) < 22)) i += 22;             // pas deux rangées collées
@@ -135,7 +144,7 @@
     }
 
     _tick(input) {
-      if (this.state === 'done') return;
+      if (this.state === 'done' || this.hold) return;
       const before = this.clock;
       this.clock += DT;
       if (this.clock < 0) {
@@ -144,6 +153,7 @@
       }
       if (before < 0) { this.state = 'run'; this.events.push({ t: 'go' }); }
       for (const c of this.cars) {
+        if (c.remote) { this._remoteStep(c); continue; }
         if (c.finished) { this._cruise(c); continue; }
         const ctl = c.isPlayer ? (c.pn === 2 ? this.input2 : input) : this._ai(c);
         this._drive(c, ctl);
@@ -157,8 +167,68 @@
         return b.prog - a.prog;
       });
       if (this.waitHuman && this.clock > this.waitHuman) this.playerFinished = true;
-      if (this.playerFinished) this._finishAll();
+      if (this.playerFinished && !this.net) this._finishAll();   // en réseau, c'est l'hôte qui clôt la course (netFinish)
     }
+
+    // ---------- Course en réseau ----------
+    // État d'une voiture tel qu'envoyé aux autres téléphones (une vingtaine de fois par seconde).
+    netState(c) {
+      const r = (v, k) => Math.round(v * k) / k;
+      return [c.netId, r(this.clock, 1000), r(c.x, 100), r(c.z, 100), r(c.h, 1000), r(c.v, 10), r(c.prog, 10), r(Math.max(c.y, c.ry || 0), 100), r(c.slip, 100),
+        (c.drifting ? 1 : 0) | (c.boost > 0 ? 2 : 0) | (c.finished ? 4 : 0) | (c.sc ? 8 : 0), c.finished ? r(c.time, 1000) : 0];
+    }
+
+    // Position reçue d'une voiture distante. Le décalage entre les horloges (et le temps de trajet) est estimé à
+    // chaque message : la voiture est affichée un dixième de seconde dans le passé, entre deux positions reçues.
+    netPush(s) {
+      const c = this.cars.find((q) => q.netId === s[0]);
+      if (!c || !c.remote) return;
+      const snap = { t: s[1], x: s[2], z: s[3], h: s[4], v: s[5], p: s[6], y: s[7], sl: s[8], f: s[9], tm: s[10] };
+      const last = c.nb[c.nb.length - 1];
+      if (last && snap.t <= last.t) return;                  // message en retard : déjà dépassé
+      const off = this.clock - snap.t;
+      c.netOff = c.netOff === undefined ? off : c.netOff + (off - c.netOff) * (off < c.netOff ? 0.3 : 0.02);
+      c.nb.push(snap);
+      if (c.nb.length > 24) c.nb.shift();
+      if (snap.f & 4 && !c.finished) { c.finished = true; c.time = snap.tm; }
+    }
+
+    _remoteStep(c) {
+      const b = c.nb;
+      if (!b.length) return;
+      const want = this.clock - (c.netOff || 0) - NET_DELAY;
+      let a = b[0], z = b[0];
+      for (let k = b.length - 1; k >= 0; k--) if (b[k].t <= want) { a = b[k]; z = b[Math.min(k + 1, b.length - 1)]; break; }
+      let x, zz, h;
+      if (z !== a) {
+        const u = clamp((want - a.t) / (z.t - a.t), 0, 1);
+        x = a.x + (z.x - a.x) * u; zz = a.z + (z.z - a.z) * u; h = a.h + angleDiff(z.h, a.h) * u;
+        c.prog = a.p + (z.p - a.p) * u; c.y = a.y + (z.y - a.y) * u;
+      } else {
+        const ahead = clamp(want - a.t, 0, NET_EXTRA);       // plus de nouvelles : elle continue un instant sur sa lancée
+        x = a.x + Math.cos(a.h) * a.v * ahead; zz = a.z + Math.sin(a.h) * a.v * ahead; h = a.h;
+        c.prog = a.p + a.v * ahead; c.y = a.y;
+      }
+      c.x = x; c.z = zz; c.h = h; c.v = a.v; c.slip = a.sl; c.ry = 0;
+      c.drifting = !!(a.f & 1); c.boost = a.f & 2 ? 0.2 : 0;
+      if (a.f & 4 && !c.finished) { c.finished = true; c.time = a.tm; }
+      if (!(a.f & 8)) { const pr = MB.projectTrack(this.track, c.x, c.z, c.idx); c.idx = pr.i; c.lat = pr.lat; }   // pas sur un raccourci
+    }
+
+    // Fin de course décidée par l'hôte : rows = [{ id, time }] (time null = abandon), dans l'ordre d'arrivée.
+    netFinish(rows) {
+      for (const c of this.cars) {
+        const r = rows.find((q) => q.id === c.netId);
+        if (!r) continue;
+        c.finished = true; c.time = r.time == null ? 1e9 : r.time; c.dnf = r.time == null;
+      }
+      this.ranked = this.cars.slice().sort((a, b) => a.time - b.time);
+      this.state = 'done';
+      this.events.push({ t: 'finish' });
+    }
+
+    // Temps estimé d'une voiture pas encore arrivée (comme à la fin d'une course hors ligne).
+    etaOf(c) { return c.finished ? c.time : this.clock + (this.laps * this.track.length - c.prog) / Math.max(c.v, 18); }
 
     // Rival sur le raccourci : il suit son axe, contourne les plots et ralentit dans les courbes de la branche.
     _aiBranch(c) {
@@ -553,6 +623,7 @@
       const cs = this.cars;
       for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
         const a = cs[i], b = cs[j], dx = b.x - a.x, dz = b.z - a.z, d2 = dx * dx + dz * dz, min = CAR_R * 2;
+        if (this.net && (a.remote || b.remote || a.isPlayer || b.isPlayer)) continue;   // en réseau, les voitures des joueurs se traversent
         if (d2 >= min * min || d2 === 0 || Math.abs(a.y - b.y) > 2) continue;
         const d = Math.sqrt(d2), o = (0.3 * (min - d)) / d, ma = a.spec.mass, mb = b.spec.mass, sum = ma + mb;
         let ax = -dx * o * (mb / sum), az = -dz * o * (mb / sum), bx = dx * o * (ma / sum), bz = dz * o * (ma / sum);

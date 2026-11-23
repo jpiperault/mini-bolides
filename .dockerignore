@@ -1,0 +1,22 @@
+# Seul server/ est utile à l'image.
+.git
+.github
+**/build
+**/.gradle
+.kotlin
+node_modules
+.env*
+.data
+android/
+js/
+fonts/
+sfx/
+store/
+tests/
+tools/
+journaux/
+mockup/
+tex-cache/
+*.jks
+keystore.properties
+local.properties

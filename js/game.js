@@ -7,7 +7,7 @@
     play: ['Championnat', 'Championship'], jouer: ['JOUER', 'PLAY'], today: ["Aujourd'hui", 'Today'], otherMode: ['Autre mode', 'Other mode'], modesT: ['Choisis un mode', 'Pick a mode'], tabHome: ['Accueil', 'Home'], tabTracks: ['Circuits', 'Tracks'],
     weekShort: ['Semaine', 'Week'], dayShort: ['j', 'd'], chalShort: ['Défi du jour', 'Daily'], doneShort: ['Réussi', 'Done'], missShort: ['Missions', 'Missions'], missChestGo: ['Ouvre le coffre !', 'Open the chest!'], missBye: ['À demain !', 'See you tomorrow!'],
     raceN: ['course', 'race'], ofN: ['sur', 'of'], swipeCar: ['glisse pour changer', 'swipe to change'], mCup: ['Championnat', 'Championship'], mCupD: ['Des coupes de 3 courses, aux points', 'Cups of 3 races, on points'], mRaceD: ['Un circuit au choix contre 5 rivaux', 'Any track against 5 rivals'],
-    mChronoD: ['Seul contre ton fantôme', 'Alone against your ghost'], mDuoD: ['Écran partagé, sur le même téléphone', 'Split screen, on the same phone'], chalAgain: ['Déjà réussi aujourd\'hui. Reviens demain !', 'Already done today. Come back tomorrow!'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
+    mChronoD: ['Seul contre ton fantôme', 'Alone against your ghost'], mDuoD: ['Écran partagé, sur le même téléphone', 'Split screen, on the same phone'], mMulti: ['À plusieurs', 'Multiplayer'], mMultiD: ['En ligne ou en Wi-Fi, jusqu\'à 4 téléphones', 'Online or over Wi-Fi, up to 4 phones'], chalAgain: ['Déjà réussi aujourd\'hui. Reviens demain !', 'Already done today. Come back tomorrow!'], cupsTitle: ['Championnat', 'Championship'], shop: ['Boutique', 'Shop'],
     stars: ['étoiles', 'stars'], locked: ['étoiles requises', 'stars needed'], unlocked: ['Nouvelle coupe débloquée !', 'New cup unlocked!'], cupCcHelp: ['Chaque cylindrée a ses médailles. Choisis-la puis touche une coupe.', 'Each class has its own medals. Pick one, then tap a cup.'], goal: ['3e étoile : gagne avec 20 pièces', '3rd star: win with 20 coins'],
     chal: ['Défi du jour', 'Daily challenge'], edTitle: ['Atelier', 'Workshop'], edSub: ['dessine ton propre circuit', 'draw your own track'], edSlot: ['Circuit', 'Track'], edHelp: ['Touche pour ajouter un point, glisse pour le déplacer. Touche un point pour le choisir.', 'Tap to add a point, drag to move it. Tap a point to select it.'], edOk: ['Circuit prêt !', 'Track ready!'], edCross: ['Deux bouts de route se touchent : écarte-les.', 'Two parts of the road touch: move them apart.'], edTight: ['Virage trop serré : arrondis-le.', 'Corner too tight: round it off.'], edFull: ['18 points maximum', '18 points max'], edDecor: ['Décor', 'Scenery'], edDel: ['🗑 Retirer le point', '🗑 Remove point'], edReset: ['↺ Recommencer', '↺ Start over'], edGo: ['🏁 Essayer', '🏁 Try it'], week: ['Défi de la semaine', 'Weekly challenge'], weekWin: ['gagne', 'win'], weekDone: ['réussi ! Nouveau défi lundi', 'done! New challenge on Monday'], weekWon: ['🗓️ Défi de la semaine réussi !', '🗓️ Weekly challenge done!'], weekFail: ['Défi de la semaine manqué', 'Weekly challenge failed'], golden: ['devient doré !', 'turns golden!'], days: ['jours', 'days'], day: ['jour', 'day'], chalDone: ['réussi, reviens demain !', 'done, back tomorrow!'], chalWin: ['Défi réussi', 'Challenge done'], chalFail: ['Défi manqué', 'Challenge failed'],
     close: ['Fermer', 'Close'], miss: ['Missions du jour', 'Daily missions'], missChest: ['Ouvrir le coffre', 'Open the chest'], missLock: ['Finis les 3 missions pour ouvrir le coffre', 'Finish all 3 missions to open the chest'],
@@ -327,7 +327,7 @@
   }
   function renderModes() {
     const row = (m, ic, name, desc) => `<button class="row" data-hmode="${m}"><b>${ic}</b><span>${name}<small>${desc}</small></span></button>`;
-    $('modeList').innerHTML = row('cups', '🏆', t('mCup'), t('mCupD')) + row('race', '🏁', t('free'), t('mRaceD')) + row('chrono', '⏱', t('modeChrono').replace(/^\S+\s/, ''), t('mChronoD')) + row('duo', '👥', t('modeDuo').replace(/^\S+\s/, ''), t('mDuoD'));
+    $('modeList').innerHTML = row('cups', '🏆', t('mCup'), t('mCupD')) + row('race', '🏁', t('free'), t('mRaceD')) + row('chrono', '⏱', t('modeChrono').replace(/^\S+\s/, ''), t('mChronoD')) + row('duo', '👥', t('modeDuo').replace(/^\S+\s/, ''), t('mDuoD')) + (MB.FEATURES.multi ? row('multi', '🌐', t('mMulti'), t('mMultiD')) : '');
     $('modes').hidden = false;
   }
   // Défi du jour ou de la semaine : la carte de l'accueil est petite, la règle complète s'affiche avant de partir.
@@ -468,9 +468,16 @@ const cur = ms.list.find((m) => m.p < m.n);
   const MOOD_MUSIC = { matin: 'cuisine', midi: 'cuisine', minuit: 'cuisine', sable: 'plage', foret: 'foret', neige: 'neige', ville: 'ville', chambre: 'chambre', bain: 'plage', grenier: 'chambre' };
   // Départ demandé par le joueur : écran « Préparation du circuit » affiché d'abord (deux images), puis construction
   // et image de chauffe ; le compte à rebours part ensuite sans à-coup.
+  // Course en réseau (js/multi.js) : réglages imposés par l'hôte, puis done() une fois la course prête à partir.
+  let netCfg = null, netDone = null;
+  function startNetRace(cfg, done) {
+    cup = null; chal = null; week = null; netCfg = cfg; netDone = done;
+    startRace(cfg.track, null);
+  }
   function startRace(trackId, variant) {
     $('loading').hidden = false;
-    const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { buildRace(trackId, variant); $('loading').hidden = true; }));
+    if (!netDone) netCfg = null;                               // course ordinaire : plus de réglages réseau
+    const go = () => requestAnimationFrame(() => requestAnimationFrame(() => { buildRace(trackId, variant); $('loading').hidden = true; const d = netDone; netDone = null; if (d) d(); }));
     view.preload(getTrack(trackId, cup || chal ? null : variant || null)).then(go, go);   // photos des matières du monde, avant de construire
   }
   function buildRace(trackId, variant) {
@@ -485,10 +492,11 @@ const cur = ms.list.find((m) => m.p < m.n);
     view.clearShowcase();
     view.world(track);
     const spec = MB.effectiveCar(save.car, save.ups[save.car]);
-    const solo = trackMode === 'chrono' && !cup && !chal && !week;
-    const duo = trackMode === 'duo' && !cup && !chal && !week;
-    raceCc = cup ? cup.diff : week ? week.cc : save.diff;
-    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: raceCc, assist: save.assist, seed: (Date.now() & 0xffff) + 1, solo, toys: auto || isCustom(trackId) ? [] : toysFor(trackId, track), champ: solo ? null : MB.champOf(trackId), cc: solo ? 1 : undefined, duo, carSpec2: spec });   // contre-la-montre toujours en 50 cc : records comparables
+    const net = netCfg;
+    const solo = trackMode === 'chrono' && !cup && !chal && !week && !net;
+    const duo = trackMode === 'duo' && !cup && !chal && !week && !net;
+    raceCc = net ? net.diff : cup ? cup.diff : week ? week.cc : save.diff;
+    race = new MB.Race({ trackId, def: track.def, track, carSpec: spec, power: spec.power, sens: MB.SENS[save.sens].k, diff: raceCc, assist: save.assist, seed: net ? net.seed : (Date.now() & 0xffff) + 1, solo, toys: auto || net || isCustom(trackId) ? [] : toysFor(trackId, track), champ: solo || net ? null : MB.champOf(trackId), cc: solo ? 1 : undefined, duo, carSpec2: spec, net: net ? net.net : null });   // contre-la-montre toujours en 50 cc : records comparables
     race.track = track;
     if (journalOn && !auto) {
       journal = new MB.Journal(race, { version: bridge.appVersion(), track: trackId, car: save.car, ups: save.ups[save.car], diff: save.diff, sens: save.sens, assist: save.assist, lang, w: innerWidth, h: innerHeight, dpr: devicePixelRatio, ua: navigator.userAgent, date: new Date().toISOString() });
@@ -707,7 +715,7 @@ const cur = ms.list.find((m) => m.p < m.n);
   };
   let coachT = null;
   function coach(key) {
-    if (!race || race.solo || race.duo || save.tuto[key]) return;
+    if (!race || race.solo || race.duo || race.net || save.tuto[key]) return;
     save.tuto[key] = 1; persist();
     const el = $('coach'); el.textContent = COACH[key][lang === 'fr' ? 0 : 1]; el.className = 'on';
     clearTimeout(coachT); coachT = setTimeout(() => { el.className = ''; }, COACH[key][0].length > 60 ? 5200 : 3400);
@@ -741,7 +749,7 @@ const cur = ms.list.find((m) => m.p < m.n);
     while (rec.length && rec[0][0] < race.clock - REC_KEEP) rec.shift();
   }
   function startReplay() {
-    if (race.duo) return finishRace();
+    if (race.duo || race.net) return finishRace();
     const p = race.player, tc = p.time;
     if (!rec.length || !(tc > rec[0][0] + 1)) return finishRace();
     const close = !race.solo && race.cars.some((c) => !c.isPlayer && c.finished && Math.abs(c.time - tc) < 0.3 && c.time < tc + 0.3);
@@ -946,7 +954,39 @@ const cur = ms.list.find((m) => m.p < m.n);
     buzz(40);
   }
 
+  // En réseau : classement publié par l'hôte, pièces ramassées gagnées, rien d'autre (ni étoiles ni trophées).
+  function finishNet() {
+    phase = 'result';
+    Sound.engine(false, 0); Sound.draft(0);
+    const pos = race.position(race.player);
+    closeJournal({ fin: 'réseau', rang: pos, temps: race.player.time });
+    pendingCoins = race.coinCount;
+    save.coins += pendingCoins; save.races++; persist();
+    netBanner('');
+    $('resTitle').textContent = race.player.dnf ? '—' : `${pos}${placeSuf(pos)}`;
+    $('resTrack').textContent = trackLabel();
+    $('resStars').textContent = '';
+    $('resNote').hidden = true;
+    $('resRows').innerHTML = multi.resultRows(race);
+    $('resCoins').textContent = `+${pendingCoins} ${t('coins')}`;
+    $('resDouble').hidden = true;
+    $('resNext').textContent = multi.againLabel();
+    show('result');
+    buzz(40);
+  }
+  // Quitter la course sans revenir à l'accueil (retour au salon du jeu à plusieurs).
+  function netIdle() {
+    if (race) view.track = null;
+    closeJournal({ fin: 'abandon' });
+    phase = 'menu'; race = null; cup = null; chal = null; week = null; netCfg = null; paused = false;
+    Sound.engine(false, 0); Sound.draft(0); Sound.song('menu'); Sound.rain(false);
+    view.showcase(getTrack(MB.TRACKS[0].id), carSpec().shape, paintHex(), save.look);
+  }
+  let netHint = '';
+  function netBanner(text) { if (text === netHint) return; netHint = text; $('hint').textContent = text; $('hint').hidden = !text; }
+  let multi = null;
   function finishRace() {
+    if (race.net) return finishNet();
     if (race.duo) return finishDuo();
     if (race.solo) return finishSolo();
     const p = race.player, pos = race.position(p), id = currentTrack;
@@ -1233,7 +1273,9 @@ const cur = ms.list.find((m) => m.p < m.n);
     if (Sound.ctx && Sound.ctx.state === 'suspended') Sound.ctx.resume();
     Sound.play('tap', [620, 0.05, 'triangle', 0.08]);
     const d = b.dataset;
+    if (d.go === 'home' && multi && multi.active()) { multi.quit(); return menu(); }
     if (d.go === 'home') return leave(menu);
+    if (d.mp || d.mptrack || d.mpcc || d.mplan) return multi.click(d);
     if (d.go === 'cups') return renderCups();
     if (d.cup) { cup = { def: MB.CUPS.find((c) => c.id === d.cup), diff: save.diff, i: 0, pts: [0, 0, 0, 0, 0, 0] }; chal = null; week = null; keepCup(); return startRace(cup.def.tracks[0]); }
     if (d.go === 'missions') return renderMissions();
@@ -1261,7 +1303,7 @@ const cur = ms.list.find((m) => m.p < m.n);
     if (d.go === 'play') { cup = nextPlay(); chal = null; week = null; keepCup(); return startRace(cup.def.tracks[cup.i]); }
     if (d.go === 'modes') return renderModes();
     if (d.go === 'modesClose') { $('modes').hidden = true; return; }
-    if (d.hmode) { $('modes').hidden = true; if (d.hmode === 'cups') return renderCups(); trackMode = d.hmode; return renderTracks(); }
+    if (d.hmode) { $('modes').hidden = true; if (d.hmode === 'cups') return renderCups(); if (d.hmode === 'multi') return multi.home(); trackMode = d.hmode; return renderTracks(); }
     if (d.hstep) return homeCar(+d.hstep);
     if (d.go === 'dailyTake') return takeDaily(1);
     if (d.go === 'dailyDouble') return MB.monet.showRewarded('daily', (ok) => takeDaily(ok ? 2 : 1));
@@ -1281,6 +1323,7 @@ const cur = ms.list.find((m) => m.p < m.n);
     if (d.go === 'skipReplay') return endReplay();
     if (d.go === 'report') { snapJournal('signalé'); setTimeout(() => { if (journal) journal.copied = null; copyJournal('signalé'); }, 250); return; }
     if (d.go === 'restart') { if (cup) cup.pts = cup.pts.slice(); return startRace(currentTrack, currentVariant); }
+    if (d.go === 'next' && race && race.net) { netIdle(); return multi.afterRace(); }
     if (d.go === 'next') return leave(nextAfterResult);
     if (d.go === 'double') return MB.monet.showRewarded('double', (ok) => { if (ok) { save.coins += pendingCoins; persist(); $('resDouble').hidden = true; } });
     if (d.mode) { trackMode = d.mode; return renderTracks(); }
@@ -1389,18 +1432,19 @@ const cur = ms.list.find((m) => m.p < m.n);
     frameDt = raw > 0.05 ? raw : frameDt + (raw - frameDt) * 0.25;    // gomme le tremblement de l'horloge, pas les vrais à-coups
     const dt = MB.REEL.still ? 1 / 30 : frameDt;
     if (phase === 'race' && race) {
-      if (!paused) {
+      if (!paused || race.net) {                               // en réseau, la course continue derrière le menu de pause
         const keys = (input.keyR ? 1 : 0) - (input.keyL ? 1 : 0);
         let ctl = { steer: keys || input.steer, item: input.item };
         let ctl2 = { steer: pad2.side(), item: input2.item };
         if (auto) { ctl = MB.botInput(race); if (race.duo) ctl2 = MB.botInput(race, { car: race.player2 }); }
         // Ralenti sur la ligne : la fin de course se savoure, puis tout reprend.
         if (race.playerFinished) {
-          if (!finFx) { finFx = true; slowT = 1.6; snapJournal('arrivée'); const pos = race.solo ? (ghost.record ? 1 : 4) : race.position(race.player); Sound.song(null); if (pos <= 3) { view.confetti(); Sound.fanfare(pos === 1); } else Sound.play('finish', null, 0); }
+          if (!finFx) { finFx = true; slowT = race.net ? 0 : 1.6; snapJournal('arrivée'); const pos = race.solo ? (ghost.record ? 1 : 4) : race.position(race.player); Sound.song(null); if (pos <= 3) { view.confetti(); Sound.fanfare(pos === 1); } else Sound.play('finish', null, 0); }
           slowT -= dt;
         }
         timeK += ((slowT > 0 ? 0.35 : 1) - timeK) * Math.min(1, dt * 5);
         race.step(dt * timeK, ctl, ctl2);
+        if (race.net) multi.tick();
         recordFrame();
         coachWatch();
         if (ghost && race.solo) ghostStep();
@@ -1448,6 +1492,7 @@ const cur = ms.list.find((m) => m.p < m.n);
     if (!$('modes').hidden) { $('modes').hidden = true; return true; }
     if (!$('brief').hidden) { $('brief').hidden = true; return true; }
     if (!$('notifAsk').hidden) { $('notifAsk').hidden = true; setNotif(false); return true; }
+    if (multi && multi.active()) multi.quit();                // retour depuis le salon ou son classement : on quitte le salon
     if (phase === 'result') { menu(); return true; }
     if (!$('home').hidden) return false;
     menu(); return true;
@@ -1461,6 +1506,8 @@ const cur = ms.list.find((m) => m.p < m.n);
   async function boot() {
     applyTexts();
     view = new MB.View($('gl'));
+    multi = MB.makeMulti({ $, t, L, lang, save, persist, show, fmt, paintHex, openTracks, race: () => race, startNetRace, backToMenu: menu, banner: netBanner,
+      defaultTrack: () => (openTracks().includes(currentTrack) ? currentTrack : openTracks()[0]) });
     document.addEventListener('click', onClick);
     bindInput();
     const drag = $('gDrag');

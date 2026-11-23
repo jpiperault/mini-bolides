@@ -1404,9 +1404,19 @@
 
     bindRace(race, paints) {
       for (const c of race.cars) {
-        const hex = c.pn === 2 ? paints.player2 || 0x2f8bff : c.isPlayer ? paints.player : paints.rivals[c.id % paints.rivals.length];
+        const other = c.human && !c.isPlayer;                  // course en réseau : un autre joueur, avec sa peinture et son style
+        const hex = c.pn === 2 ? paints.player2 || 0x2f8bff : c.isPlayer ? paints.player : other && c.hex ? c.hex : paints.rivals[c.id % paints.rivals.length];
         const m = MB.buildCarHD(c.spec.shape, hex, lam.env);
-        if (c.pn === 2) { if (m.repaint) m.repaint('bandes'); } else if (c.isPlayer) MB.styleCar(m, paints.look); else if (m.repaint) m.repaint(MB.RIVAL_DECO[c.id % MB.RIVAL_DECO.length]);
+        if (c.pn === 2) { if (m.repaint) m.repaint('bandes'); } else if (c.isPlayer) MB.styleCar(m, paints.look); else if (other && c.look) MB.styleCar(m, c.look); else if (m.repaint) m.repaint(MB.RIVAL_DECO[c.id % MB.RIVAL_DECO.length]);
+        if (other && c.name) {                                  // son nom au-dessus du toit
+          const tag = new T.Sprite(new T.SpriteMaterial({ map: canvas(256, 64, (g) => {
+            g.font = '800 34px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+            const w = Math.min(248, g.measureText(c.name).width + 28);
+            g.fillStyle = 'rgba(43,34,48,.72)'; g.beginPath(); if (g.roundRect) g.roundRect(128 - w / 2, 8, w, 48, 22); else g.rect(128 - w / 2, 8, w, 48); g.fill();
+            g.fillStyle = '#fff'; g.fillText(c.name, 128, 33);
+          }), transparent: true, depthWrite: false }));
+          tag.scale.set(6, 1.5, 1); tag.position.set(0, (m.top || 1.6) + 2.2, 0); m.add(tag);
+        }
         if (c.champ) {                                          // champion du circuit : couronne dorée au-dessus du toit
           const gold = new T.MeshStandardMaterial({ color: 0xf2c14e, metalness: 1, roughness: 0.25, envMap: lam.env, emissive: 0x7a5200, emissiveIntensity: 0.35 });
           const cr = new T.Group(), ring = new T.Mesh(new T.CylinderGeometry(0.62, 0.55, 0.36, 18, 1, true), gold); ring.material.side = T.DoubleSide; cr.add(ring);

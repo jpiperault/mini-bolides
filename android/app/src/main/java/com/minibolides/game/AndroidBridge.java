@@ -42,10 +42,59 @@ public class AndroidBridge {
     private final Context context;
     private final WebView web;
 
+    private LanRelay lan;
+    private LanFinder finder;
+
     public AndroidBridge(Context context, WebView web) {
         this.context = context;
         this.web = web;
+        // Configuration à distance arrivée après le chargement du jeu : il la reçoit aussitôt.
+        Remote.setOnChange(() -> web.post(() -> web.evaluateJavascript("window.mbRemote&&mbRemote(" + JSONObject.quote(Remote.config(context)) + ")", null)));
     }
+
+    // ---------- Jeu en ligne et en Wi-Fi
+
+    /** Adresse du serveur du jeu en ligne (apps.json mémorisé, sinon adresse de secours), terminée par « / ». */
+    @JavascriptInterface
+    public String serverUrl() { return Remote.serverUrl(context); }
+
+    /** Dernière configuration à distance mémorisée (JSON : min_version_code, recommended_version_code, flags, message). */
+    @JavascriptInterface
+    public String remoteConfig() { return Remote.config(context); }
+
+    @JavascriptInterface
+    public int versionCode() { return BuildConfig.VERSION_CODE; }
+
+    /** Ouvre un salon Wi-Fi sur ce téléphone et l'annonce sous [name] ; renvoie le port du relais (-1 en cas d'échec). */
+    @JavascriptInterface
+    public synchronized int lanHost(String name) {
+        lanStop();
+        try { lan = new LanRelay(); } catch (Exception e) { return -1; }
+        finder().announce(name == null || name.isEmpty() ? "Mini Bolides" : name, lan.port());
+        return lan.port();
+    }
+
+    @JavascriptInterface
+    public synchronized void lanStop() {
+        if (finder != null) finder.stopAnnounce();
+        if (lan != null) { lan.close(); lan = null; }
+    }
+
+    /** Cherche les salons Wi-Fi : chacun arrive dans window.mbLanFound(nom, adresse, port, perdu). */
+    @JavascriptInterface
+    public synchronized void lanScan() {
+        finder().scan((name, host, port, lost) -> web.post(() -> web.evaluateJavascript(
+                "window.mbLanFound&&mbLanFound(" + JSONObject.quote(name) + "," + JSONObject.quote(host) + "," + port + "," + lost + ")", null)));
+    }
+
+    @JavascriptInterface
+    public synchronized void lanScanStop() { if (finder != null) finder.stopScan(); }
+
+    /** Adresse du téléphone sur le Wi-Fi, affichée par l'hôte pour une saisie à la main. */
+    @JavascriptInterface
+    public String localIp() { return LanFinder.localIp(); }
+
+    private LanFinder finder() { if (finder == null) finder = new LanFinder(context); return finder; }
 
     @JavascriptInterface
     public void vibrate(int ms) {

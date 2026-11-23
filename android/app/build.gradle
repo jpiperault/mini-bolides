@@ -10,9 +10,14 @@ android {
         applicationId 'com.minibolides.game'
         minSdk 26
         targetSdk 36
-        versionCode 84
-        versionName '0.12.0'
+        versionCode 85
+        versionName '0.13.0'
+        // Jeu en ligne : adresse de secours du serveur, utilisée seulement si apps.json n'a jamais pu être lu.
+        buildConfigField 'String', 'DEFAULT_BASE_URL', '"https://mini-bolides.piperault.fr/"'
+        // Annuaire des serveurs et configuration à distance (apps.json, apps/<package>.json).
+        buildConfigField 'String', 'APPS_URL', '"https://apps.piperault.fr/.well-known/"'
     }
+    buildFeatures { buildConfig true }
 
     // Clé d'envoi Play Store : android/keystore.properties + .jks (copie dans /root/keys, jamais dans git)
     def ksFile = rootProject.file('keystore.properties')

@@ -20,6 +20,7 @@ import java.util.Arrays;
 public class MainActivity extends Activity {
     static final int ASK_NOTIF = 7;
     private WebView web;
+    private AndroidBridge bridge;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -41,7 +42,8 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setSupportZoom(false);
         web.setWebViewClient(new WebViewClient());
-        web.addJavascriptInterface(new AndroidBridge(this, web), "AndroidBridge");
+        bridge = new AndroidBridge(this, web);
+        web.addJavascriptInterface(bridge, "AndroidBridge");
         setContentView(web);
         // Android 10+ : un pouce posé près du bord ne doit pas être pris pour le geste retour.
         if (Build.VERSION.SDK_INT >= 29) {
@@ -126,6 +128,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        bridge.lanStop();                          // salon Wi-Fi : le relais s'arrête avec l'appli
+        bridge.lanScanStop();
         web.destroy();
         super.onDestroy();
     }

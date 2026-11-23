@@ -1,2 +1,8 @@
 # Photos de matières téléchargées (régénérables par tools/build-tex.py)
 tex-cache/
+# Test local du serveur (docker-compose.local.yml) et builds du serveur
+.data/
+server/build/
+server/.gradle/
+server/.kotlin/
+.env*

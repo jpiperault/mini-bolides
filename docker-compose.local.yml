@@ -1,0 +1,33 @@
+# Test local qui reproduit le serveur Hangar : docker compose -f docker-compose.local.yml up --build
+# Valeurs factices, uniquement pour le développement.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: bolides
+      POSTGRES_PASSWORD: dev-mot-de-passe
+      POSTGRES_DB: bolides
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      platforms: [linux/amd64]
+    image: mini-bolides-local
+    environment:
+      # Même format que celui injecté par Hangar (URI libpq, hôte « postgres »).
+      DATABASE_URL: postgresql://bolides:dev-mot-de-passe@postgres:5432/bolides
+      SESSION_SECRET: dev-uniquement-0123456789abcdef0123456789abcdef0123456789abcdef
+      ADMIN_EMAIL: dev@example.org
+    volumes:
+      - ./.data:/data
+    mem_limit: 384m
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - postgres
+    stop_grace_period: 10s
+
+volumes:
+  pgdata:

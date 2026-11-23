@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Versions de test : http autorisé vers le réseau local (journal des parties sur 192.168.91.48, salons Wi-Fi en ws://
+     vers le téléphone hôte, dont l'adresse change selon la box). Le serveur en ligne, lui, est en https. -->
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">192.168.91.48</domain>
-    </domain-config>
+    <base-config cleartextTrafficPermitted="true" />
 </network-security-config>
